@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>积分兑换 - Providence</title>
+    <link rel="stylesheet" href="css/ios-toast.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
+
+        /* 顶部导航 */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 15px;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .page-title {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .history-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        /* 主体内容 */
+        .content {
+            margin-top: 56px;
+            padding: 20px 15px;
+        }
+
+        /* 积分余额卡片 */
+        .balance-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            padding: 30px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .balance-title {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .balance-amount {
+            text-align: center;
+            font-size: 48px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 20px;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .balance-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        /* 兑换表单卡片 */
+        .exchange-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 25px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .card-icon {
+            font-size: 24px;
+            margin-right: 10px;
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            height: 50px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 0 15px;
+            color: #333;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input::placeholder {
+            color: #999;
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #667eea;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* 快捷金额按钮 */
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .quick-btn {
+            height: 40px;
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .quick-btn:active {
+            transform: scale(0.95);
+        }
+
+        .quick-btn:hover {
+            background: #667eea;
+            border-color: #667eea;
+            color: #fff;
+        }
+
+        /* 兑换信息 */
+        .exchange-info {
+            background: #f8f9fa;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .info-value {
+            color: #667eea;
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* 兑换按钮 */
+        .exchange-btn {
+            width: 100%;
+            height: 54px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .exchange-btn:active {
+            transform: translateY(2px);
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+        }
+
+        .exchange-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 说明卡片 */
+        .tips-card {
+            background: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        }
+
+        .tips-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .tips-icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .tips-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .tips-list {
+            list-style: none;
+        }
+
+        .tips-item {
+            color: #666;
+            font-size: 13px;
+            line-height: 1.8;
+            padding-left: 15px;
+            position: relative;
+            margin-bottom: 8px;
+        }
+
+        .tips-item:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: #667eea;
+        }
+
+        /* 支付密码弹窗 - 仿提款页面样式 */
+        .password-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 9999;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .password-overlay.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .password-modal {
+            background: #fff;
+            border-radius: 16px;
+            width: 85%;
+            max-width: 320px;
+            padding: 0;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 17px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .modal-body {
+            padding: 25px 20px;
+        }
+
+        /* 密码输入框组 */
+        .password-dots {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .password-dot {
+            width: 40px;
+            height: 40px;
+            background: #f8f9fa;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .password-dot.filled {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .password-dot-inner {
+            width: 12px;
+            height: 12px;
+            background: #fff;
+            border-radius: 50%;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .password-dot.filled .password-dot-inner {
+            opacity: 1;
+        }
+
+        .password-input-hidden {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* 数字键盘 */
+        .number-keyboard {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .key-btn {
+            height: 50px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 10px;
+            font-size: 22px;
+            font-weight: 500;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .key-btn:active {
+            background: #e0e0e0;
+            transform: scale(0.95);
+        }
+
+        .key-btn.delete {
+            background: #fff;
+            border: 1px solid #e0e0e0;
+            font-size: 18px;
+        }
+
+        .key-btn.confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .modal-footer {
+            padding: 0 20px 20px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            height: 45px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .modal-btn-cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+
+        .modal-btn-confirm {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+
+        .modal-btn:active {
+            transform: scale(0.95);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Loading 状态 */
+        .loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* 响应式 */
+        @media (max-width: 360px) {
+            .balance-amount {
+                font-size: 40px;
+            }
+
+            .quick-amounts {
+                gap: 8px;
+            }
+
+            .password-dots {
+                gap: 10px;
+            }
+
+            .password-dot {
+                width: 35px;
+                height: 35px;
+            }
+
+            .number-keyboard {
+                gap: 10px;
+            }
+
+            .key-btn {
+                height: 45px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="top-bar">
+        <div class="back-btn" onclick="goBack()">←</div>
+        <div class="page-title">积分兑换</div>
+        <div class="history-btn" onclick="goHistory()">明细</div>
+    </div>
+
+    <!-- 主体内容 -->
+    <div class="content">
+        <!-- 积分余额卡片 -->
+        <div class="balance-card">
+            <div class="balance-title">当前积分</div>
+            <div class="balance-amount" id="pointsBalance">0</div>
+            <div class="balance-stats">
+                <div class="stat-item">
+                    <div class="stat-label">今日获得</div>
+                    <div class="stat-value" id="todayPoints">+0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">累计兑换</div>
+                    <div class="stat-value" id="totalExchange">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 兑换表单 -->
+        <div class="exchange-card">
+            <div class="card-header">
+                <div class="card-icon">💰</div>
+                <div class="card-title">积分兑换人民币</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">兑换金额</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="number" 
+                        class="form-input" 
+                        id="exchangeAmount"
+                        placeholder="请输入兑换金额"
+                        min="10"
+                        oninput="calculatePoints()"
+                    >
+                    <span class="input-suffix">CNY</span>
+                </div>
+                <div class="quick-amounts">
+                    <button class="quick-btn" onclick="setAmount(10)">¥10</button>
+                    <button class="quick-btn" onclick="setAmount(50)">¥50</button>
+                    <button class="quick-btn" onclick="setAmount(100)">¥100</button>
+                    <button class="quick-btn" onclick="setAmount(200)">¥200</button>
+                    <button class="quick-btn" onclick="setAmount(500)">¥500</button>
+                    <button class="quick-btn" onclick="setAmount(1000)">¥1000</button>
+                </div>
+            </div>
+
+            <div class="exchange-info">
+                <div class="info-row">
+                    <span class="info-label">兑换比例</span>
+                    <span class="info-value">1 积分 = ¥1</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">需要积分</span>
+                    <span class="info-value" id="needPoints">0 分</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">最低兑换</span>
+                    <span class="info-value">¥10</span>
+                </div>
+            </div>
+
+            <button class="exchange-btn" id="exchangeBtn" onclick="showPasswordModal()">
+                确认兑换
+            </button>
+        </div>
+
+        <!-- 说明卡片 -->
+        <div class="tips-card">
+            <div class="tips-header">
+                <div class="tips-icon">💡</div>
+                <div class="tips-title">兑换说明</div>
+            </div>
+            <ul class="tips-list">
+                <li class="tips-item">最低兑换金额 ¥10</li>
+                <li class="tips-item">兑换比例：1 积分 = ¥1</li>
+                <li class="tips-item">兑换需要输入支付密码</li>
+                <li class="tips-item">积分兑换后实时到账</li>
+                <li class="tips-item">积分可用于消费抵扣等</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 支付密码弹窗 -->
+    <div class="password-overlay" id="passwordModal">
+        <div class="password-modal">
+            <div class="modal-header">
+                <div class="modal-title">请输入支付密码</div>
+            </div>
+            <div class="modal-body">
+                <!-- 密码点显示 -->
+                <div class="password-dots" id="passwordDots">
+                    <div class="password-dot">
+                        <div class="password-dot-inner"></div>
+                    </div>
+                    <div class="password-dot">
+                        <div class="password-dot-inner"></div>
+                    </div>
+                    <div class="password-dot">
+                        <div class="password-dot-inner"></div>
+                    </div>
+                    <div class="password-dot">
+                        <div class="password-dot-inner"></div>
+                    </div>
+                    <div class="password-dot">
+                        <div class="password-dot-inner"></div>
+                    </div>
+                    <div class="password-dot">
+                        <div class="password-dot-inner"></div>
+                    </div>
+                </div>
+
+                <!-- 隐藏的输入框 -->
+                <input 
+                    type="password" 
+                    class="password-input-hidden" 
+                    id="tradePassword"
+                    maxlength="6"
+                    inputmode="numeric"
+                >
+
+                <!-- 数字键盘 -->
+                <div class="number-keyboard">
+                    <button class="key-btn" onclick="inputNumber(1)">1</button>
+                    <button class="key-btn" onclick="inputNumber(2)">2</button>
+                    <button class="key-btn" onclick="inputNumber(3)">3</button>
+                    <button class="key-btn" onclick="inputNumber(4)">4</button>
+                    <button class="key-btn" onclick="inputNumber(5)">5</button>
+                    <button class="key-btn" onclick="inputNumber(6)">6</button>
+                    <button class="key-btn" onclick="inputNumber(7)">7</button>
+                    <button class="key-btn" onclick="inputNumber(8)">8</button>
+                    <button class="key-btn" onclick="inputNumber(9)">9</button>
+                    <button class="key-btn delete" onclick="deleteNumber()">⌫</button>
+                    <button class="key-btn" onclick="inputNumber(0)">0</button>
+                    <button class="key-btn confirm" onclick="confirmExchange()">确认</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-cancel" onclick="closePasswordModal()">
+                    取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/ios-toast.js"></script>
+    <script src="config.js"></script>
+    <script>
+        const API = new APIClient();
+        let currentBalance = 0;
+        let passwordValue = '';
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLogin();
+            loadPointsBalance();
+        });
+
+        // 检查登录
+        function checkLogin() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('请先登录');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1500);
+            }
+        }
+
+        // 加载积分余额
+        async function loadPointsBalance() {
+            try {
+                const data = await API.get('/api/user/points-balance.php');
+                
+                if (data.code === 1) {
+                    currentBalance = parseFloat(data.data.points) || 0;
+                    document.getElementById('pointsBalance').textContent = currentBalance.toFixed(2);
+                    document.getElementById('todayPoints').textContent = '+' + (parseFloat(data.data.today_points) || 0).toFixed(2);
+                    document.getElementById('totalExchange').textContent = (parseFloat(data.data.total_exchange) || 0).toFixed(2);
+                } else {
+                    showToast(data.msg || '加载失败');
+                }
+            } catch (error) {
+                console.error('加载积分余额失败:', error);
+                showToast('加载失败，请刷新重试');
+            }
+        }
+
+        // 设置快捷金额
+        function setAmount(amount) {
+            document.getElementById('exchangeAmount').value = amount;
+            calculatePoints();
+        }
+
+        // 计算所需积分
+        function calculatePoints() {
+            const amount = parseFloat(document.getElementById('exchangeAmount').value) || 0;
+            const needPoints = amount;
+            document.getElementById('needPoints').textContent = needPoints.toFixed(2) + ' 分';
+            
+            const btn = document.getElementById('exchangeBtn');
+            if (amount < 10) {
+                btn.disabled = true;
+                btn.textContent = '最低兑换金额 ¥10';
+            } else if (needPoints > currentBalance) {
+                btn.disabled = true;
+                btn.textContent = '积分不足';
+            } else {
+                btn.disabled = false;
+                btn.textContent = '确认兑换';
+            }
+        }
+
+        // 显示密码弹窗
+        function showPasswordModal() {
+            const amount = parseFloat(document.getElementById('exchangeAmount').value) || 0;
+            
+            if (amount < 10) {
+                showToast('最低兑换金额 ¥10');
+                return;
+            }
+            
+            const needPoints = amount;
+            if (needPoints > currentBalance) {
+                showToast('积分不足');
+                return;
+            }
+            
+            passwordValue = '';
+            updatePasswordDots();
+            document.getElementById('passwordModal').classList.add('active');
+        }
+
+        // 关闭密码弹窗
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+            passwordValue = '';
+            updatePasswordDots();
+        }
+
+        // 输入数字
+        function inputNumber(num) {
+            if (passwordValue.length < 6) {
+                passwordValue += num;
+                updatePasswordDots();
+                
+                // 如果输入满6位，自动提交
+                if (passwordValue.length === 6) {
+                    setTimeout(() => {
+                        confirmExchange();
+                    }, 200);
+                }
+            }
+        }
+
+        // 删除数字
+        function deleteNumber() {
+            if (passwordValue.length > 0) {
+                passwordValue = passwordValue.slice(0, -1);
+                updatePasswordDots();
+            }
+        }
+
+        // 更新密码点显示
+        function updatePasswordDots() {
+            const dots = document.querySelectorAll('.password-dot');
+            dots.forEach((dot, index) => {
+                if (index < passwordValue.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        // 确认兑换
+        async function confirmExchange() {
+            if (passwordValue.length !== 6) {
+                showToast('请输入6位支付密码');
+                return;
+            }
+            
+            const amount = parseFloat(document.getElementById('exchangeAmount').value) || 0;
+            const btn = document.querySelector('.key-btn.confirm');
+            btn.classList.add('loading');
+            btn.textContent = '处理中...';
+            
+            try {
+                const data = await API.post('/api/user/points-exchange.php', {
+                    amount: amount,
+                    trade_password: passwordValue
+                });
+                
+                if (data.code === 1) {
+                    showToast('兑换成功！');
+                    closePasswordModal();
+                    
+                    document.getElementById('exchangeAmount').value = '';
+                    calculatePoints();
+                    
+                    setTimeout(() => {
+                        loadPointsBalance();
+                    }, 1000);
+                } else {
+                    showToast(data.msg || '兑换失败');
+                    passwordValue = '';
+                    updatePasswordDots();
+                }
+            } catch (error) {
+                console.error('兑换失败:', error);
+                showToast('兑换失败，请重试');
+                passwordValue = '';
+                updatePasswordDots();
+            } finally {
+                btn.classList.remove('loading');
+                btn.textContent = '确认';
+            }
+        }
+
+        // 返回
+        function goBack() {
+            window.history.back();
+        }
+
+        // 兑换明细
+        function goHistory() {
+            window.location.href = '/points-exchange-history.html';
+        }
+
+        // 点击遮罩关闭弹窗
+        document.getElementById('passwordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePasswordModal();
+            }
+        });
+    </script>
+</body>
+</html>

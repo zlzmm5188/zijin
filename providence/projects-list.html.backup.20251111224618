@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>PROVIDENCE · 固收优选系列</title>
+<style>
+/* ===== Design Tokens (与首页 v1.2 对齐) ===== */
+:root{
+  --navy-1:#08141f; --navy-2:#0d1d2b; --navy-3:#0a1723;
+  --ink:#0f172a; --muted:#6b7280; --muted-2:#8a95a6;
+  --paper:#f5f7fa; --card:#ffffff;
+  --lineD:rgba(255,255,255,.08); --lineL:#e3e7ee; --lineS:#eef1f5;
+  --gold:#9e8a57; --gold-2:#c8ba94;
+  --radius:14px; --radius-sm:12px;
+  --sh-soft:0 6px 22px rgba(6,12,18,.20);
+}
+
+*{box-sizing:border-box} html,body{height:100%}
+
+body{
+  margin:0; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  color:#e9eef6;
+  background:
+    radial-gradient(900px 420px at 120% -10%, rgba(158,138,87,.16), transparent 55%),
+    linear-gradient(180deg,var(--navy-3) 0%, var(--navy-2) 42%, var(--navy-1) 100%);
+  padding-bottom:120px; /* 为底部导航栏留出空间 */
+}
+
+/* 顶部栏 */
+.topbar{
+  position:sticky;top:0;z-index:40;padding:14px 16px;
+  background:linear-gradient(180deg,rgba(10,23,35,.95),rgba(10,23,35,.75));
+  backdrop-filter:blur(6px);border-bottom:1px solid var(--lineD);
+}
+
+.brand{display:flex;align-items:center;gap:10px}
+
+.logo{width:26px;height:26px;border-radius:8px;background:url('img/logo.png') center/contain no-repeat;background-color:transparent}
+
+.brand h1{margin:0;font-size:18px;letter-spacing:.3px;color:var(--gold2);font-weight:600}
+
+.badge{margin-left:auto;font-size:11px;padding:6px 10px;border-radius:999px;border:1px solid rgba(159,139,84,.4);background:rgba(159,139,84,.15);color:var(--gold2)}
+
+/* 标题 & 摘要 */
+.hero{padding:18px 16px 10px;border-bottom:1px solid var(--lineD)}
+
+.hero h2{margin:0 0 4px;font-size:20px;color:var(--gold-2)}
+
+.hero p{margin:0;color:#c8d2dd;font-size:13px}
+
+/* 筛选条 */
+.filters{
+  position:sticky;top:60px;z-index:35;
+  padding:10px 16px;background:linear-gradient(180deg,rgba(10,23,35,.92),rgba(10,23,35,.72));
+  border-bottom:1px solid var(--lineD);backdrop-filter:blur(6px);
+}
+
+.row{display:flex;gap:8px;flex-wrap:wrap}
+
+.chip{
+  font-size:12px;padding:8px 10px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--lineD);color:#d7ddea;background:rgba(255,255,255,.06);
+}
+
+.chip.active{color:#0b1220;border-color:rgba(158,138,87,.55);background:linear-gradient(180deg,#efe7d2,#e2d6b5)}
+
+.select{
+  appearance:none;background:rgba(255,255,255,.06);color:#e6edf6;border:1px solid var(--lineD);
+  border-radius:999px;padding:8px 12px;font-size:12px
+}
+
+/* 列表容器 */
+.wrap{max-width:880px;margin:0 auto}
+
+.list{padding:12px 16px}
+
+/* 单卡片 */
+.card{
+  background:linear-gradient(180deg,#ffffff,#f8f9fb);color:var(--ink);
+  border:1px solid var(--lineL);border-radius:var(--radius);box-shadow:0 4px 16px rgba(0,0,0,0.08);
+  padding:18px;margin-bottom:16px;
+  transition:all 0.3s ease;
+  cursor:pointer;
+}
+
+.card:hover{
+  transform:translateY(-2px);
+  box-shadow:0 8px 24px rgba(0,0,0,0.12);
+  border-color:rgba(158,138,87,0.3);
+}
+
+.head{display:flex;gap:10px;align-items:center}
+
+.badge-vip{margin-left:auto;font-size:11px;padding:4px 8px;border-radius:999px;color:#0b1220;
+  background:linear-gradient(180deg,#efe9d6,#e2d7b7);border:1px solid rgba(158,138,87,.45)}
+
+.title{margin:0;font-size:17px;color:#0f172a;font-weight:700;line-height:1.4}
+
+.sub{font-size:13px;color:#647086;margin-top:4px;font-weight:500}
+
+/* 指标 */
+.meta{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px
+}
+
+.kv{background:linear-gradient(135deg,#f8f9fb,#ffffff);border:1px solid var(--lineS);border-radius:12px;padding:14px;text-align:center;transition:all 0.2s ease}
+
+.kv:hover{background:linear-gradient(135deg,#ffffff,#f8f9fb);border-color:rgba(158,138,87,0.2)}
+
+.kv b{display:block;font-size:18px;color:#0f172a;font-weight:700;margin-bottom:4px}
+
+.kv small{font-size:12px;color:#6b7280;font-weight:500}
+
+/* PM 行 */
+.pm{display:flex;align-items:center;gap:10px;margin-top:14px;padding-top:14px;border-top:1px solid #f0f2f5}
+
+.pm img{
+  width:32px;height:32px;border-radius:50%;object-fit:cover;
+  border:2px solid rgba(158,138,87,.25);background:linear-gradient(180deg,#f8f6ee,#efe7d2);
+  box-shadow:0 2px 4px rgba(0,0,0,0.05);
+}
+
+.pm span{font-size:13px;color:#3e4754;font-weight:500}
+
+/* 标签和按钮同一行 */
+.tags-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:10px;flex-wrap:wrap}
+
+/* 标签行 */
+.tags{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+
+.tag{
+  font-size:11px;color:#394155;padding:6px 8px;border-radius:8px;border:1px dashed rgba(158,138,87,.45);
+  background:linear-gradient(180deg,rgba(158,138,87,.10),rgba(158,138,87,.04))
+}
+
+.tag.viponly{color:#0b1220;background:linear-gradient(180deg,#efe7d2,#e2d6b5);border:1px solid rgba(158,138,87,.55)}
+
+/* CTA 行 */
+.actions{display:flex;gap:10px;flex-shrink:0}
+
+.btn{
+  border-radius:12px;padding:8px 20px;font-size:13px;cursor:pointer;border:1px solid var(--lineL);background:#fff;color:#0f172a;white-space:nowrap
+}
+
+.btn.primary{
+  color:#0b1220;border:1px solid rgba(158,138,87,.55);
+  background:linear-gradient(180deg,#efe7d2,#e2d6b5);
+  font-weight:600;
+  transition:all 0.2s ease;
+}
+
+.btn.primary:hover{
+  transform:scale(1.02);
+  box-shadow:0 4px 12px rgba(158,138,87,0.25);
+}
+
+/* 页脚加载 */
+.loadmore{display:block;margin:16px auto 28px;padding:10px 14px;border-radius:12px;border:1px solid var(--lineD);
+  background:rgba(255,255,255,.06);color:#e6edf6;font-size:13px}
+
+@media(min-width:760px){.list{padding:16px}}
+
+/* 底部导航栏 */
+.tabbar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(11,59,94,0.98) 0%,rgba(18,76,106,0.98) 100%),url('img/photo_2025-10-20_05-38-52.jpg') center bottom/contain repeat-x;backdrop-filter:blur(10px);display:flex;justify-content:space-around;align-items:flex-end;border-top:1px solid rgba(212,175,55,0.2);height:65px;z-index:100;padding:2px 0 2px;box-shadow:0 -2px 16px rgba(0,0,0,.15)}
+
+.tab{width:20%;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;color:#8b9aa8;text-decoration:none;transition:color .2s ease;position:relative;padding:0;gap:0;-webkit-tap-highlight-color:transparent}
+
+.tab:active .ico{transform:scale(0.92)}
+
+.tab.active{color:#f5d771}
+
+.tab .ico{width:110px;height:110px;background-image:url('img/tab-icons-sprite.jpg');background-size:400% 400%;background-repeat:no-repeat;background-color:transparent;margin-bottom:0px;transition:transform .15s ease,opacity .15s ease;position:relative;border-radius:0;overflow:visible;will-change:transform,opacity}
+
+.tab:not(.active) .ico{opacity:0.7}
+
+.tab.active .ico{opacity:1;transform:scale(1.15)}
+
+.tab .txt{font-size:11px;font-weight:600;letter-spacing:0.3px;margin-top:-30px;line-height:1;padding-top:0;margin-bottom:2px}
+
+.ico-home{background-image:url('img/zy.png')!important;background-size:75%!important;background-position:center!important}
+
+.ico-finance{background-image:url('img/w1.png')!important;background-size:75%!important;background-position:center!important}
+
+.ico-market{background-image:url('img/xm.png')!important;background-size:75%!important;background-position:center!important}
+
+.ico-message{background-image:url('img/34.png')!important;background-size:75%!important;background-position:center!important}
+
+.ico-me{background-image:url('img/wd.png')!important;background-size:75%!important;background-position:center!important}
+</style>
+</head>
+<body>
+<!-- 顶部 -->
+<div class="topbar">
+  <div class="brand">
+    <div class="logo"></div>
+    <h1>PROVIDENCE</h1>
+    <div class="badge">固收优选系列</div>
+  </div>
+</div>
+
+<!-- 标题 -->
+<section class="hero wrap">
+  <h2>固收优选系列</h2>
+  <p>以固收为核心，覆盖可转债（深/沪）与低波动增强。强调回撤控制与资金效率。</p>
+</section>
+
+<!-- 筛选条 -->
+<div class="filters">
+  <div class="row wrap" style="gap:10px">
+    <div class="row" style="flex:1">
+      <div class="chip active" data-chip="all">全部</div>
+      <div class="chip" data-chip="ipo">IPO 配售</div>
+      <div class="chip" data-chip="bond">债券 / 可转债</div>
+      <div class="chip" data-chip="newbie">新手友好</div>
+      <div class="chip" data-chip="vip">VIP 专属</div>
+    </div>
+  </div>
+</div>
+
+<!-- 列表 -->
+<section class="list wrap" id="list">
+  <div id="loading" style="text-align:center;padding:40px;color:#c8d2dd;font-size:14px">加载中...</div>
+  <!-- 卡片将动态从后端API加载 -->
+  <button class="loadmore" id="more" style="display:none">加载更多</button>
+</section>
+
+<script src="config.js?v=1762554425"></script>
+<script>
+// 等待API对象加载
+function waitForAPI() {
+    return new Promise((resolve) => {
+        if (window.API && window.API_CONFIG) {
+            resolve();
+        } else {
+            const check = setInterval(() => {
+                if (window.API && window.API_CONFIG) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 50);
+            setTimeout(() => {
+                clearInterval(check);
+                resolve();
+            }, 3000);
+        }
+    });
+}
+
+// 项目数据
+let projectData = {
+    categories: [],
+    projects: []
+};
+
+// 筛选和排序
+const chips = document.querySelectorAll('.chip');
+const list  = document.getElementById('list');
+const loading = document.getElementById('loading');
+
+function applyFilter(){
+  const active = document.querySelector('.chip.active')?.dataset.chip || 'all';
+  [...list.querySelectorAll('.card')].forEach(card=>{
+    const type = card.dataset.type;
+    const isVip = card.dataset.vip === 'true';
+    let show = true;
+    if(active==='ipo') show = type==='ipo';
+    if(active==='bond') show = type==='bond';
+    if(active==='newbie') show = card.innerText.includes('新手友好');
+    if(active==='vip') show = isVip;
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+chips.forEach(c=>c.addEventListener('click',()=>{
+  chips.forEach(x=>x.classList.remove('active'));
+  c.classList.add('active'); applyFilter();
+}));
+
+// ========== 加载项目数据 ==========
+async function loadProjects() {
+    try {
+        await waitForAPI();
+        loading.style.display = 'block';
+
+        // 优先使用统一API封装
+        let data = null;
+        if (window.API && window.API.fund && window.API.fund.getList) {
+            const result = await window.API.fund.getList();
+            if (result.success && result.data) {
+                data = { code: 200, data: result.data, msg: 'ok' };
+            }
+        }
+
+        // 降级方案
+        if (!data) {
+            const API_BASE = window.API_CONFIG?.baseURL || 'https://api.frevix.top';
+            const response = await fetch(API_BASE + '/fund/project/all', {
+                headers: { 'Accept': 'application/json' }
+            });
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            data = await response.json();
+        }
+
+        if (data && (data.code === 200 || data.msg === 'ok') && data.data) {
+            projectData.categories = data.data;
+            projectData.projects = [];
+
+            // 提取所有项目
+            data.data.forEach(cat => {
+                if (cat.list && Array.isArray(cat.list)) {
+                    cat.list.forEach(p => {
+                        p.categoryName = cat.name;
+                        projectData.projects.push(p);
+                    });
+                }
+            });
+
+            renderProjects();
+            loading.style.display = 'none';
+        } else {
+            loading.textContent = '暂无项目数据';
+        }
+    } catch (error) {
+        console.error('[Load Projects]', error);
+        loading.textContent = '加载失败，请重试';
+    }
+}
+
+// ========== 渲染项目列表 ==========
+function renderProjects() {
+    // 清空现有内容（保留loading和more按钮）
+    const existingCards = list.querySelectorAll('.card');
+    existingCards.forEach(card => card.remove());
+
+    if (projectData.projects.length === 0) {
+        loading.textContent = '暂无项目';
+        loading.style.display = 'block';
+        return;
+    }
+
+    projectData.projects.forEach(project => {
+        const card = createProjectCard(project);
+        list.insertBefore(card, document.getElementById('more'));
+    });
+}
+
+// ========== 创建项目卡片 ==========
+function createProjectCard(project) {
+    const rate = parseFloat(project.rate || 0);
+    const vipRate = parseFloat(project.vip_rate || 0);
+    const totalRate = rate + vipRate;
+    const day = parseInt(project.day || 0);
+    const min = parseFloat(project.min || 0);
+    const max = parseFloat(project.max || 0);
+    const status = parseInt(project.status || 0);
+    const vipReq = parseInt(project.vip || 0);
+    const isVipOnly = vipReq > 0;
+    const clock = parseInt(project.clock || 0); // 是否倒计时项目
+    const added = parseFloat(project.added || 0); // 增值收益
+    const gift = parseFloat(project.gift || 0); // 红包收益
+
+    // 判断项目类型（根据分类名称或标题）
+    let type = 'bond';
+    const catName = (project.categoryName || '').toLowerCase();
+    const title = (project.title || '').toLowerCase();
+    if (catName.includes('ipo') || title.includes('ipo') || title.includes('配售')) type = 'ipo';
+    if (catName.includes('基金') || title.includes('基金') || title.includes('组合')) type = 'fund';
+    const isNewbie = title.includes('新手') || min <= 10000;
+
+    // 生成标签（根据实际数据）
+    const tags = [];
+    if (isVipOnly) tags.push({ text: 'VIP 专属', viponly: true });
+    if (isNewbie) tags.push({ text: '新手友好', viponly: false });
+    if (added > 0) tags.push({ text: '增值收益', viponly: false });
+    if (gift > 0) tags.push({ text: '红包收益', viponly: false });
+    if (clock === 1) tags.push({ text: '限时抢购', viponly: false });
+    if (status === 2) tags.push({ text: '已售罄', viponly: false });
+
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.dataset.type = type;
+    card.dataset.vip = isVipOnly ? 'true' : 'false';
+    card.dataset.yield = totalRate.toFixed(1);
+    card.dataset.cycle = day;
+    card.dataset.min = min;
+
+    const tagsHtml = tags.map(t =>
+        `<span class="tag ${t.viponly ? 'viponly' : ''}">${t.text}</span>`
+    ).join('');
+
+    // 格式化VIP标签
+    let vipBadge = '';
+    if (vipRate > 0) {
+        vipBadge = `<span class="badge-vip">VIP${vipReq}+ 加息至 ${totalRate.toFixed(1)}%</span>`;
+    } else if (isVipOnly) {
+        vipBadge = '<span class="badge-vip">VIP Only</span>';
+    }
+
+    // 格式化周期显示
+    const cycleText = day > 0 ? `${day} 个月` : '灵活';
+
+    // 格式化公司信息
+    const companyImage = project.company?.image || project.image || 'https://picsum.photos/seed/pm/60';
+    const companyName = project.company?.name || 'PROVIDENCE';
+
+    card.innerHTML = `
+    <div class="head">
+      <div>
+        <h3 class="title">${project.title || '投资项目'}</h3>
+        <div class="sub">${project.categoryName || project.catName || '固收优选'}</div>
+      </div>
+      ${vipBadge}
+    </div>
+    <div class="meta">
+      <div class="kv"><b>${cycleText}</b><small>投资周期</small></div>
+      <div class="kv"><b>¥ ${min.toLocaleString()}</b><small>起投金额</small></div>
+    </div>
+    <div class="pm">
+      <img src="${companyImage}" alt="" onerror="this.src='https://picsum.photos/seed/pm/60'">
+      <span>${companyName} · 项目负责人</span>
+    </div>
+    <div class="tags-actions">
+      <div class="tags">
+        ${tagsHtml || '<span class="tag">稳健收益</span>'}
+      </div>
+      <div class="actions">
+        <button class="btn primary" onclick="location.href='project-detail.html?id=${project.id}'">查看详情</button>
+      </div>
+    </div>
+    `;
+
+    return card;
+}
+
+// ========== 初始化 ==========
+document.addEventListener('DOMContentLoaded', () => {
+    loadProjects();
+});
+</script>
+
+<!-- 底部导航栏 -->
+<nav class="tabbar" id="tabbar">
+    <a class="tab" data-tab="home" href="index.html">
+        <div class="ico ico-home"></div>
+        <div class="txt">首页</div>
+    </a>
+    <a class="tab" data-tab="market" href="market.html">
+        <div class="ico ico-finance"></div>
+        <div class="txt">数据</div>
+    </a>
+    <a class="tab active" data-tab="project" href="projects.html">
+        <div class="ico ico-market"></div>
+        <div class="txt">项目</div>
+    </a>
+    <a class="tab" data-tab="news" href="messages.html">
+        <div class="ico ico-message"></div>
+        <div class="txt">消息</div>
+    </a>
+    <a class="tab" data-tab="me" href="profile.html">
+        <div class="ico ico-me"></div>
+        <div class="txt">我的</div>
+    </a>
+</nav>
+</body>
+</html>

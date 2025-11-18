@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0"
+    />
+    <meta name="format-detection" content="telephone=no" />
+    <title>积分兑换记录 - Providence</title>
+    <link rel="stylesheet" href="styles.css?v=1763343791" />
+    <style>
+      :root {
+        --gold: #dcb24f;
+        --gold2: #f5d771;
+        --goldLight: #ffe6aa;
+        --goldDark: #a3791d;
+        --ink: #0f172a;
+        --lineD: rgba(255, 255, 255, 0.08);
+        --lineL: #e5e7eb;
+      }
+
+      * {
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+      }
+
+      body,
+      p,
+      span,
+      label,
+      input,
+      small,
+      strong,
+      button,
+      .text-default {
+        color: rgba(255, 255, 255, 0.85);
+        -webkit-font-smoothing: antialiased;
+        font-smoothing: antialiased;
+      }
+
+      html,
+      body {
+        color: rgba(255, 255, 255, 0.85);
+        -webkit-font-smoothing: antialiased;
+        font-smoothing: antialiased;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        overflow-x: hidden;
+      }
+
+      body {
+        background: linear-gradient(
+          180deg,
+          #0a1723 0%,
+          #0f1c2a 100%
+        ) !important;
+        padding-bottom: 65px !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      /* 顶部导航栏 */
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        background: linear-gradient(
+          180deg,
+          rgba(10, 23, 35, 0.95),
+          rgba(10, 23, 35, 0.75)
+        );
+        backdrop-filter: blur(6px);
+        padding: 3vw 4vw;
+        display: flex;
+        align-items: center;
+        border-bottom: 1px solid var(--lineD);
+      }
+
+      .back-btn {
+        width: 8.5vw;
+        height: 8.5vw;
+        min-width: 32px;
+        min-height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #fff;
+        font-size: 5vw;
+        text-decoration: none;
+        flex-shrink: 0;
+      }
+
+      .brand h1 {
+        margin: 0;
+        font-size: 4.5vw;
+        letter-spacing: 0.3px;
+        color: #fff;
+        font-weight: 600;
+        flex: 1;
+        text-align: center;
+      }
+
+      /* 记录列表 */
+      .records-list {
+        margin: 3vw 4vw;
+      }
+
+      .record-item {
+        background: rgba(16, 27, 45, 0.92);
+        border: 1px solid rgba(220, 178, 79, 0.3);
+        border-radius: 12px;
+        padding: 3vw;
+        margin-bottom: 2.5vw;
+      }
+
+      .record-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 2vw;
+      }
+
+      .record-amount {
+        display: flex;
+        align-items: baseline;
+        gap: 1vw;
+      }
+
+      .points-value {
+        font-size: 4.5vw;
+        font-weight: 700;
+        color: var(--goldLight);
+      }
+
+      .arrow {
+        font-size: 3.5vw;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .money-value {
+        font-size: 4vw;
+        font-weight: 600;
+        color: #26a17b;
+      }
+
+      .record-status {
+        padding: 1vw 2.5vw;
+        background: rgba(38, 161, 123, 0.15);
+        border: 1px solid rgba(38, 161, 123, 0.3);
+        border-radius: 12px;
+        font-size: 2.8vw;
+        color: #7dd3bb;
+      }
+
+      .record-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 2.8vw;
+        color: rgba(255, 255, 255, 0.6);
+      }
+
+      .record-time {
+        display: flex;
+        align-items: center;
+        gap: 1vw;
+      }
+
+      .record-id {
+        font-family: monospace;
+      }
+
+      /* 空状态 */
+      .empty-state {
+        text-align: center;
+        padding: 10vw 4vw;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .empty-icon {
+        font-size: 12vw;
+        margin-bottom: 3vw;
+      }
+
+      .empty-text {
+        font-size: 3.5vw;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 顶部导航 -->
+    <div class="topbar">
+      <a href="points-exchange.html" class="back-btn">‹</a>
+      <div class="brand">
+        <h1>积分兑换记录</h1>
+      </div>
+      <div style="width: 8.5vw; min-width: 32px"></div>
+    </div>
+
+    <!-- 记录列表 -->
+    <div class="records-list" id="recordsList">
+      <div class="empty-state">
+        <div class="empty-icon">📊</div>
+        <div class="empty-text">加载中...</div>
+      </div>
+    </div>
+
+    <script src="config.js?v=1763365517"></script>
+    <script src="ios-toast.js?v=17630668562427b227"></script>
+    <script>
+      let currentFilter = "all";
+      let allRecords = [];
+
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!ApiService.auth.ensureLogin()) return;
+        loadRecords();
+      });
+
+      async function loadRecords() {
+        try {
+          const res = await fetch(
+            "https://apis.copla.top/index.php/user/points/exchange-history",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+                token:
+                  localStorage.getItem("providence_token") ||
+                  localStorage.getItem("token") ||
+                  "",
+              },
+            }
+          );
+
+          const result = await res.json();
+
+          if (result.code === 1 && result.data) {
+            allRecords = result.data.list || [];
+            renderRecords(allRecords);
+          } else {
+            showEmptyState("暂无兑换记录");
+          }
+        } catch (e) {
+          console.error("加载兑换记录失败:", e);
+          showEmptyState("加载失败，请重试");
+        }
+      }
+
+      function renderRecords(records) {
+        if (!records || records.length === 0) {
+          showEmptyState("暂无兑换记录");
+          return;
+        }
+
+        const html = records
+          .map(
+            (record) => `
+                <div class="record-item">
+                    <div class="record-header">
+                        <div class="record-amount">
+                            <span class="points-value">${(record.points || 0).toLocaleString()}</span>
+                            <span class="arrow">→</span>
+                            <span class="money-value">¥${(record.amount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="record-status">已完成</div>
+                    </div>
+                    <div class="record-footer">
+                        <div class="record-time">
+                            <span>🕐</span>
+                            <span>${record.created_at || "-"}</span>
+                        </div>
+                        <div class="record-id">#${record.id || "-"}</div>
+                    </div>
+                </div>
+            `
+          )
+          .join("");
+
+        document.getElementById("recordsList").innerHTML = html;
+      }
+
+      function showEmptyState(message) {
+        document.getElementById("recordsList").innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <div class="empty-text">${message}</div>
+                </div>
+            `;
+      }
+    </script>
+  </body>
+</html>

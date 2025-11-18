@@ -1,0 +1,30 @@
+<?php
+/**
+ * 邀请信息 - 优化版（返回UID）
+ * GET /user/user/invite
+ */
+require_once __DIR__ . './../../config/bootstrap.php';
+
+$authUser = Auth::user();
+if (!$authUser) {
+    Response::error('未登录或登录已过期', 401);
+}
+
+$db = Database::getInstance();
+
+$user = $db->fetchOne("SELECT uid, invite_code FROM " . $db->getPrefix() . "users WHERE id = :id", ['id' => $authUser['user_id']]);
+
+// 统计邀请数据
+$directCount = $db->count('users', 'parent_id = :id', ['id' => $authUser['user_id']]);
+
+// 使用UID作为主要邀请标识
+$inviteId = $user['uid'] ?? $user['invite_code'];
+
+Response::success([
+    'uid' => $user['uid'],                          // 用户UID（8位数字）
+    'invite_code' => $user['invite_code'],      // 备用邀请码
+    'invite' => $inviteId,                           // 主要邀请ID（优先uid）
+    'invite_url' => 'https://' . $user['uid'] . '.'. $_SERVER['HTTP_HOST'],
+    'direct_count' => $directCount,
+    'total_reward' => 0 // TODO: 统计总奖励
+]);

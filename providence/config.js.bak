@@ -1,0 +1,303 @@
+// =============================================
+// 智能拦截器版本: 20250117-FIXED
+// =============================================
+console.log('%c🚀 Config.js 已加载 [版本: 20250117-FIXED]', 'color: #4CAF50; font-size: 16px; font-weight: bold');
+console.log('%c📍 如果看到这条消息，说明config.js成功加载', 'color: #2196F3');
+console.log('%c✅ API地址已更新为: apis.copla.top', 'color: #00FF00; font-weight: bold');
+
+// ===================================
+// Providence 前台通用 API 配置
+// 重建时间：2025-11-12
+// ===================================
+
+const API_CONFIG = {
+    SPLASH_DOMAIN: 'https://sen.wyzyrx.cn',
+  baseURL: 'https://apis.copla.top',
+  adminURL: 'https://apis.copla.top/octohoutai.php',
+  tokenKey: 'providence_token',
+  timeout: 15000,
+  debug: false
+};
+
+class HttpClient {
+  constructor(config) {
+    this.baseURL = config.baseURL;
+    this.timeout = config.timeout;
+    this.debug = config.debug;
+  }
+
+  getToken() {
+    try {
+      return localStorage.getItem(API_CONFIG.tokenKey) || '';
+    } catch (err) {
+      console.warn('getToken fail', err);
+      return '';
+    }
+  }
+
+  buildHeaders(extra = {}) {
+    const headers = {
+      'Content-Type': 'application/json',
+      ...extra
+    };
+    const token = this.getToken();
+    if (token) headers['Authorization'] = token;
+    return headers;
+  }
+
+  async request(method, url, body = null, extraHeaders = {}) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+    const options = {
+      method,
+      headers: this.buildHeaders(extraHeaders),
+      signal: controller.signal
+    };
+    if (body) options.body = JSON.stringify(body);
+
+    let response;
+    let result;
+    try {
+      if (this.debug) {
+        console.log('[HTTP] request', method, url, body);
+      }
+      response = await fetch(this.baseURL + url, options);
+      const text = await response.text();
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch (err) {
+        if (this.debug) {
+          console.error('[HTTP] JSON parse error', err, text);
+        }
+        throw new Error('响应解析失败');
+      }
+      return {
+        status: response.status,
+        ok: response.ok,
+        data: result
+      };
+    } finally {
+      clearTimeout(timeoutId);
+    }
+  }
+
+  async get(url, params = {}, extraHeaders = {}) {
+    const query = new URLSearchParams(params).toString();
+    const fullUrl = query ? `${url}?${query}` : url;
+    return this.request('GET', fullUrl, null, extraHeaders);
+  }
+
+  async post(url, data = {}, extraHeaders = {}) {
+    return this.request('POST', url, data, extraHeaders);
+  }
+}
+
+const http = new HttpClient(API_CONFIG);
+
+const ApiService = {
+  auth: {
+    saveToken(token) {
+      try {
+        localStorage.setItem(API_CONFIG.tokenKey, token || '');
+      } catch (err) {
+        console.warn('saveToken fail', err);
+      }
+    },
+    clearToken() {
+      try {
+        localStorage.removeItem(API_CONFIG.tokenKey);
+      } catch (err) {
+        console.warn('clearToken fail', err);
+      }
+    },
+    ensureLogin() {
+      const token = localStorage.getItem(API_CONFIG.tokenKey);
+      if (!token) {
+        window.location.href = 'login.html';
+        return false;
+      }
+      return true;
+    }
+  },
+
+  ribao: {
+    async getInfo() {
+      const res = await http.get('/user/ribao/info');
+      return res.data || {};
+    },
+    async transferIn(payload) {
+      const res = await http.post('/user/ribao/transfer-in', payload);
+      return res.data || {};
+    },
+    async transferOut(payload) {
+      const res = await http.post('/user/ribao/transfer-out', payload);
+      return res.data || {};
+    },
+    async getRecords(params = {}) {
+      const res = await http.get('/user/ribao/records', params);
+      return res.data || {};
+    }
+  },
+
+  points: {
+    async getBalance() {
+      const res = await http.get('/user/points-balance');
+      return res.data || {};
+    },
+    async exchange(payload) {
+      const res = await http.post('/user/points-exchange', payload);
+      return res.data || {};
+    },
+    async getLogs(params = {}) {
+      const res = await http.get('/points/logs', params);
+      return res.data || {};
+    }
+  },
+
+  finance: {
+    async getUserBalance() {
+      // 从用户信息接口获取余额
+      const res = await http.get('/api/user/info.php');
+      return res.data || {};
+    },
+    async recharge(payload) {
+      // 使用用户充值接口
+      const res = await http.post('/api/user/recharge.php', payload);
+      return res.data || {};
+    },
+    async withdraw(payload) {
+      const res = await http.post('/pay/withdraw', payload);
+      return res.data || {};
+    },
+    async getBankList() {
+      const res = await http.get('/pay/bank-list');
+      return res.data || {};
+    },
+    async getUsdtInfo() {
+      const res = await http.get('/pay/usdt-info');
+      return res.data || {};
+    }
+  }
+};
+
+window.ApiService = ApiService;
+window.httpClient = http;
+
+// ==========================================
+
+// 页面加载时检查 Token
+// Token 失效全局拦截器 - 增强调试版本
+// ==========================================
+(function() {
+  // 保存原始 fetch
+  const originalFetch = window.fetch;
+
+  // API白名单 - 这些API的Token错误不会触发强制退出
+  const WHITELIST_APIS = [
+    '/api/finance/ribao-',  // 日利宝相关API
+    '/api/user/profile.php', // 个人信息
+  ];
+
+  window.fetch = async function(...args) {
+    try {
+      const response = await originalFetch.apply(this, args);
+
+      // 获取请求URL
+      const url = typeof args[0] === 'string' ? args[0] : args[0].url;
+
+      console.log('%c[拦截器] 拦截到请求:', 'color: #2196F3', url);
+
+      // 检查是否在白名单中
+      const isWhitelisted = WHITELIST_APIS.some(pattern => {
+        const matched = url.includes(pattern);
+        console.log(`[拦截器] 检查白名单: "${pattern}" -> ${matched ? '✅匹配' : '❌不匹配'}`);
+        return matched;
+      });
+
+      console.log(`[拦截器] URL白名单状态: ${isWhitelisted ? '✅在白名单中' : '❌不在白名单中'}`);
+
+      // 克隆响应以便读取
+      const clonedResponse = response.clone();
+
+      try {
+        const data = await clonedResponse.json();
+
+        console.log('[拦截器] API响应:', {
+          url: url.substring(url.lastIndexOf('/') + 1),
+          code: data.code,
+          msg: data.msg
+        });
+
+        // 检查 Token 失效
+        const hasTokenError = data.code === -1 &&
+            (data.msg.includes('登录') ||
+             data.msg.includes('token') ||
+             data.msg.includes('认证'));
+
+        if (hasTokenError) {
+          console.log('%c[拦截器] 检测到Token错误！', 'color: #FF9800; font-weight: bold');
+
+          if (isWhitelisted) {
+            console.warn('%c[拦截器] ✅ API在白名单中，跳过强制退出', 'color: #4CAF50; font-size: 14px; font-weight: bold');
+            console.warn('[拦截器] URL:', url);
+            console.warn('[拦截器] 错误信息:', data.msg);
+          } else {
+            console.log('%c[拦截器] ❌ API不在白名单，将清除Token并跳转', 'color: #F44336; font-size: 14px; font-weight: bold');
+            console.log('[拦截器] URL:', url);
+            console.log('[拦截器] 响应:', data);
+
+            // 清除本地存储
+            localStorage.removeItem('token');
+            localStorage.removeItem('userInfo');
+
+            // 显示提示
+            if (typeof showToast === 'function') {
+              showToast('登录已过期，请重新登录');
+            } else {
+              alert('登录已过期，请重新登录');
+            }
+
+            // 延迟跳转
+            setTimeout(() => {
+              window.location.href = '/login.html';
+            }, 1500);
+          }
+        }
+      } catch (e) {
+        // JSON 解析失败，忽略
+        console.debug('[拦截器] JSON解析失败（可能是非JSON响应）');
+      }
+
+      return response;
+    } catch (error) {
+      console.error('[拦截器] 请求失败:', error);
+      throw error;
+    }
+  };
+
+  console.log('%c[拦截器] Token失效拦截器已启动（增强调试模式）', 'color: #4CAF50; font-size: 14px; font-weight: bold');
+  console.log('[拦截器] 白名单:', WHITELIST_APIS);
+})();
+(function() {
+  // 需要登录的页面列表
+  const requireAuthPages = [
+    'profile.html',
+    'recharge.html',
+    'withdraw.html',
+    'my-investments.html',
+    'ribao.html',
+    'team-rewards.html',
+    'bank-cards.html'
+  ];
+
+  const currentPage = window.location.pathname.split('/').pop();
+
+  if (requireAuthPages.includes(currentPage)) {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      console.log('[拦截器] 未登录，跳转登录页');
+      window.location.href = '/login.html';
+    }
+  }
+})();

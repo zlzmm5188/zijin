@@ -1,0 +1,81 @@
+<?php
+/**
+ * 获取VIP升级进度
+ * GET /user/vip/progress
+ */
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+// 验证用户登录
+$authUser = Auth::user();
+if (!$authUser) {
+    Response::error('未登录或登录已过期', 401);
+}
+
+$userId = $authUser['user_id'];
+$db = Database::getInstance();
+
+try {
+    // 获取用户当前VIP等级和累计投资
+    $user = $db->fetchOne(
+        "SELECT vip_level, total_invest FROM users WHERE id = :id",
+        ['id' => $userId]
+    );
+
+    if (!$user) {
+        Response::error('用户不存在');
+    }
+
+    $currentLevel = (int)($user['vip_level'] ?? 0);
+    $totalInvest = (float)($user['total_invest'] ?? 0);
+
+    // 获取下一级VIP要求
+    $nextLevel = $currentLevel + 1;
+    $nextLevelRule = $db->fetchOne(
+        "SELECT level, min_total_invest, vip_extra_rate FROM vip_level_rules WHERE level = :level",
+        ['level' => $nextLevel]
+    );
+
+    if (!$nextLevelRule) {
+        // 已经是最高等级
+        Response::success([
+            'current_level' => $currentLevel,
+            'total_invest' => $totalInvest,
+            'next_level' => $currentLevel,
+            'need_invest' => 0,
+            'progress_percent' => 100,
+            'is_max_level' => true
+        ]);
+    }
+
+    $needInvest = (float)$nextLevelRule['min_total_invest'];
+    $currentLevelMinInvest = 0;
+
+    // 获取当前等级的最低投资要求
+    if ($currentLevel > 0) {
+        $currentLevelRule = $db->fetchOne(
+            "SELECT min_total_invest FROM vip_level_rules WHERE level = :level",
+            ['level' => $currentLevel]
+        );
+        $currentLevelMinInvest = (float)($currentLevelRule['min_total_invest'] ?? 0);
+    }
+
+    // 计算进度百分比
+    $progressPercent = 0;
+    if ($needInvest > $currentLevelMinInvest) {
+        $progressPercent = min(100, (($totalInvest - $currentLevelMinInvest) / ($needInvest - $currentLevelMinInvest)) * 100);
+    }
+
+    Response::success([
+        'current_level' => $currentLevel,
+        'total_invest' => $totalInvest,
+        'next_level' => $nextLevel,
+        'need_invest' => max(0, $needInvest - $totalInvest),
+        'next_level_min_invest' => $needInvest,
+        'progress_percent' => round($progressPercent, 2),
+        'is_max_level' => false
+    ]);
+
+} catch (Exception $e) {
+    error_log("获取VIP进度API错误: " . $e->getMessage());
+    Response::error('获取VIP进度失败: ' . $e->getMessage());
+}

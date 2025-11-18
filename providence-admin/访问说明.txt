@@ -1,0 +1,111 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║           PROVIDENCE 后台系统 - 访问说明                        ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+�� 正确的访问方式
+
+【方法1：通过主框架访问（推荐）】
+
+1️⃣  首先访问登录页面：
+   https://houtai.frevix.top/admin/login.html
+
+2️⃣  登录后会自动跳转到主界面：
+   https://houtai.frevix.top/admin/index.html
+
+3️⃣  在主界面左侧菜单点击，所有功能都会在iframe中加载
+
+【方法2：直接访问根域名（会自动跳转）】
+
+访问: https://houtai.frevix.top/
+会自动跳转到: https://houtai.frevix.top/admin/login.html
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+❌ 错误的访问方式
+
+✗ https://houtai.frevix.top/vip.html        (404 - 文件不在根目录)
+✗ https://houtai.frevix.top/users.html      (404 - 文件不在根目录)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 正确的访问方式
+
+✓ https://houtai.frevix.top/admin/login.html     (登录页)
+✓ https://houtai.frevix.top/admin/index.html     (主界面)
+✓ https://houtai.frevix.top/admin/vip.html       (VIP管理)
+✓ https://houtai.frevix.top/admin/users.html     (用户管理)
+
+或者在主界面的左侧菜单中点击各个功能模块
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📂 目录结构说明
+
+/www/wwwroot/providence-admin/
+├── admin/              ← 管理后台所有页面都在这里
+│   ├── login.html     ← 登录页（入口）
+│   ├── index.html     ← 主框架
+│   ├── vip.html       ← VIP管理
+│   ├── users.html     ← 用户管理
+│   └── ...            ← 其他页面
+├── api/               ← API接口目录
+└── index.html         ← 自动跳转页
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 宝塔面板配置建议
+
+【推荐配置】
+网站根目录设置为: /www/wwwroot/providence-admin/admin
+
+这样可以直接访问:
+https://houtai.frevix.top/vip.html
+https://houtai.frevix.top/users.html
+
+【当前配置】
+如果根目录是: /www/wwwroot/providence-admin/
+
+那么需要访问:
+https://houtai.frevix.top/admin/vip.html
+https://houtai.frevix.top/admin/users.html
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📋 所有可用页面（17个）
+
+1.  login.html          登录页面
+2.  index.html          主框架
+3.  dashboard.html      数据概览
+4.  users.html          用户管理
+5.  vip.html            VIP等级管理 ← 您要访问的
+6.  projects.html       项目管理
+7.  managers.html       项目经理
+8.  orders.html         投资订单
+9.  recharge.html       充值审核
+10. withdraw.html       提现审核
+11. balance.html        资金流水
+12. news.html           新闻快讯
+13. company-news.html   公司动态
+14. education.html      投资课堂
+15. stats.html          统计报表
+16. config.html         系统配置
+17. admins.html         管理员
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🚀 快速开始
+
+1. 访问: https://houtai.frevix.top/admin/login.html
+2. 登录: admin / admin123
+3. 在主界面左侧菜单中点击各个功能模块
+
+或者修改宝塔面板的网站根目录为:
+/www/wwwroot/providence-admin/admin
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+© 2024 PROVIDENCE

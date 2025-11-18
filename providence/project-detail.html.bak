@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>PROVIDENCE · 认购详情</title>
+  <link rel="icon" href="favicon.ico">
+  <script src="gestures.js?v=1762754400"></script>
+  <script src="ios-toast.js?v=17630668562427b227h"></script>
+  <style>
+    :root {
+      --navy-1: #08141f;
+      --navy-2: #0d1d2b;
+      --navy-3: #0a1723;
+      --ink: #0f172a;
+      --muted: #6b7280;
+      --muted2: #8a95a6;
+      --paper: #f6f8fb;
+      --card: #ffffff;
+      --lineD: rgba(255, 255, 255, .10);
+      --lineL: #e5e9f0;
+      --lineS: #eef2f7;
+      --gold: #9e8a57;
+      --gold2: #c8ba94;
+      --radius: 16px;
+      --radius-sm: 12px;
+      --sh: 0 8px 28px rgba(6, 12, 18, .22);
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(1200px 520px at 120% -10%, rgba(158, 138, 87, .16), transparent 55%),
+        linear-gradient(180deg, var(--navy-3) 0%, var(--navy-2) 42%, var(--navy-1) 100%);
+      color: #e9eef6;
+      padding-bottom: 180px; /* 增加底部padding，避免申请认购按钮遮住项目经理 */
+    }
+
+    /* 顶栏 */
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, rgba(10, 23, 35, .96), rgba(10, 23, 35, .78));
+      border-bottom: 1px solid var(--lineD);
+      backdrop-filter: blur(6px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      max-width: 980px;
+      margin: 0 auto
+    }
+
+    .back-btn {
+      width: 32px;
+      height: 32px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, .08);
+      color: #fff;
+      font-size: 20px;
+      cursor: pointer;
+      border: none;
+      text-decoration: none
+    }
+
+    .back-btn:active {
+      transform: scale(0.95)
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-size: 16px;
+      flex: 1;
+      text-align: center;
+      color: #c8ba94
+    }
+
+    .badge {
+      margin-left: auto;
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      color: #0b1220;
+      background: linear-gradient(180deg, #efe9d6, #e2d7b7);
+      border: 1px solid rgba(158, 138, 87, .45)
+    }
+
+    /* 容器 */
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px
+    }
+
+    /* Hero 指标 */
+    .hero {
+      margin: 12px 0;
+      padding: 18px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, .03));
+      border: 1px solid var(--lineD);
+    }
+
+    .titleRow {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px
+    }
+
+    .titleBox h2 {
+      margin: 0;
+      font-size: 22px;
+      color: var(--gold2)
+    }
+
+    .titleBox small {
+      display: block;
+      margin-top: 6px;
+      color: #cbd6e3
+    }
+
+    .kpis {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-top: 12px
+    }
+
+    .kv {
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--lineD);
+      border-radius: 12px;
+      padding: 10px;
+      text-align: center
+    }
+
+    .kv b {
+      display: block;
+      color: #fff;
+      font-size: 18px
+    }
+
+    .kv small {
+      color: #aeb8c6;
+      font-size: 11px
+    }
+
+    .progress {
+      margin-top: 12px
+    }
+
+    .bar {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, .12);
+      overflow: hidden
+    }
+
+    .bar i {
+      display: block;
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold2), var(--gold));
+      width: 0%
+    }
+
+    .pRow {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #c8d2df;
+      margin-top: 6px
+    }
+
+    /* 白卡模块 */
+    .section {
+      background: linear-gradient(180deg, #f7f9fc, #f3f6fa);
+      color: var(--ink);
+      border: 1px solid var(--lineL);
+      border-radius: var(--radius);
+      box-shadow: var(--sh);
+      margin: 14px 0;
+      overflow: hidden
+    }
+
+    .sec-hd {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--lineS);
+      display: flex;
+      align-items: center;
+      gap: 10px
+    }
+
+    .sec-hd h3 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 16px
+    }
+
+    .sec-bd {
+      padding: 14px 16px
+    }
+
+    .row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap
+    }
+
+    /* 余额条 */
+    .wallet {
+      background: #fff;
+      border: 1px solid var(--lineS);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .wallet b {
+      color: #0f172a;
+      font-size: 16px
+    }
+
+    .wallet small {
+      color: #6b7280
+    }
+
+    .btn-sm {
+      padding: 8px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(158, 138, 87, .45);
+      background: linear-gradient(180deg, #efe7d2, #e2d6b5);
+      color: #0b1220;
+      cursor: pointer;
+      font-size: 13px;
+      border: none
+    }
+
+    .btn-sm:active {
+      transform: scale(0.98)
+    }
+
+    /* VIP条 */
+    .vip {
+      background: #fff;
+      border: 1px solid var(--lineS);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px
+    }
+
+    .vip b {
+      color: #0f172a
+    }
+
+    .vip small {
+      color: #6b7280
+    }
+
+    /* 输入与计算 */
+    .formRow {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px
+    }
+
+    @media (min-width: 640px) {
+      .formRow {
+        grid-template-columns: 1fr 1fr
+      }
+    }
+
+    .input {
+      background: #fff;
+      border: 1px solid var(--lineS);
+      border-radius: 12px;
+      padding: 12px
+    }
+
+    .input label {
+      display: block;
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 6px
+    }
+
+    .input input {
+      width: 100%;
+      border: none;
+      outline: none;
+      font-size: 18px;
+      color: #0f172a
+    }
+
+    .calc {
+      background: #fff;
+      border: 1px solid var(--lineS);
+      border-radius: 12px;
+      padding: 12px
+    }
+
+    .calc .kvline {
+      display: flex;
+      justify-content: space-between;
+      margin: 6px 0;
+      color: #3e4754;
+      flex-wrap: wrap;
+      gap: 4px
+    }
+
+    .calc .kvline span {
+      font-size: 12px;
+      flex: 1;
+      min-width: 120px
+    }
+
+    .calc .kvline b {
+      color: #0f172a;
+      font-weight: 600;
+      font-size: 14px
+    }
+
+    .warn {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #b54747
+    }
+
+    /* PM 一行短介绍 */
+    .pmline {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #fff;
+      border: 1px solid var(--lineS);
+      border-radius: 12px;
+      padding: 10px
+    }
+
+    .pmline img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 1px solid rgba(158, 138, 87, .35);
+      background: linear-gradient(180deg, #f8f6ee, #efe7d2)
+    }
+
+    .pmline small {
+      color: #616b79
+    }
+
+    /* 加载状态 */
+    .loading-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #c8d2dd
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid rgba(200, 186, 148, .2);
+      border-top-color: var(--gold2);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 12px
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg)
+      }
+    }
+
+    /* 底部 CTA */
+    .cta {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 50;
+      padding: 12px 16px;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, .94));
+      border-top: 1px solid var(--lineD);
+      display: flex;
+      gap: 10px
+    }
+
+    .btn {
+      flex: 1;
+      display: block;
+      padding: 14px;
+      border-radius: 14px;
+      font-size: 16px;
+      cursor: pointer;
+      text-align: center;
+      border: none
+    }
+
+    .btn.ghost {
+      border: 1px solid var(--lineD);
+      background: rgba(255, 255, 255, .06);
+      color: #e9eef6
+    }
+
+    .btn.primary {
+      color: #0b1220;
+      border: 1px solid rgba(158, 138, 87, .55);
+      background: linear-gradient(180deg, #efe7d2, #e2d6b5)
+    }
+
+    .btn:active {
+      transform: scale(0.98)
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      transform: translateX(-50%);
+      bottom: 90px;
+      background: rgba(0, 0, 0, .72);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      display: none;
+      z-index: 100
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="brand">
+      <a href="javascript:history.back()" class="back-btn-policy">‹</a>
+      <h1>认购详情</h1>
+      <div style="width:32px;"></div>
+    </div>
+  </div>
+
+  <div class="wrap">
+
+    <!-- 项目核心指标 -->
+    <section class="hero">
+      <div class="titleRow">
+        <div class="titleBox">
+          <h2 id="projName">加载中...</h2>
+          <small id="projSub">正在加载项目信息</small>
+        </div>
+      </div>
+      <div class="kpis">
+        <div class="kv"><b id="cycle">—</b><small>投资周期</small></div>
+        <div class="kv"><b id="rateVip">—</b><small>VIP额外加息</small></div>
+        <div class="kv"><b id="maxAmt">—</b><small>封顶金额</small></div>
+        <div class="kv"><b id="minAmt">—</b><small>起投金额</small></div>
+      </div>
+      <div class="progress">
+        <div class="bar"><i id="prog" style="width:0%"></i></div>
+        <div class="pRow"><span>募集进度 <span id="progTxt">0%</span></span><span>剩余额度 <span id="remainTxt">—</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 认购输入 / 实时计算 -->
+    <section class="section">
+      <div class="sec-hd">
+        <h3>填写认购信息</h3>
+      </div>
+      <div class="sec-bd">
+        <div class="formRow">
+          <div class="input">
+            <label>认购金额（CNY）</label>
+            <input id="amount" type="number" placeholder="请输入金额，如 10000" min="0" step="100" />
+          </div>
+          <div class="calc">
+            <div class="kvline"><span>实际年化（含VIP）：</span><b id="rateEff">—</b></div>
+            <div class="kvline"><span>预计周期收益：</span><b id="estIncome">—</b></div>
+            <div class="kvline"><span>预计到期本息：</span><b id="estTotal">—</b></div>
+          </div>
+        </div>
+        <div id="warn" class="warn" style="display:none;"></div>
+      </div>
+    </section>
+
+    <!-- PM 简介（信任背书） -->
+    <section class="section">
+      <div class="sec-hd">
+        <h3>项目经理</h3>
+      </div>
+      <div class="sec-bd">
+        <div class="pmline" id="pmInfo" style="cursor:pointer;" onclick="showManagerDetail()">
+          <img src="img/user-avatar-default.svg" alt="">
+          <div>
+            <b>加载中...</b>
+            <div><small>正在加载</small></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- 底部 CTA -->
+  <div class="cta">
+    <div style="flex:1;display:flex;align-items:center;gap:8px;font-size:14px;color:#c8ba94">
+      <span>余额：</span>
+      <b style="color:#fff;font-size:16px;font-weight:600" id="balance">加载中…</b>
+    </div>
+    <button class="btn primary" id="applyBtn">申请认购</button>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="config.js?v=1763365517"></script>
+  <script src="project-detail-managers-data.js?v=1762754400"></script>
+  <script src="project-detail.js?v=1762902592"></script>
+</body>
+
+</html>

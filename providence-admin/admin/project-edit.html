@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>编辑项目 - Providence</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1d29;
+        }
+
+        .form-container {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .form-section {
+            margin-bottom: 32px;
+        }
+
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1d29;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+        }
+
+        .form-grid-full {
+            grid-column: 1 / -1;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-label.required::after {
+            content: '*';
+            color: var(--danger);
+            margin-left: 4px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-hint {
+            display: block;
+            font-size: 12px;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052cc;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-content {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-title" id="pageTitle">添加项目</h1>
+        <button class="btn btn-secondary" onclick="history.back()">返回列表</button>
+    </div>
+
+    <form class="form-container" id="projectForm" onsubmit="return submitForm(event)">
+        <input type="hidden" id="projectId" name="id" value="">
+
+        <!-- 基本信息 -->
+        <div class="form-section">
+            <h2 class="section-title">基本信息</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label required">项目名称</label>
+                    <input type="text" class="form-input" name="title" id="title" required>
+                    <span class="form-hint">用户看到的项目标题</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">项目编号</label>
+                    <input type="text" class="form-input" name="project_code" id="project_code">
+                    <span class="form-hint">留空自动生成，格式：PRJ20241110001</span>
+                </div>
+
+                <div class="form-group form-grid-full">
+                    <label class="form-label">副标题</label>
+                    <input type="text" class="form-input" name="subtitle" id="subtitle">
+                    <span class="form-hint">项目简短描述</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">分类</label>
+                    <select class="form-select" name="category" id="category" required>
+                        <option value="">请选择</option>
+                        <option value="IPO">IPO</option>
+                        <option value="BOND">债券</option>
+                        <option value="FUND">基金</option>
+                        <option value="FIXED">固收</option>
+                        <option value="INVEST">定投</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">币种</label>
+                    <select class="form-select" name="currency" id="currency" required>
+                        <option value="">请选择</option>
+                        <option value="CNY">CNY（人民币）</option>
+                        <option value="USDT">USDT</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">状态</label>
+                    <select class="form-select" name="status" id="status">
+                        <option value="0">禁用</option>
+                        <option value="1">启用</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">项目描述</label>
+                <textarea class="form-textarea" name="description" id="description"></textarea>
+                <span class="form-hint">详细的项目介绍</span>
+            </div>
+        </div>
+
+        <!-- 收益设置 -->
+        <div class="form-section">
+            <h2 class="section-title">收益设置</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label required">投资周期（天）</label>
+                    <input type="number" class="form-input" name="cycle_days" id="cycle_days" min="1" required>
+                    <span class="form-hint">项目运行天数</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">基础收益率(%)</label>
+                    <input type="number" class="form-input" name="base_rate" id="base_rate" step="0.01" min="0" required>
+                    <span class="form-hint">周期收益率（不是年化）</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">附加收益率(%)</label>
+                    <input type="number" class="form-input" name="added_rate" id="added_rate" step="0.01" min="0" value="0">
+                    <span class="form-hint">临时活动加息</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">赠送收益率(%)</label>
+                    <input type="number" class="form-input" name="gift_rate" id="gift_rate" step="0.01" min="0" value="0">
+                    <span class="form-hint">特殊赠送加息</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投资额度 -->
+        <div class="form-section">
+            <h2 class="section-title">投资额度</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label required">最小投资额</label>
+                    <input type="number" class="form-input" name="min_invest" id="min_invest" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">最大投资额</label>
+                    <input type="number" class="form-input" name="max_invest" id="max_invest" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label required">总募集额度</label>
+                    <input type="number" class="form-input" name="total_quota" id="total_quota" min="0" step="0.01" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">项目经理ID</label>
+                    <input type="number" class="form-input" name="manager_id" id="manager_id" min="0" value="0">
+                    <span class="form-hint">关联项目经理</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 购买限制 -->
+        <div class="form-section">
+            <h2 class="section-title">购买限制配置</h2>
+            <div class="form-grid">
+                <div class="form-group">
+                    <label class="form-label">排序权重</label>
+                    <input type="number" class="form-input" name="sort" id="sort" value="100">
+                    <span class="form-hint">数字越大越靠前</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">首页展示</label>
+                    <select class="form-select" name="is_index" id="is_index">
+                        <option value="0">否</option>
+                        <option value="1">是</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">支付方式</label>
+                    <select class="form-select" name="payment_type" id="payment_type">
+                        <option value="0">不限</option>
+                        <option value="1">仅USDT</option>
+                        <option value="2">仅CNY</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">最低VIP等级</label>
+                    <input type="number" class="form-input" name="vip_min" id="vip_min" min="0" max="8" value="0">
+                    <span class="form-hint">0=无限制，1-8=VIP1至VIP8</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">需要推荐人</label>
+                    <select class="form-select" name="need_referral" id="need_referral">
+                        <option value="0">否</option>
+                        <option value="1">是</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">团队人数要求</label>
+                    <input type="number" class="form-input" name="team_member_required" id="team_member_required" min="0" value="0">
+                    <span class="form-hint">0=无限制</span>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">购买次数限制</label>
+                    <input type="number" class="form-input" name="mcount" id="mcount" min="0" value="0">
+                    <span class="form-hint">0=不限，>0=限制次数</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="button" class="btn btn-secondary" onclick="history.back()">取消</button>
+            <button type="submit" class="btn btn-primary">保存项目</button>
+        </div>
+    </form>
+
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-content">
+            <div style="font-size: 24px; margin-bottom: 12px;">⏳</div>
+            <div>处理中...</div>
+        </div>
+    </div>
+
+    <script>
+        // 获取URL参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const projectId = urlParams.get('id');
+
+        // 页面加载时
+        window.addEventListener('DOMContentLoaded', () => {
+            if (projectId) {
+                document.getElementById('pageTitle').textContent = '编辑项目';
+                document.getElementById('projectId').value = projectId;
+                loadProjectData(projectId);
+            }
+        });
+
+        // 加载项目数据
+        async function loadProjectData(id) {
+            try {
+                showLoading();
+                const response = await fetch(`../api/admin/project-detail.php?id=${id}`);
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    fillFormData(result.data);
+                } else {
+                    alert('加载失败: ' + result.message);
+                    history.back();
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                alert('网络请求失败');
+                history.back();
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 填充表单数据
+        function fillFormData(data) {
+            document.getElementById('project_code').value = data.project_code || '';
+            document.getElementById('title').value = data.title || '';
+            document.getElementById('subtitle').value = data.subtitle || '';
+            document.getElementById('description').value = data.description || '';
+            document.getElementById('category').value = data.category || '';
+            document.getElementById('currency').value = data.currency || '';
+            document.getElementById('cycle_days').value = data.cycle_days || '';
+            document.getElementById('base_rate').value = data.base_rate || '';
+            document.getElementById('added_rate').value = data.added_rate || '';
+            document.getElementById('gift_rate').value = data.gift_rate || '';
+            document.getElementById('min_invest').value = data.min_invest || '';
+            document.getElementById('max_invest').value = data.max_invest || '';
+            document.getElementById('total_quota').value = data.total_quota || '';
+            document.getElementById('manager_id').value = data.manager_id || '0';
+            document.getElementById('status').value = data.status || '0';
+            document.getElementById('is_index').value = data.is_index || '0';
+            document.getElementById('sort').value = data.sort || '100';
+            document.getElementById('payment_type').value = data.payment_type || '0';
+            document.getElementById('vip_min').value = data.vip_min || '0';
+            document.getElementById('need_referral').value = data.need_referral || '0';
+            document.getElementById('team_member_required').value = data.team_member_required || '0';
+            document.getElementById('mcount').value = data.mcount || '0';
+        }
+
+        // 提交表单
+        async function submitForm(event) {
+            event.preventDefault();
+
+            const formData = new FormData(document.getElementById('projectForm'));
+
+            // 验证数据
+            const minInvest = parseFloat(formData.get('min_invest'));
+            const maxInvest = parseFloat(formData.get('max_invest'));
+
+            if (maxInvest < minInvest) {
+                alert('最大投资额不能小于最小投资额');
+                return false;
+            }
+
+            try {
+                showLoading();
+
+                // 获取token
+                const token = localStorage.getItem('admin_token');
+                if (!token) {
+                    alert('请先登录');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                const response = await fetch('../api/admin/project-save.php', {
+                    method: 'POST',
+                    headers: {
+                        'token': token
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    alert(result.message);
+                    window.location.href = 'projects.html';
+                } else {
+                    alert('保存失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('提交失败:', error);
+                alert('网络请求失败');
+            } finally {
+                hideLoading();
+            }
+
+            return false;
+        }
+
+        // 显示加载
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        // 隐藏加载
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>

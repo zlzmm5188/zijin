@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>我的团队 - Providence</title>
+    <link rel="stylesheet" href="styles.css?v=1763343791">
+<style>
+/* 无效成员样式 */
+.team-member-card.invalid-member {
+    opacity: 0.6;
+    background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border-left: 3px solid #6b7280;
+}
+
+.invalid-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 10px;
+    font-size: 10px;
+    color: #ef4444;
+    margin-left: 6px;
+    font-weight: 600;
+}
+
+.invalid-notice {
+    margin-top: 12px;
+    padding: 8px 12px;
+    background: rgba(251, 191, 36, 0.1);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    color: #fbbf24;
+}
+
+.notice-icon {
+    font-size: 14px;
+}
+
+.notice-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
+.team-stat-footer {
+    text-align: center;
+    padding: 16px;
+    margin-top: 12px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 12px;
+    border: 1px solid rgba(255,255,255,0.08);
+}
+
+.stat-footer-text {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    font-weight: 500;
+}
+</style>
+</head>
+<body class="page-team">
+<div id="app">
+    <!-- 顶部导航 -->
+    <header class="team-header">
+        <a href="profile.html" class="back-btn">‹</a>
+        <h1 class="team-title">我的团队</h1>
+        <button class="btn-invite-header" onclick="window.location.href='invite-share.html'">
+            <span>🎁</span>
+            <span>邀请</span>
+        </button>
+    </header>
+
+    <!-- 团队统计 -->
+    <section class="team-stats">
+        <div class="stat-box">
+            <div class="stat-label">团队总人数</div>
+            <div class="stat-value" id="totalMembers">--</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">团队总投资</div>
+            <div class="stat-value" id="totalInvestment">--</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-label">我的佣金</div>
+            <div class="stat-value stat-value-gold" id="myCommission">--</div>
+        </div>
+    </section>
+
+    <!-- 级别切换 -->
+    <section class="level-tabs">
+        <button class="level-tab active" data-level="1">一级团队</button>
+        <button class="level-tab" data-level="2">二级团队</button>
+    </section>
+
+    <!-- 团队列表 -->
+    <section class="team-list" id="teamList">
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">加载中...</div>
+        </div>
+    </section>
+</div>
+
+<!-- 底部导航 -->
+<nav class="tabbar">
+    <a class="tab" href="index.html">
+        <div class="ico ico-home"></div>
+        <div class="txt">首页</div>
+    </a>
+    <a class="tab">
+        <div class="ico ico-finance"></div>
+        <div class="txt">数据</div>
+    </a>
+    <a class="tab" href="projects.html">
+        <div class="ico ico-market"></div>
+        <div class="txt">项目</div>
+    </a>
+    <a class="tab" href="messages.html">
+        <div class="ico ico-message"></div>
+        <div class="txt">消息</div>
+    </a>
+    <a class="tab active" href="profile.html">
+        <div class="ico ico-me"></div>
+        <div class="txt">我的</div>
+    </a>
+</nav>
+
+<script type="module" src="invite.js?v=1763054560"></script>
+</body>
+</html>

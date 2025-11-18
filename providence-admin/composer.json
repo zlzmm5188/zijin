@@ -1,0 +1,51 @@
+{
+    "name": "providence/api",
+    "description": "Providence Financial Platform API",
+    "type": "project",
+    "license": "proprietary",
+    "require": {
+        "php": ">=8.0",
+        "ext-json": "*",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "ext-pdo": "*",
+        "ext-pdo_mysql": "*",
+        "ext-curl": "*",
+        "guzzlehttp/guzzle": "^7.8",
+        "monolog/monolog": "^3.5",
+        "vlucas/phpdotenv": "^5.5",
+        "firebase/php-jwt": "^6.10",
+        "ramsey/uuid": "^4.7",
+        "respect/validation": "^2.2",
+        "symfony/var-dumper": "^6.4",
+        "league/csv": "^9.12",
+        "phpmailer/phpmailer": "^6.9"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Providence\\": "src/"
+        },
+        "files": [
+            "config/functions.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Providence\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": "dist",
+        "sort-packages": true,
+        "allow-plugins": {
+            "php-http/discovery": true
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

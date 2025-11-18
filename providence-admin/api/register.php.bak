@@ -1,0 +1,160 @@
+<?php
+/**
+ * 用户注册API
+ * POST /login/reg/account
+ */
+require_once __DIR__ . '/../config/bootstrap.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    Response::error('请求方法错误');
+}
+
+$input = json_decode(file_get_contents('php://input'), true);
+$username = trim($input['username'] ?? '');
+$password = trim($input['password'] ?? '');
+$phone = trim($input['phone'] ?? '');
+$email = trim($input['email'] ?? '');
+$invite_code = trim($input['invite_code'] ?? $input['inviteCode'] ?? '');
+
+// 验证必填字段
+if (empty($username) || empty($password)) {
+    Response::error('用户名和密码不能为空');
+}
+
+// SRS规范：密码强度验证（大写+小写+数字+特殊符号）
+$passwordCheck = Validator::validatePasswordStrength($password);
+if ($passwordCheck !== true) {
+    Response::error($passwordCheck);
+}
+
+// 验证用户名格式
+$usernameCheck = Validator::validateUsername($username);
+if ($usernameCheck !== true) {
+    Response::error($usernameCheck);
+}
+
+$db = Database::getInstance();
+
+// 检查用户名是否已存在
+$exists = $db->fetchOne("SELECT id FROM " . $db->getPrefix() . "users WHERE username = :username LIMIT 1", ['username' => $username]);
+if ($exists) {
+    Response::error('用户名已存在');
+}
+
+// 检查手机号
+if (!empty($phone)) {
+    $exists = $db->fetchOne("SELECT id FROM " . $db->getPrefix() . "users WHERE phone = :phone LIMIT 1", ['phone' => $phone]);
+    if ($exists) {
+        Response::error('手机号已被注册');
+    }
+}
+
+// 检查邮箱
+if (!empty($email)) {
+    $exists = $db->fetchOne("SELECT id FROM " . $db->getPrefix() . "users WHERE email = :email LIMIT 1", ['email' => $email]);
+    if ($exists) {
+        Response::error('邮箱已被注册');
+    }
+}
+
+// 处理邀请码
+$parent_id = null;
+if (!empty($invite_code)) {
+    $parent = $db->fetchOne("SELECT id FROM " . $db->getPrefix() . "users WHERE invite_code = :code LIMIT 1", ['code' => $invite_code]);
+    if ($parent) {
+        $parent_id = $parent['id'];
+    }
+}
+
+// 生成唯一邀请码
+do {
+    $new_invite_code = strtoupper(substr(md5(uniqid()), 0, 8));
+    $exists = $db->fetchOne("SELECT id FROM " . $db->getPrefix() . "users WHERE invite_code = :code LIMIT 1", ['code' => $new_invite_code]);
+} while ($exists);
+
+// 开始事务
+$db->beginTransaction();
+
+try {
+    // 插入用户
+    $userId = $db->insert('users', [
+        'username' => $username,
+        'password' => Auth::hashPassword($password),
+        'phone' => $phone,
+        'email' => $email,
+        'invite_code' => $new_invite_code,
+        'parent_id' => $parent_id,
+        'vip_level' => 1,
+        'trial_balance' => 1000.00, // 新用户赠送1000体验金
+        'login_ip' => $_SERVER['REMOTE_ADDR'],
+        'login_time' => date('Y-m-d H:i:s')
+    ]);
+
+    if (!$userId) {
+        throw new Exception('用户创建失败');
+    }
+
+    // 如果有推荐人，发放邀请奖励
+    if ($parent_id) {
+        // 获取推荐人的VIP等级
+        $parent = $db->fetchOne("SELECT vip_level, points FROM " . $db->getPrefix() . "users WHERE id = :id", ['id' => $parent_id]);
+
+        // 获取VIP配置
+        $vipConfig = $db->fetchOne("SELECT invite_points FROM " . $db->getPrefix() . "vip_levels WHERE id = :level", ['level' => $parent['vip_level']]);
+
+        if ($vipConfig && $vipConfig['invite_points'] > 0) {
+            // 增加推荐人积分
+            $newPoints = $parent['points'] + $vipConfig['invite_points'];
+            $db->update('users', ['points' => $newPoints], 'id = :id', ['id' => $parent_id]);
+
+            // 记录积分变化
+            $db->insert('points_logs', [
+                'user_id' => $parent_id,
+                'type' => 'invite',
+                'points' => $vipConfig['invite_points'],
+                'balance_before' => $parent['points'],
+                'balance_after' => $newPoints,
+                'remark' => '邀请新用户注册奖励'
+            ]);
+        }
+    }
+
+    $db->commit();
+
+    // SRS规范：记录审计日志
+    AuditLog::record(
+        'USER_REGISTER',
+        $userId,
+        'users',
+        $userId,
+        [
+            'username' => $username,
+            'phone' => $phone,
+            'email' => $email,
+            'parent_id' => $parent_id,
+            'invite_code' => $new_invite_code
+        ],
+        $_SERVER['REMOTE_ADDR'] ?? 'unknown',
+        $_SERVER['HTTP_USER_AGENT'] ?? 'unknown'
+    );
+
+    // 生成Token
+    $token = Auth::generateToken($userId, $username);
+
+    Response::success([
+        'token' => $token,
+        'user' => [
+            'id' => $userId,
+            'username' => $username,
+            'invite_code' => $new_invite_code,
+            'vip_level' => 1,
+            'balance' => 0,
+            'trial_balance' => 1000.00,
+            'points' => 0
+        ]
+    ], '注册成功');
+
+} catch (Exception $e) {
+    $db->rollBack();
+    Response::error('注册失败: ' . $e->getMessage());
+}

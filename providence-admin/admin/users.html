@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>用户列表 - Providence</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <link rel="stylesheet" href="../public/css/admin-mobile.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1d29;
+        }
+
+        .filter-bar {
+            background: white;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            width: 250px;
+        }
+
+        .filter-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #0052cc;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .table th,
+        .table td {
+            padding: 16px 14px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .table th {
+            background: #1e293b;
+            font-weight: 700;
+            font-size: 16px;
+            color: #ffffff;
+            white-space: nowrap;
+            padding: 18px 14px;
+            letter-spacing: 0.5px;
+            border-bottom: 3px solid #334155;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .table td {
+            font-size: 14px;
+            color: #2c3e50;
+            padding: 16px 14px;
+            font-weight: 500;
+        }
+
+        .table tbody tr:hover {
+            background: #f9fafb;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fed7aa;
+            color: #92400e;
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .btn-link {
+            background: none;
+            color: var(--primary);
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 13px;
+            text-decoration: none;
+        }
+
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .user-name {
+            font-weight: 500;
+        }
+
+        .user-uid {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-header">
+        <h1 class="page-title">用户列表</h1>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-row">
+            <input type="text" class="filter-input" id="keywordInput" placeholder="搜索用户名/手机/邮箱">
+            <button class="btn btn-primary" onclick="loadUsers()">查询</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户信息</th>
+                    <th>联系方式</th>
+                    <th>VIP等级</th>
+                    <th>累计投资</th>
+                    <th>实名状态</th>
+                    <th>下级人数</th>
+                    <th>状态</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="userList">
+                <tr>
+                    <td colspan="9" class="loading">加载中...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <div class="pagination-info">
+                共 <strong id="totalCount">0</strong> 个用户
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 页面加载时获取用户列表
+        window.addEventListener('DOMContentLoaded', () => {
+            loadUsers();
+        });
+
+        // 加载用户列表
+        async function loadUsers() {
+            const keyword = document.getElementById('keywordInput').value;
+
+            const params = new URLSearchParams({
+                page: 1,
+                limit: 100
+            });
+
+            if (keyword) params.append('keyword', keyword);
+
+            try {
+                const response = await fetch(`../api/admin/users.php?${params}`);
+                const result = await response.json();
+
+                if (result.code === 1 && result.data) {
+                    renderUsers(result.data.data);
+                    updatePagination(result.data.count);
+                } else {
+                    showError(result.message || '加载失败');
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                showError('网络请求失败');
+            }
+        }
+
+        // 渲染用户列表
+        function renderUsers(users) {
+            const tbody = document.getElementById('userList');
+
+            if (!users || users.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" class="empty">
+                            <div style="font-size: 48px; margin-bottom: 12px;">👥</div>
+                            <div>暂无用户数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>
+                        <div class="user-info">
+                            <div class="user-name">${escapeHtml(user.username)}</div>
+                            <div class="user-uid">UID: ${escapeHtml(user.uid)}</div>
+                        </div>
+                    </td>
+                    <td>
+                        <div>${user.phone ? escapeHtml(user.phone) : '-'}</div>
+                        <div style="font-size: 12px; color: #6b7280;">${user.email ? escapeHtml(user.email) : ''}</div>
+                    </td>
+                    <td>
+                        <span class="badge badge-primary">${user.vip_name}</span>
+                    </td>
+                    <td>¥${formatMoney(user.total_invest)}</td>
+                    <td>
+                        ${getRealnameStatusBadge(user.realname_status)}
+                    </td>
+                    <td>${user.children_count || 0}人</td>
+                    <td>
+                        ${user.status === 1 ?
+                    '<span class="badge badge-success">正常</span>' :
+                    '<span class="badge badge-danger">冻结</span>'}
+                    </td>
+                    <td>${formatDate(user.created_at)}</td>
+                    <td>
+                        <button class="btn-link" onclick="viewDetail(${user.id})">详情</button>
+                        <button class="btn-link" onclick="viewTeam(${user.id})">团队</button>
+                        <button class="btn-link" onclick="resetPassword(${user.id})">重置密码</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 更新分页信息
+        function updatePagination(total) {
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('pagination').style.display = total > 0 ? 'flex' : 'none';
+        }
+
+        // 获取实名状态徽章
+        function getRealnameStatusBadge(status) {
+            switch (status) {
+                case 1:
+                    return '<span class="badge badge-success">已认证</span>';
+                case 2:
+                    return '<span class="badge badge-danger">已拒绝</span>';
+                default:
+                    return '<span class="badge badge-gray">未认证</span>';
+            }
+        }
+
+        // 显示错误
+        function showError(message) {
+            const tbody = document.getElementById('userList');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="empty">
+                        <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+                        <div>${escapeHtml(message)}</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 格式化金额
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('zh-CN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // 格式化日期
+        function formatDate(dateStr) {
+            if (!dateStr) return '-';
+            const date = new Date(dateStr);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(/\//g, '-');
+        }
+        // 查看用户详情
+        function viewDetail(userId) {
+            window.location.href = `user-detail.html?id=${userId}`;
+        }
+
+        // 查看团队
+        function viewTeam(userId) {
+            window.location.href = `user-team-view.html?id=${userId}`;
+        }
+
+        // 重置密码
+        async function resetPassword(userId) {
+            const newPassword = prompt('请输入新密码（至少8位，包含大小写字母、数字和特殊符号）：');
+
+            if (!newPassword) {
+                return;
+            }
+
+            if (newPassword.length < 8) {
+                alert('密码长度至少8位');
+                return;
+            }
+
+            if (!confirm(`确定要将该用户的密码重置为：${newPassword} ？`)) {
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('user_id', userId);
+                formData.append('new_password', newPassword);
+
+                const response = await fetch('../api/admin/user-reset-password', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    alert('密码重置成功！\n\n新密码：' + newPassword + '\n\n请通知用户及时修改密码。');
+                } else {
+                    alert('重置失败：' + result.message);
+                }
+            } catch (error) {
+                console.error('重置失败:', error);
+                alert('网络请求失败');
+            }
+        }
+    </script>
+</body>
+
+</html>

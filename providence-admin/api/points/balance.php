@@ -1,0 +1,45 @@
+<?php
+/**
+ * 获取积分余额
+ * GET /user/points/balance
+ */
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+// 认证检查已禁用：无登录模式
+    $authUser = Auth::user(); // 始终返回 guest 用户
+    // if (!$authUser) {
+    //     Response::error('未登录或登录已过期', 401);
+    // }
+
+$db = Database::getInstance();
+
+try {
+    // 获取用户的CNY钱包（积分存储在wallets表）
+    $wallet = $db->fetchOne(
+        "SELECT points, points_frozen FROM wallets WHERE user_id = :user_id AND currency = 'CNY' LIMIT 1",
+        ['user_id' => $authUser['user_id']]
+    );
+
+    if (!$wallet) {
+        // 如果钱包不存在，返回0
+        Response::success([
+            'points' => 0,
+            'points_frozen' => 0,
+            'available_points' => 0
+        ]);
+        exit;
+    }
+
+    $points = (float)($wallet['points'] ?? 0);
+    $pointsFrozen = (float)($wallet['points_frozen'] ?? 0);
+
+    Response::success([
+        'points' => $points,
+        'points_frozen' => $pointsFrozen,
+        'available_points' => $points - $pointsFrozen
+    ]);
+
+} catch (Exception $e) {
+    error_log("获取积分余额失败: " . $e->getMessage());
+    Response::error('获取积分余额失败');
+}

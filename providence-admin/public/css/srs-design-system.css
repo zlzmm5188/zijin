@@ -1,0 +1,350 @@
+/**
+ * PROVIDENCE SRS Design System
+ * 前后台统一视觉规范
+ * 从前台styles.css提取Design Token
+ */
+
+/* ==================== Design Tokens ==================== */
+:root {
+  /* 主色调 */
+  --primary: #0b3b5e;
+  --primary-600: #0e4a78;
+  --accent: #c99b2b;        /* 金色 */
+  
+  /* 背景色 */
+  --bg: #f7f8fa;
+  --surface: #fff;
+  --hero-bg: linear-gradient(180deg, #0e2b44, #091c2e);
+  
+  /* 文字色 */
+  --text: #222;
+  --muted: #6b7a8a;
+  
+  /* 状态色 */
+  --success: #25d0a6;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --info: #3b82f6;
+  
+  /* 圆角 */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  
+  /* 阴影 */
+  --shadow-sm: 0 2px 6px rgba(0,0,0,.06);
+  --shadow-md: 0 4px 12px rgba(5,15,30,.08);
+  --shadow-lg: 0 6px 16px rgba(5,15,30,.1);
+  
+  /* 间距 */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+}
+
+/* ==================== 全局样式 ==================== */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Helvetica Neue", sans-serif;
+  -webkit-font-smoothing: antialiased;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+}
+
+/* ==================== 卡片组件 ==================== */
+.card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  box-shadow: var(--shadow-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.card-header {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: var(--spacing-md);
+  padding-bottom: var(--spacing-sm);
+  border-bottom: 2px solid var(--bg);
+}
+
+/* ==================== 按钮组件 ==================== */
+.btn {
+  border: none;
+  border-radius: var(--radius-sm);
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, var(--primary-600), var(--primary));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(14,74,120,.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(14,74,120,.4);
+}
+
+.btn-primary:active {
+  transform: scale(0.98);
+}
+
+.btn-accent {
+  background: linear-gradient(90deg, var(--accent), #e6cfaa);
+  color: #2a1e0b;
+  box-shadow: 0 4px 12px rgba(202,165,107,.3);
+}
+
+.btn-success {
+  background: var(--success);
+  color: #fff;
+}
+
+.btn-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: #fff;
+  color: var(--text);
+  border: 1px solid #e5e7eb;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.btn-lg {
+  padding: 14px 32px;
+  font-size: 16px;
+}
+
+/* ==================== 徽章组件 ==================== */
+.badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.badge-primary {
+  background: var(--primary);
+  color: #fff;
+}
+
+.badge-success {
+  background: var(--success);
+  color: #fff;
+}
+
+.badge-warning {
+  background: var(--warning);
+  color: #fff;
+}
+
+.badge-danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+.badge-accent {
+  background: linear-gradient(90deg, var(--accent), #e6cfaa);
+  color: #2a1e0b;
+}
+
+.badge-secondary {
+  background: #f3f4f6;
+  color: var(--muted);
+}
+
+/* ==================== 表单组件 ==================== */
+.form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: var(--spacing-sm);
+}
+
+.form-input {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+  transition: all 0.2s;
+}
+
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(11,59,94,.1);
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1px solid #e5e7eb;
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  color: var(--text);
+  background: var(--surface);
+}
+
+/* ==================== 表格组件 ==================== */
+.table {
+  width: 100%;
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+}
+
+.table thead {
+  background: linear-gradient(90deg, var(--primary-600), var(--primary));
+}
+
+.table thead th {
+  padding: 14px 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+  text-align: left;
+}
+
+.table tbody td {
+  padding: 12px 16px;
+  font-size: 14px;
+  color: var(--text);
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.table tbody tr:hover {
+  background: #f9fafb;
+}
+
+/* ==================== 统计卡片 ==================== */
+.stat-card {
+  background: var(--surface);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-lg);
+  box-shadow: var(--shadow-md);
+  transition: all 0.3s;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lg);
+}
+
+.stat-number {
+  font-size: 32px;
+  font-weight: 800;
+  margin-bottom: var(--spacing-sm);
+}
+
+.stat-number.primary { color: var(--primary); }
+.stat-number.accent { color: var(--accent); }
+.stat-number.success { color: var(--success); }
+.stat-number.danger { color: var(--danger); }
+
+.stat-label {
+  font-size: 14px;
+  color: var(--muted);
+}
+
+/* ==================== 顶部导航栏 ==================== */
+.admin-header {
+  background: var(--hero-bg);
+  padding: 16px 24px;
+  box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+
+.admin-logo {
+  color: #e8edf3;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+/* ==================== 侧边栏 ==================== */
+.admin-sidebar {
+  background: var(--hero-bg);
+}
+
+.sidebar-menu-item {
+  color: rgba(232,237,243,0.8);
+  padding: 12px 20px;
+  border-radius: var(--radius-sm);
+  margin: 4px 8px;
+  transition: all 0.2s;
+}
+
+.sidebar-menu-item:hover,
+.sidebar-menu-item.active {
+  background: rgba(255,255,255,0.1);
+  color: #e8edf3;
+}
+
+/* ==================== 动画 ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.slide-up {
+  animation: slideUp 0.5s ease-out;
+}
+
+/* ==================== 工具类 ==================== */
+.text-primary { color: var(--primary); }
+.text-accent { color: var(--accent); }
+.text-success { color: var(--success); }
+.text-danger { color: var(--danger); }
+.text-muted { color: var(--muted); }
+
+.bg-primary { background: var(--primary); }
+.bg-accent { background: var(--accent); }
+.bg-surface { background: var(--surface); }
+
+.shadow-sm { box-shadow: var(--shadow-sm); }
+.shadow-md { box-shadow: var(--shadow-md); }
+.shadow-lg { box-shadow: var(--shadow-lg); }
+
+.rounded-sm { border-radius: var(--radius-sm); }
+.rounded-md { border-radius: var(--radius-md); }
+.rounded-lg { border-radius: var(--radius-lg); }

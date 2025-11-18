@@ -1,0 +1,5 @@
+{
+  "format": {
+    "ignore": ["node_modules/**", "backup/**"]
+  }
+}

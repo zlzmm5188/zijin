@@ -1,0 +1,286 @@
+<?php
+/**
+ * AI聊天接口 - Providence智能顾问
+ * POST /api/ai/chat
+ * 响应格式：code: 200（匹配前端）
+ */
+require_once dirname(__DIR__, 2) . '/config/bootstrap.php';
+
+header('Content-Type: application/json; charset=utf-8');
+
+// 接收POST数据
+$input = json_decode(file_get_contents('php://input'), true);
+$message = trim($input['message'] ?? '');
+$conversationId = trim($input['conversation_id'] ?? '');
+
+if (empty($message)) {
+    echo json_encode(['code' => 400, 'message' => '消息不能为空', 'data' => null], JSON_UNESCAPED_UNICODE);
+    exit;
+}
+
+// 生成会话ID
+if (empty($conversationId)) {
+    $conversationId = 'conv-' . time() . '-' . uniqid();
+}
+
+try {
+    $db = Database::getInstance();
+    
+    // 获取Token（可选）
+    $token = $_SERVER['HTTP_TOKEN'] ?? $_SERVER['HTTP_AUTHORIZATION'] ?? $input['token'] ?? '';
+    $token = str_replace('Bearer ', '', $token);
+    $userId = 0;
+    $userData = null;
+    
+    if (!empty($token)) {
+        $authData = Auth::verifyToken($token);
+        if ($authData) {
+            $userId = $authData['user_id'];
+            $userData = getUserData($userId, $db);
+        }
+    }
+    
+    // 保存用户消息
+    saveMessage($conversationId, $userId, 'user', $message, null, null, $db);
+    
+    // 意图识别
+    $intent = recognizeIntent($message, $db);
+    
+    // 检查是否需要登录
+    if ($intent && $intent['requires_auth'] == 1 && $userId == 0) {
+        $aiMessage = "抱歉，查询此信息需要先登录。请点击下方按钮登录。";
+        $actionButtons = [
+            ['text' => '🔐 去登录', 'link' => 'login.html', 'type' => 'primary']
+        ];
+        
+        saveMessage($conversationId, $userId, 'ai', $aiMessage, 'require_login', 95, $db);
+        
+        echo json_encode([
+            'code' => 200,
+            'message' => '处理成功',
+            'data' => [
+                'message' => $aiMessage,
+                'intent' => 'require_login',
+                'confidence' => 95,
+                'actionButtons' => $actionButtons,
+                'conversation_id' => $conversationId,
+                'timestamp' => time()
+            ]
+        ], JSON_UNESCAPED_UNICODE);
+        exit;
+    }
+    
+    // 生成AI回复
+    if ($intent) {
+        $aiMessage = generateResponse($intent, $userData, $db);
+        $confidence = 90;
+        $actionButtons = generateActionButtons($intent, $userData);
+    } else {
+        $aiMessage = "抱歉，我还不太理解您的问题。\n\n您可以问我：\n💰 我的余额\n📊 我的投资\n👑 VIP等级\n👥 团队数据\n\n或者直接点击下方快捷按钮。";
+        $confidence = 50;
+        $actionButtons = [
+            ['text' => '💰 查余额', 'onclick' => 'quickAsk("我的余额")', 'type' => 'primary'],
+            ['text' => '📊 查投资', 'onclick' => 'quickAsk("我的投资")'],
+            ['text' => '👑 查VIP', 'onclick' => 'quickAsk("VIP等级")'],
+        ];
+    }
+    
+    // 保存AI回复
+    saveMessage($conversationId, $userId, 'ai', $aiMessage, $intent['category'] ?? null, $confidence, $db);
+    
+    // 更新会话
+    updateConversation($conversationId, $userId, $db);
+    
+    // 返回响应（code: 200格式）
+    echo json_encode([
+        'code' => 200,
+        'message' => '处理成功',
+        'data' => [
+            'message' => $aiMessage,
+            'intent' => $intent['category'] ?? 'unknown',
+            'confidence' => $confidence,
+            'actionButtons' => $actionButtons,
+            'conversation_id' => $conversationId,
+            'timestamp' => time()
+        ]
+    ], JSON_UNESCAPED_UNICODE);
+    
+} catch (Exception $e) {
+    error_log('[AI Chat] Error: ' . $e->getMessage());
+    echo json_encode([
+        'code' => 500,
+        'message' => 'AI服务暂时不可用: ' . $e->getMessage(),
+        'data' => null
+    ], JSON_UNESCAPED_UNICODE);
+}
+
+// ========== 辅助函数 ==========
+
+function recognizeIntent($message, $db) {
+    $message = mb_strtolower($message);
+    
+    $sql = "SELECT * FROM pv_ai_knowledge_base WHERE status = 1 ORDER BY priority DESC";
+    $knowledgeList = $db->fetchAll($sql);
+    
+    foreach ($knowledgeList as $item) {
+        // 关键词匹配
+        $keywords = json_decode($item['keywords'], true);
+        if ($keywords) {
+            foreach ($keywords as $keyword) {
+                if (mb_strpos($message, $keyword) !== false) {
+                    return $item;
+                }
+            }
+        }
+        
+        // 正则匹配
+        if (!empty($item['question_pattern'])) {
+            if (@preg_match('/'. $item['question_pattern'] . '/ui', $message)) {
+                return $item;
+            }
+        }
+    }
+    
+    return null;
+}
+
+function getUserData($userId, $db) {
+    $user = $db->fetchOne(
+        "SELECT id, username, realname, vip_level, total_invest, kyc_status
+         FROM users WHERE id = ?",
+        [$userId]
+    );
+    
+    if (!$user) return null;
+    
+    $cnyWallet = $db->fetchOne(
+        "SELECT balance, ribao_balance, ribao_total_profit, ribao_yesterday_profit, points
+         FROM wallets WHERE user_id = ? AND currency = 'CNY'",
+        [$userId]
+    );
+    
+    $usdtWallet = $db->fetchOne(
+        "SELECT balance FROM wallets WHERE user_id = ? AND currency = 'USDT'",
+        [$userId]
+    );
+    
+    $investStats = $db->fetchOne(
+        "SELECT COUNT(*) as active_count, COALESCE(SUM(earned_amount), 0) as total_profit
+         FROM invest_orders WHERE user_id = ? AND status = 'running'",
+        [$userId]
+    );
+    
+    $teamStats = $db->fetchOne(
+        "SELECT COUNT(*) as count, COALESCE(SUM(total_invest), 0) as performance
+         FROM users WHERE inviter_id = ?",
+        [$userId]
+    );
+    
+    $vipInfo = $db->fetchOne(
+        "SELECT extra_rate, level_name FROM vip_interest_rules WHERE vip_level = ?",
+        [$user['vip_level']]
+    );
+    
+    return [
+        'balance_cny' => number_format($cnyWallet['balance'] ?? 0, 2, '.', ''),
+        'balance_usdt' => number_format($usdtWallet['balance'] ?? 0, 2, '.', ''),
+        'ribao_balance' => number_format($cnyWallet['ribao_balance'] ?? 0, 2, '.', ''),
+        'ribao_total_profit' => number_format($cnyWallet['ribao_total_profit'] ?? 0, 2, '.', ''),
+        'ribao_yesterday_profit' => number_format($cnyWallet['ribao_yesterday_profit'] ?? 0, 2, '.', ''),
+        'points' => number_format($cnyWallet['points'] ?? 0, 0, '.', ''),
+        'total_invest' => number_format($user['total_invest'] ?? 0, 2, '.', ''),
+        'active_count' => $investStats['active_count'] ?? 0,
+        'total_profit' => number_format($investStats['total_profit'] ?? 0, 2, '.', ''),
+        'team_count' => $teamStats['count'] ?? 0,
+        'team_performance' => number_format($teamStats['performance'] ?? 0, 2, '.', ''),
+        'vip_level' => $user['vip_level'],
+        'vip_rate' => $vipInfo['extra_rate'] ?? 0,
+        'vip_benefits' => $vipInfo['level_name'] ?? 'VIP' . $user['vip_level'],
+        'withdraw_fee' => 2.0,
+        'min_withdraw' => 100,
+        'referral_rewards' => '0.00'
+    ];
+}
+
+function generateResponse($intent, $userData, $db) {
+    $template = $intent['answer_template'];
+    
+    if ($intent['requires_data'] && $userData) {
+        foreach ($userData as $key => $value) {
+            $template = str_replace('{{' . $key . '}}', $value, $template);
+        }
+    }
+    
+    return $template;
+}
+
+function generateActionButtons($intent, $userData) {
+    if (!$intent) return [];
+    
+    $buttons = [];
+    
+    switch ($intent['category']) {
+        case 'balance':
+            $buttons[] = ['text' => '💳 去充值', 'link' => 'recharge.html', 'type' => 'primary'];
+            $buttons[] = ['text' => '💰 去提现', 'link' => 'withdraw.html'];
+            break;
+        case 'investment':
+            $buttons[] = ['text' => '📊 我的投资', 'link' => 'my-investments.html', 'type' => 'primary'];
+            $buttons[] = ['text' => '🔍 浏览项目', 'link' => 'projects-list.html'];
+            break;
+        case 'vip':
+            $buttons[] = ['text' => '👑 VIP中心', 'link' => 'vip.html', 'type' => 'primary'];
+            break;
+        case 'recharge':
+            $buttons[] = ['text' => '💳 去充值', 'link' => 'recharge.html', 'type' => 'primary'];
+            break;
+        case 'withdraw':
+            $buttons[] = ['text' => '💰 去提现', 'link' => 'withdraw.html', 'type' => 'primary'];
+            break;
+        case 'ribao':
+            $buttons[] = ['text' => '📈 日利宝', 'link' => 'ribao.html', 'type' => 'primary'];
+            break;
+        case 'team':
+            $buttons[] = ['text' => '👥 我的团队', 'link' => 'team-rewards.html', 'type' => 'primary'];
+            break;
+        case 'kyc':
+            $buttons[] = ['text' => '✅ 去认证', 'link' => 'kyc.html', 'type' => 'primary'];
+            break;
+        case 'password_reset':
+            $buttons[] = ['text' => '🔐 找回密码', 'link' => 'messages.html?intent=password_reset', 'type' => 'primary'];
+            break;
+    }
+    
+    return $buttons;
+}
+
+function saveMessage($conversationId, $userId, $type, $content, $intent, $confidence, $db) {
+    $db->query(
+        "INSERT INTO pv_ai_chat_messages 
+         (conversation_id, user_id, message_type, message_content, user_intent, ai_confidence, ip_address) 
+         VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [$conversationId, $userId, $type, $content, $intent, $confidence, $_SERVER['REMOTE_ADDR'] ?? '']
+    );
+}
+
+function updateConversation($conversationId, $userId, $db) {
+    $exists = $db->fetchOne(
+        "SELECT id FROM pv_ai_conversations WHERE conversation_id = ?",
+        [$conversationId]
+    );
+    
+    if ($exists) {
+        $db->query(
+            "UPDATE pv_ai_conversations 
+             SET message_count = message_count + 2, last_message_at = NOW() 
+             WHERE conversation_id = ?",
+            [$conversationId]
+        );
+    } else {
+        $db->query(
+            "INSERT INTO pv_ai_conversations (conversation_id, user_id, message_count, last_message_at) 
+             VALUES (?, ?, 2, NOW())",
+            [$conversationId, $userId]
+        );
+    }
+}

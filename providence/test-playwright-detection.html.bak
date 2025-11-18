@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Playwright 检测测试</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .test-item h3 {
+            margin-top: 0;
+            color: #ffd700;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .pass {
+            background: rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4caf50;
+        }
+        .fail {
+            background: rgba(244, 67, 54, 0.3);
+            border-left: 4px solid #f44336;
+        }
+        .info {
+            background: rgba(33, 150, 243, 0.3);
+            border-left: 4px solid #2196f3;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 10px 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        #console-output {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Playwright 检测测试</h1>
+
+        <div class="test-item">
+            <h3>1. User-Agent 检测</h3>
+            <div id="ua-result" class="result info">检测中...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>2. navigator.webdriver 检测</h3>
+            <div id="webdriver-result" class="result info">检测中...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>3. Playwright 全局变量检测</h3>
+            <div id="global-result" class="result info">检测中...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>4. Playwright 脚本标记检测</h3>
+            <div id="script-result" class="result info">检测中...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>5. Navigator 属性检测</h3>
+            <div id="navigator-result" class="result info">检测中...</div>
+        </div>
+
+        <div class="test-item">
+            <h3>6. 综合检测结果</h3>
+            <div id="summary-result" class="result info">检测中...</div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button onclick="runAllTests()">🔄 重新检测</button>
+            <button onclick="clearConsole()">🗑️ 清空日志</button>
+        </div>
+
+        <div id="console-output"></div>
+    </div>
+
+    <script>
+        // 捕获控制台输出
+        const originalLog = console.log;
+        const originalWarn = console.warn;
+        const originalError = console.error;
+        const consoleOutput = document.getElementById('console-output');
+
+        function addConsoleMessage(type, ...args) {
+            const div = document.createElement('div');
+            div.style.color = type === 'error' ? '#f44336' : type === 'warn' ? '#ff9800' : '#4caf50';
+            div.textContent = `[${type.toUpperCase()}] ${args.join(' ')}`;
+            consoleOutput.appendChild(div);
+            consoleOutput.scrollTop = consoleOutput.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog.apply(console, args);
+            addConsoleMessage('log', ...args);
+        };
+
+        console.warn = function(...args) {
+            originalWarn.apply(console, args);
+            addConsoleMessage('warn', ...args);
+        };
+
+        console.error = function(...args) {
+            originalError.apply(console, args);
+            addConsoleMessage('error', ...args);
+        };
+
+        function clearConsole() {
+            consoleOutput.innerHTML = '';
+        }
+
+        function runAllTests() {
+            clearConsole();
+            console.log('开始 Playwright 检测测试...');
+
+            // 1. User-Agent 检测
+            const ua = navigator.userAgent.toLowerCase();
+            const playwrightPatterns = ['playwright', 'playwright-webkit', 'playwright-firefox', 'playwright-chromium'];
+            const uaDetected = playwrightPatterns.some(pattern => ua.includes(pattern));
+            const uaResult = document.getElementById('ua-result');
+            if (uaDetected) {
+                uaResult.className = 'result fail';
+                uaResult.innerHTML = `❌ 检测到 Playwright User-Agent<br>UA: ${navigator.userAgent}`;
+                console.warn('检测到 Playwright User-Agent:', navigator.userAgent);
+            } else {
+                uaResult.className = 'result pass';
+                uaResult.innerHTML = `✅ 未检测到 Playwright User-Agent<br>UA: ${navigator.userAgent.substring(0, 80)}...`;
+                console.log('User-Agent 检测通过');
+            }
+
+            // 2. navigator.webdriver 检测
+            const webdriverResult = document.getElementById('webdriver-result');
+            if (navigator.webdriver === true) {
+                webdriverResult.className = 'result fail';
+                webdriverResult.innerHTML = `❌ 检测到 navigator.webdriver = true`;
+                console.warn('检测到 navigator.webdriver = true');
+            } else {
+                webdriverResult.className = 'result pass';
+                webdriverResult.innerHTML = `✅ navigator.webdriver = ${navigator.webdriver}`;
+                console.log('navigator.webdriver 检测通过');
+            }
+
+            // 3. Playwright 全局变量检测
+            const globalResult = document.getElementById('global-result');
+            const playwrightGlobals = ['__playwright', '__pw_', 'playwright'];
+            const detectedGlobals = playwrightGlobals.filter(name => window[name] !== undefined);
+            if (detectedGlobals.length > 0) {
+                globalResult.className = 'result fail';
+                globalResult.innerHTML = `❌ 检测到 Playwright 全局变量: ${detectedGlobals.join(', ')}`;
+                console.warn('检测到 Playwright 全局变量:', detectedGlobals);
+            } else {
+                globalResult.className = 'result pass';
+                globalResult.innerHTML = `✅ 未检测到 Playwright 全局变量`;
+                console.log('Playwright 全局变量检测通过');
+            }
+
+            // 4. Playwright 脚本标记检测
+            const scriptResult = document.getElementById('script-result');
+            const playwrightScript = document.querySelector('script[data-playwright]');
+            if (playwrightScript) {
+                scriptResult.className = 'result fail';
+                scriptResult.innerHTML = `❌ 检测到 Playwright 脚本标记`;
+                console.warn('检测到 Playwright 脚本标记');
+            } else {
+                scriptResult.className = 'result pass';
+                scriptResult.innerHTML = `✅ 未检测到 Playwright 脚本标记`;
+                console.log('Playwright 脚本标记检测通过');
+            }
+
+            // 5. Navigator 属性检测
+            const navigatorResult = document.getElementById('navigator-result');
+            const emptyPlugins = navigator.plugins && navigator.plugins.length === 0;
+            const emptyLanguages = navigator.languages && navigator.languages.length === 0;
+            if (emptyPlugins && emptyLanguages) {
+                navigatorResult.className = 'result fail';
+                navigatorResult.innerHTML = `❌ 检测到异常的空插件和语言列表（可能是 Playwright）<br>插件数: ${navigator.plugins.length}, 语言数: ${navigator.languages.length}`;
+                console.warn('检测到异常的空插件和语言列表');
+            } else {
+                navigatorResult.className = 'result pass';
+                navigatorResult.innerHTML = `✅ Navigator 属性正常<br>插件数: ${navigator.plugins ? navigator.plugins.length : 'N/A'}, 语言数: ${navigator.languages ? navigator.languages.length : 'N/A'}`;
+                console.log('Navigator 属性检测通过');
+            }
+
+            // 6. 综合检测结果
+            const summaryResult = document.getElementById('summary-result');
+            const allTests = [
+                !uaDetected,
+                navigator.webdriver !== true,
+                detectedGlobals.length === 0,
+                !playwrightScript,
+                !(emptyPlugins && emptyLanguages)
+            ];
+            const passedTests = allTests.filter(test => test).length;
+            const totalTests = allTests.length;
+
+            if (passedTests === totalTests) {
+                summaryResult.className = 'result pass';
+                summaryResult.innerHTML = `✅ 所有检测通过 (${passedTests}/${totalTests})<br>未检测到 Playwright 自动化工具`;
+                console.log('✅ 所有检测通过，未检测到 Playwright');
+            } else {
+                summaryResult.className = 'result fail';
+                summaryResult.innerHTML = `❌ 检测到 Playwright 特征 (${totalTests - passedTests}/${totalTests} 项失败)<br>可能正在使用 Playwright 自动化工具`;
+                console.warn('❌ 检测到 Playwright 特征');
+            }
+        }
+
+        // 页面加载时自动运行检测
+        window.addEventListener('DOMContentLoaded', runAllTests);
+    </script>
+</body>
+</html>

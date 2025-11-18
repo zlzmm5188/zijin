@@ -1,0 +1,180 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║           PROVIDENCE 前后台对接配置指南                         ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🌐 域名部署方案
+
+【前台】
+域名: qiantai.frevix.top
+目录: /www/wwwroot/providence/
+说明: 用户访问的前端页面
+
+【后台管理】
+域名: houtai.frevix.top
+目录: /www/wwwroot/providence-admin/admin/
+说明: 管理员使用的后台界面
+
+【API接口】
+方案1 (推荐): api.frevix.top
+目录: /www/wwwroot/providence-admin/api/
+说明: 独立API域名，更安全
+
+方案2 (简化): houtai.frevix.top/api
+目录: /www/wwwroot/providence-admin/api/
+说明: 使用后台域名的子路径
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 前台配置修改
+
+【文件位置】
+/www/wwwroot/providence/config.js
+
+【需要修改的内容】
+
+// 原配置
+const API_CONFIG = {
+  baseURL: 'https://v2api.hemlx.com',  // ← 修改这里
+  ...
+};
+
+// 新配置（方案1 - 独立API域名）
+const API_CONFIG = {
+  baseURL: 'https://api.frevix.top',
+  tokenKey: 'providence_token',
+  timeout: 10000,
+  debug: false  // 生产环境建议关闭
+};
+
+// 新配置（方案2 - 使用后台子路径）
+const API_CONFIG = {
+  baseURL: 'https://houtai.frevix.top/api',
+  tokenKey: 'providence_token',
+  timeout: 10000,
+  debug: false
+};
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔧 宝塔面板配置步骤
+
+【方案1：创建独立API站点 (推荐)】
+
+1. 登录宝塔面板
+2. 网站 → 添加站点
+   - 域名: api.frevix.top
+   - 根目录: /www/wwwroot/providence-admin/api
+   - PHP版本: 8.2
+   - 创建站点
+
+3. 配置伪静态
+   网站设置 → 伪静态 → 添加：
+   
+   if (!-e $request_filename) {
+       rewrite ^/(.*)$ /index.php?$1 last;
+   }
+
+4. 配置SSL证书（生产环境必须）
+   网站设置 → SSL → Let's Encrypt → 申请
+
+5. 测试访问
+   https://api.frevix.top/fund/project/all
+
+【方案2：使用现有站点的子路径】
+
+已在 houtai.frevix.top 配置中添加：
+
+location ^~ /api {
+    alias /www/wwwroot/providence-admin/api;
+    index index.php;
+    
+    location ~ \.php$ {
+        fastcgi_pass unix:/tmp/php-cgi-82.sock;
+        fastcgi_param SCRIPT_FILENAME $request_filename;
+        include fastcgi_params;
+    }
+}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🔌 API接口完整列表
+
+【用户认证】
+POST   /login/login/account         用户登录
+POST   /login/reg/account           用户注册
+GET    /user/user/logout            退出登录
+
+【用户信息】
+GET    /user/user/index             获取用户信息 (需token)
+GET    /user/user/invite            邀请信息 (需token)
+
+【VIP系统】
+GET    /user/level/list             VIP等级列表
+GET    /user/vip/info               用户VIP信息 (需token)
+GET    /user/vip/config             VIP配置
+
+【投资项目】
+GET    /fund/project/all            项目列表
+GET    /fund/project/detail         项目详情 (?id=x)
+POST   /fund/project/add            投资项目 (需token)
+POST   /fund/project/buy_with_trial 体验金投资 (需token)
+
+【订单管理】
+GET    /user/order/list             订单列表 (需token)
+GET    /user/order/detail           订单详情 (需token)
+
+【财务管理】
+POST   /user/recharge/add           充值申请 (需token)
+POST   /user/withdraw/add           提现申请 (需token)
+GET    /user/bank/list              银行卡列表 (需token)
+
+【积分系统】
+GET    /user/points/balance         积分余额 (需token)
+GET    /user/points/logs            积分明细 (需token)
+POST   /user/points/exchange        积分兑换 (需token)
+
+【团队系统】
+GET    /user/team/tree              团队树 (需token)
+GET    /user/team/stats             团队统计 (需token)
+GET    /user/team/reward_check      检测团队奖励 (需token)
+
+【体验金】
+GET    /user/trial_fund/balance     体验金余额 (需token)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 对接测试步骤
+
+1. 在宝塔面板配置API站点或路径
+2. 修改前台 config.js 的 baseURL
+3. 清除浏览器缓存 (Ctrl+Shift+R)
+4. 测试注册功能
+5. 测试登录功能
+6. 测试项目列表和投资功能
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📊 当前系统状态
+
+✅ 数据库: 已更新为VIP0-VIP8 (9个等级)
+✅ 团队奖励: 9个等级规则已配置
+✅ 推荐奖励: 一级、二级百分比已设置
+✅ VIP升级: 根据累计投资自动升级
+✅ 额外加息: VIP1-VIP8额外加息已配置
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 建议
+
+1. 使用独立API域名 (api.frevix.top) 更专业
+2. 配置HTTPS证书保护数据传输
+3. 在前台 config.js 中设置正确的 baseURL
+4. 前台添加版本号参数破除缓存 (?v=timestamp)
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+© 2024 PROVIDENCE

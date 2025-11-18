@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>清除缓存 - PROVIDENCE</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0b3b5e 0%, #091c2e 100%);
+            margin: 0;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .clear-box {
+            background: white;
+            border-radius: 16px;
+            padding: 48px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+
+        h1 {
+            color: #0b3b5e;
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0 0 16px 0;
+        }
+
+        .desc {
+            color: #6b7a8a;
+            font-size: 14px;
+            line-height: 1.6;
+            margin-bottom: 32px;
+        }
+
+        .info {
+            background: #f7f8fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #e8edf3;
+        }
+
+        .info-item:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #6b7a8a;
+            font-size: 13px;
+        }
+
+        .info-value {
+            color: #091c2e;
+            font-weight: 600;
+            font-size: 13px;
+        }
+
+        .btn-clear {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #c99b2b 0%, #a87c1f 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-bottom: 12px;
+        }
+
+        .btn-clear:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(201, 155, 43, 0.4);
+        }
+
+        .btn-cancel {
+            width: 100%;
+            padding: 16px;
+            background: transparent;
+            color: #6b7a8a;
+            border: 1px solid #d4dbe3;
+            border-radius: 12px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-cancel:hover {
+            background: #f7f8fa;
+            border-color: #c99b2b;
+            color: #0b3b5e;
+        }
+
+        .success {
+            display: none;
+            margin-top: 24px;
+            padding: 16px;
+            background: #d4edda;
+            color: #155724;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="clear-box">
+        <div class="icon">🗑️</div>
+        <h1>数据已重置</h1>
+        <p class="desc">检测到系统数据已重置，您需要清除本地缓存并重新登录。</p>
+
+        <div class="info">
+            <div class="info-item">
+                <span class="info-label">当前Token</span>
+                <span class="info-value" id="currentToken">加载中...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">登录用户</span>
+                <span class="info-value" id="currentUser">加载中...</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">缓存页面</span>
+                <span class="info-value" id="lastPage">加载中...</span>
+            </div>
+        </div>
+
+        <button class="btn-clear" onclick="clearAndLogin()">
+            清除缓存并重新登录
+        </button>
+
+        <button class="btn-clear" onclick="clearBusinessData()" style="background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); margin-top: 12px;">
+            ⚠️ 清理业务数据（用户、充值、订单等）
+        </button>
+
+        <button class="btn-cancel" onclick="goBack()">
+            取消
+        </button>
+
+        <div class="success" id="success">
+            ✅ 缓存已清除！正在跳转到登录页...
+        </div>
+    </div>
+
+    <script>
+    // 显示当前缓存信息
+    document.getElementById('currentToken').textContent =
+        (localStorage.getItem('admin_token') || '无').substring(0, 20) + '...';
+    document.getElementById('currentUser').textContent =
+        localStorage.getItem('admin_user') || '未知';
+    document.getElementById('lastPage').textContent =
+        localStorage.getItem('admin_last_page') || 'dashboard.html';
+
+    // 清除并登录
+    function clearAndLogin() {
+        document.getElementById('success').style.display = 'block';
+
+        setTimeout(() => {
+            localStorage.clear();
+            window.location.href = 'login.html';
+        }, 1000);
+    }
+
+    // 返回
+    function goBack() {
+        window.history.back();
+    }
+
+    // 清理业务数据（用户、充值、订单等）
+    function clearBusinessData() {
+        if (!confirm('⚠️ 警告：此操作将删除所有业务数据！\n\n包括：\n- 所有用户数据（保留管理员）\n- 所有投资订单\n- 所有充值提现记录\n- 所有钱包数据\n- 所有日利宝账户\n- 所有登录日志\n- 所有钱包流水\n\n保留：\n- 管理员账户\n- 项目配置\n- 公司动态、新闻、课堂等内容\n\n此操作不可恢复！\n\n确定要继续吗？')) {
+            return;
+        }
+
+        if (!confirm('请再次确认：您真的要清理所有业务数据吗？\n\n这将删除所有用户和交易记录！')) {
+            return;
+        }
+
+        const token = localStorage.getItem('admin_token');
+        if (!token) {
+            alert('请先登录');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // 显示加载状态
+        const btn = event.target;
+        const originalText = btn.textContent;
+        btn.disabled = true;
+        btn.textContent = '清理中...';
+
+        fetch('../api/admin/clear-all-data.php', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'token': token
+            },
+            body: JSON.stringify({
+                confirm: true,
+                type: 'business' // 只清理业务数据
+            })
+        })
+        .then(res => res.json())
+        .then(result => {
+            if (result.code === 1) {
+                let message = '✅ 业务数据清理完成！\n\n已清理：\n';
+                if (result.data) {
+                    Object.values(result.data).forEach(msg => {
+                        message += '• ' + msg + '\n';
+                    });
+                }
+                message += '\n系统已重置，可以重新开始。';
+                alert(message);
+                // 清除本地缓存
+                localStorage.clear();
+                window.location.href = 'login.html';
+            } else {
+                alert('清理失败：' + (result.message || '未知错误'));
+                btn.disabled = false;
+                btn.textContent = originalText;
+            }
+        })
+        .catch(err => {
+            alert('网络错误：' + err.message);
+            btn.disabled = false;
+            btn.textContent = originalText;
+        });
+    }
+    </script>
+</body>
+</html>

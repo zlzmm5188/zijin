@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>登录测试</title>
+</head>
+<body>
+<h2>Providence 登录测试</h2>
+<input type="text" id="username" placeholder="用户名" value="testuser">
+<input type="password" id="password" placeholder="密码" value="123456">
+<button onclick="testLogin()">测试登录</button>
+<pre id="result"></pre>
+
+<script>
+async function testLogin() {
+  const username = document.getElementById('username').value;
+  const password = document.getElementById('password').value;
+  
+  try {
+    const res = await fetch('https://api.frevix.top/login/login/account', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({ username, password })
+    });
+    
+    const data = await res.json();
+    document.getElementById('result').textContent = JSON.stringify(data, null, 2);
+    
+    if (data.code === 1) {
+      alert('登录成功！Token: ' + data.data.token);
+    } else {
+      alert('登录失败：' + data.message);
+    }
+  } catch (err) {
+    document.getElementById('result').textContent = 'CORS错误: ' + err.message;
+    alert('CORS错误: ' + err.message);
+  }
+}
+</script>
+</body>
+</html>

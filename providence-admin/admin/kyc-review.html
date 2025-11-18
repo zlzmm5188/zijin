@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>实名认证审核</title>
+    <style>
+        :root{--primary:#0b3b5e;--success:#25d0a6;--warning:#f59e0b;--danger:#ef4444;--surface:#fff}
+        body{padding:20px;background:#f7f8fa;font-family:-apple-system,sans-serif}
+        .table{width:100%;background:var(--surface);border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(5,15,30,.08)}
+        .table th{background:var(--primary);color:#fff;padding:14px;text-align:left}
+        .table td{padding:12px;border-bottom:1px solid #f3f4f6}
+        .badge{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600}
+        .badge-warning{background:var(--warning);color:#fff}
+        .badge-success{background:var(--success);color:#fff}
+        .badge-danger{background:var(--danger);color:#fff}
+        .btn{padding:6px 12px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin:0 2px}
+        .btn-primary{background:var(--primary);color:#fff}
+        .btn-success{background:var(--success);color:#fff}
+        .btn-danger{background:var(--danger);color:#fff}
+        .modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999}
+        .modal.active{display:flex;justify-content:center;align-items:center}
+        .modal-content{background:var(--surface);padding:30px;border-radius:12px;max-width:900px;max-height:90vh;overflow:auto}
+        .modal-close{float:right;font-size:28px;cursor:pointer;color:#999}
+        .id-cards-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin:20px 0}
+        .id-card-item{background:#f8f9fa;padding:15px;border-radius:8px;text-align:center}
+        .id-card-label{font-weight:600;margin-bottom:10px}
+        .id-card-image{width:100%;border-radius:8px;border:2px solid #e5e7eb;cursor:pointer}
+        .id-card-image:hover{transform:scale(1.02);box-shadow:0 4px 12px rgba(0,0,0,0.15)}
+        .user-info{background:#f8f9fa;padding:20px;border-radius:8px;margin:20px 0}
+        .info-item{padding:10px 0;border-bottom:1px solid #e5e7eb}
+    </style>
+</head>
+<body>
+    <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+        <h2>📋 实名认证审核</h2>
+        <button class="btn btn-primary" onclick="loadData()">🔄 刷新</button>
+    </div>
+
+    <table class="table">
+        <thead>
+            <tr><th>用户ID</th><th>用户名</th><th>真实姓名</th><th>身份证号</th><th>证件</th><th>状态</th><th>提交时间</th><th>操作</th></tr>
+        </thead>
+        <tbody id="list"><tr><td colspan="8" style="text-align:center;padding:40px">加载中...</td></tr></tbody>
+    </table>
+
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="close()">&times;</span>
+            <h3>实名认证审核</h3>
+            <div class="user-info">
+                <div class="info-item"><strong>用户名：</strong><span id="u"></span></div>
+                <div class="info-item"><strong>真实姓名：</strong><span id="n" style="font-size:18px;color:var(--primary);font-weight:600"></span></div>
+                <div class="info-item"><strong>身份证号：</strong><span id="c" style="font-family:monospace;font-size:16px"></span></div>
+            </div>
+            <h4>📸 身份证照片（点击查看大图）</h4>
+            <div class="id-cards-grid">
+                <div class="id-card-item"><div class="id-card-label">身份证正面</div><img id="f" class="id-card-image" onclick="view(this.src)"></div>
+                <div class="id-card-item"><div class="id-card-label">身份证反面</div><img id="b" class="id-card-image" onclick="view(this.src)"></div>
+                <div class="id-card-item"><div class="id-card-label">手持身份证</div><img id="h" class="id-card-image" onclick="view(this.src)"></div>
+            </div>
+            <div style="margin-top:30px;padding-top:20px;border-top:2px solid #e5e7eb">
+                <label><strong>审核备注：</strong></label>
+                <textarea id="r" style="width:100%;padding:12px;border-radius:8px;border:1px solid #e5e7eb;margin:10px 0" rows="3" placeholder="拒绝时必填"></textarea>
+                <div style="margin-top:20px">
+                    <button class="btn btn-success" style="padding:12px 40px;font-size:15px" onclick="approve()">✅ 通过</button>
+                    <button class="btn btn-danger" style="padding:12px 40px;font-size:15px" onclick="reject()">❌ 拒绝</button>
+                    <button class="btn" style="padding:12px 30px" onclick="closeM()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal" id="imgModal">
+        <div style="position:relative;max-width:90%;max-height:90vh">
+            <span class="modal-close" onclick="closeImg()" style="position:absolute;top:-40px;right:0;color:#fff;font-size:40px">&times;</span>
+            <img id="lg" style="max-width:100%;max-height:90vh;border-radius:8px">
+        </div>
+    </div>
+
+    <script>
+    let cur=null;
+
+    function loadData(){
+        const data=[
+            {id:1,user_id:101,username:'user123',real_name:'张三',id_card:'110101199001011234',id_card_front:'/uploads/kyc/front1.jpg',id_card_back:'/uploads/kyc/back1.jpg',hand_held_photo:'/uploads/kyc/hand1.jpg',status:0,created_at:'2024-11-10 10:00:00'},
+            {id:2,user_id:102,username:'user456',real_name:'李四',id_card:'110101199102021234',id_card_front:'/uploads/kyc/front2.jpg',id_card_back:'/uploads/kyc/back2.jpg',hand_held_photo:'/uploads/kyc/hand2.jpg',status:1,created_at:'2024-11-10 09:30:00'}
+        ];
+
+        const html=data.map(i=>{
+            const s={0:'待审核',1:'已通过',2:'已拒绝'}[i.status];
+            const c={0:'badge-warning',1:'badge-success',2:'badge-danger'}[i.status];
+            const m=i.id_card.substr(0,6)+'********'+i.id_card.substr(-4);
+            return`<tr><td>${i.user_id}</td><td>${i.username}</td><td style="font-weight:600">${i.real_name}</td><td style="font-family:monospace">${m}</td><td><span style="color:var(--primary);cursor:pointer" onclick='review(${JSON.stringify(i)})'>查看3张 📸</span></td><td><span class="badge ${c}">${s}</span></td><td>${i.created_at}</td><td>${i.status==0?`<button class="btn btn-primary" onclick='review(${JSON.stringify(i)})'>审核</button>`:'<span style="color:#999">已处理</span>'}</td></tr>`;
+        }).join('');
+
+        document.getElementById('list').innerHTML=html;
+    }
+
+    function review(i){
+        cur=i;
+        document.getElementById('u').textContent=i.username+' (ID: '+i.user_id+')';
+        document.getElementById('n').textContent=i.real_name;
+        document.getElementById('c').textContent=i.id_card;
+        document.getElementById('f').src=i.id_card_front||'';
+        document.getElementById('b').src=i.id_card_back||'';
+        document.getElementById('h').src=i.hand_held_photo||'';
+        document.getElementById('r').value='';
+        document.getElementById('modal').classList.add('active');
+    }
+
+    function view(s){
+        document.getElementById('lg').src=s;
+        document.getElementById('imgModal').classList.add('active');
+    }
+
+    function closeImg(){
+        document.getElementById('imgModal').classList.remove('active');
+    }
+
+    function closeM(){
+        document.getElementById('modal').classList.remove('active');
+        cur=null;
+    }
+
+    function approve(){
+        if(!cur)return;
+        if(confirm(`确认通过实名认证？\n\n用户：${cur.username}\n姓名：${cur.real_name}`)){
+            fetch('../api/admin/kyc-approve',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({user_id:cur.user_id})
+            }).then(r=>r.json()).then(d=>{
+                if(d.code===1){
+                    alert('✅ '+d.message);
+                    closeM();
+                    loadData();
+                }else{
+                    alert('❌ '+d.message);
+                }
+            }).catch(e=>alert('请求失败'));
+        }
+    }
+
+    function reject(){
+        if(!cur)return;
+        const reason=document.getElementById('r').value;
+        if(!reason){alert('❌ 拒绝时必须填写原因！');return;}
+        if(confirm(`确认拒绝？\n原因：${reason}`)){
+            fetch('../api/admin/kyc-reject',{
+                method:'POST',
+                headers:{'Content-Type':'application/json'},
+                body:JSON.stringify({user_id:cur.user_id,reason})
+            }).then(r=>r.json()).then(d=>{
+                if(d.code===1){
+                    alert('✅ '+d.message);
+                    closeM();
+                    loadData();
+                }else{
+                    alert('❌ '+d.message);
+                }
+            }).catch(e=>alert('请求失败'));
+        }
+    }
+
+    loadData();
+    </script>
+</body>
+</html>

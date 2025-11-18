@@ -1,0 +1,11 @@
+# Providence Admin API路由
+<IfModule mod_rewrite.c>
+RewriteEngine On
+RewriteBase /admin/
+
+# API代理到上级目录（支持 index.php 路由）
+# 如果路径包含 index.php，直接转发
+RewriteRule ^api/index\.php/(.*)$ ../api/index.php/$1 [L,QSA]
+# 否则转发到 index.php 进行路由
+RewriteRule ^api/(.*)$ ../api/index.php/$1 [L,QSA]
+</IfModule>

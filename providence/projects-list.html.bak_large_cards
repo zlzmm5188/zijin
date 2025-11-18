@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>PROVIDENCE · 固收优选系列</title>
+<style>
+/* ===== Design Tokens (与首页 v1.2 对齐) ===== */
+:root{
+  --navy-1:#08141f; --navy-2:#0d1d2b; --navy-3:#0a1723;
+  --ink:#0f172a; --muted:#6b7280; --muted-2:#8a95a6;
+  --paper:#f5f7fa; --card:#ffffff;
+  --lineD:rgba(255,255,255,.08); --lineL:#e3e7ee; --lineS:#eef1f5;
+  --gold:#9e8a57; --gold-2:#c8ba94;
+  --radius:14px; --radius-sm:12px;
+  --sh-soft:0 6px 22px rgba(6,12,18,.20);
+}
+
+*{box-sizing:border-box} html,body{height:100%}
+
+body{
+  margin:0; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC",Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+  color:#e9eef6;
+  background:linear-gradient(180deg,var(--navy-3) 0%, var(--navy-2) 42%, var(--navy-1) 100%);
+  padding-bottom:40px;
+}
+
+/* 顶部栏 */
+.topbar{
+  position:sticky;top:0;z-index:40;padding:14px 16px;
+  background:linear-gradient(180deg,rgba(10,23,35,.95),rgba(10,23,35,.75));
+  backdrop-filter:blur(6px);border-bottom:1px solid var(--lineD);
+}
+
+.brand { display: flex; flex-direction: row; align-items: center; gap: 10px; white-space: nowrap; justify-content: flex-start; }
+
+.back-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .08);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  flex: 0 0 auto;
+  transition: all 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.back-btn:hover {
+  background: rgba(255, 255, 255, .12);
+}
+
+.back-btn:active {
+  transform: scale(0.95);
+}
+
+.logo{height:26px;width:26px;border-radius:8px;background:url('img/logo.png') center/contain no-repeat;background-color:transparent;flex-shrink:0}
+
+.page-title, .brand h1 { margin: 0; display: inline-block; white-space: nowrap; flex: 0 1 auto; font-size: 18px; font-weight: 600; color: var(--gold-2); letter-spacing: 0.3px; }
+
+.badge{margin-left:auto;font-size:11px;padding:6px 10px;border-radius:999px;border:1px solid rgba(159,139,84,.4);background:rgba(159,139,84,.15);color:var(--gold-2);flex-shrink:0}
+
+/* Hero 区域 - 使用稳健增值资产池样式 */
+.hero{padding:20px 16px 18px;border-bottom:1px solid var(--lineD)}
+
+.hero-card {
+  background: linear-gradient(135deg, rgba(200, 186, 148, 0.15), rgba(200, 186, 148, 0.05));
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(200, 186, 148, 0.2);
+  box-shadow: 0 8px 32px rgba(6,12,18,0.25), 0 2px 8px rgba(0,0,0,0.1);
+  transition: all 0.3s ease;
+}
+
+.hero-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(6,12,18,0.3), 0 4px 12px rgba(200, 186, 148, 0.2);
+  border-color: rgba(200, 186, 148, 0.35);
+}
+
+.hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.hero-title{margin:0;font-size:18px;color:var(--gold-2);font-weight:600}
+
+.hero-desc {
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  margin-bottom: 12px;
+  margin-top: 0;
+}
+
+.hero-stats {
+  background: rgba(8, 20, 31, 0.4);
+  border-radius: 10px;
+  padding: 12px;
+  border: 1px solid rgba(200, 186, 148, 0.2);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: rgba(200, 186, 148, 0.8);
+  margin-bottom: 4px;
+}
+
+.stat-value {
+  font-size: 16px;
+  color: #d4af37;
+  font-weight: 700;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.6);
+}
+
+.stat-value.white {
+  color: #fff;
+  text-shadow: none;
+}
+
+/* 筛选条 */
+.filters{
+  position:sticky;top:60px;z-index:35;
+  padding:10px 16px;background:linear-gradient(180deg,rgba(10,23,35,.92),rgba(10,23,35,.72));
+  border-bottom:1px solid var(--lineD);backdrop-filter:blur(6px);
+}
+
+.row{display:flex;gap:8px;flex-wrap:wrap}
+
+.chip{
+  font-size:12px;padding:8px 12px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--lineD);color:#d7ddea;background:rgba(255,255,255,.06);
+  transition: all 0.2s ease;
+}
+
+.chip:hover {
+  border-color: rgba(200, 186, 148, 0.3);
+  background: rgba(255,255,255,.08);
+}
+
+.chip.active{
+  color:#0b1220;
+  border-color:rgba(200, 186, 148, 0.6);
+  background:linear-gradient(180deg,#efe7d2,#e2d6b5);
+  box-shadow: 0 2px 8px rgba(200, 186, 148, 0.25);
+}
+
+.select{
+  appearance:none;background:rgba(255,255,255,.06);color:#e6edf6;border:1px solid var(--lineD);
+  border-radius:999px;padding:8px 12px;font-size:12px
+}
+
+/* 列表容器 */
+.wrap{max-width:100%;margin:0 auto}
+
+.list{padding:12px 16px}
+
+/* 单卡片 - 采用稳健增值资产池UI样式 */
+.card{
+  background:linear-gradient(135deg, rgba(200, 186, 148, 0.15), rgba(200, 186, 148, 0.05));
+  color:#e9eef6;
+  border:1px solid rgba(200, 186, 148, 0.2);
+  border-radius:16px;
+  box-shadow:0 8px 32px rgba(6,12,18,0.25), 0 2px 8px rgba(0,0,0,0.1);
+  padding:20px;margin-bottom:24px;
+  transition:all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor:pointer;
+  position:relative;
+  overflow:hidden;
+  min-height:200px;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  box-shadow:0 12px 40px rgba(6,12,18,0.3), 0 4px 12px rgba(200, 186, 148, 0.2);
+  border-color:rgba(200, 186, 148, 0.35);
+  background:linear-gradient(135deg, rgba(200, 186, 148, 0.18), rgba(200, 186, 148, 0.08));
+}
+
+.head{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+
+.badge-vip{margin-left:auto;font-size:11px;padding:4px 8px;border-radius:999px;color:#0b1220;
+  background:linear-gradient(180deg,#efe9d6,#e2d7b7);border:1px solid rgba(200, 186, 148, 0.5);flex-shrink:0}
+
+.title{margin:0;font-size:20px;color:var(--gold-2);font-weight:600;line-height:1.4;letter-spacing:-0.3px}
+
+.sub{font-size:14px;color:rgba(255,255,255,0.75);margin-top:6px;font-weight:500;line-height:1.6}
+
+/* 指标 */
+.meta{
+  display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:14px
+}
+
+@media (min-width: 480px) {
+  .meta {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.kv{background:rgba(8, 20, 31, 0.4);border:1px solid rgba(200, 186, 148, 0.2);border-radius:10px;padding:14px;transition:all 0.3s ease;position:relative;overflow:hidden}
+
+.kv:hover{background:rgba(8, 20, 31, 0.5);border-color:rgba(200, 186, 148, 0.3);transform:translateY(-1px);box-shadow:0 4px 12px rgba(200, 186, 148, 0.15)}
+
+.kv b{font-size:18px;color:var(--gold-2);font-weight:600;margin-bottom:6px;display:block;letter-spacing:-0.3px}
+
+.kv small{font-size:12px;color:rgba(200, 186, 148, 0.8);font-weight:500;display:block;line-height:1.5}
+
+/* PM 行 - 项目经理信息 */
+.pm{display:flex;align-items:center;gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid rgba(200, 186, 148, 0.15);background:rgba(8, 20, 31, 0.2);padding:16px 14px;margin-left:-20px;margin-right:-20px;margin-bottom:-20px;border-radius:0 0 16px 16px}
+
+.pm img{
+  height:32px;width:32px;border-radius:50%;object-fit:cover;
+  border:2px solid rgba(200, 186, 148, 0.3);background:linear-gradient(180deg,rgba(200, 186, 148, 0.2),rgba(200, 186, 148, 0.1));
+  box-shadow:0 2px 8px rgba(200, 186, 148, 0.2);
+  transition:transform 0.2s ease;
+}
+
+.pm:hover img {
+  transform: scale(1.05);
+}
+
+.pm span{font-size:14px;color:rgba(255,255,255,0.85);font-weight:500;letter-spacing:0.2px}
+
+/* 倒计时区域 */
+.countdown-section {
+  margin-top: 12px;
+  padding: 10px;
+  background: rgba(8, 20, 31, 0.4);
+  border: 1px solid rgba(200, 186, 148, 0.2);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.countdown-label {
+  font-size: 11px;
+  color: rgba(200, 186, 148, 0.8);
+  font-weight: 500;
+}
+
+.countdown-time {
+  font-size: 16px;
+  color: var(--gold-2);
+  font-weight: 600;
+  font-family: 'Courier New', monospace;
+  letter-spacing: 1px;
+}
+
+/* 标签和按钮同一行 */
+.tags-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px;flex-wrap:wrap}
+
+/* 标签行 */
+.tags{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+
+.tag{
+  font-size:11px;color:rgba(255,255,255,0.9);padding:6px 10px;border-radius:20px;border:1px solid rgba(200, 186, 148, 0.3);
+  background:rgba(200, 186, 148, 0.15);
+  font-weight:500;letter-spacing:0.2px;transition:all 0.2s ease;
+}
+
+.tag:hover {
+  border-color:rgba(200, 186, 148, 0.5);
+  background:rgba(200, 186, 148, 0.25);
+  transform:translateY(-1px);
+}
+
+.tag.viponly{color:#0b1220;background:linear-gradient(180deg,#efe7d2,#e2d6b5);border:1px solid rgba(200, 186, 148, 0.6);box-shadow:0 2px 4px rgba(200, 186, 148, 0.25)}
+
+/* CTA 行 */
+.actions{display:flex;gap:10px}
+
+.btn {
+  padding:8px 20px;
+  font-size:13px;
+  cursor:pointer;
+  border-radius:10px;
+  white-space:nowrap;
+  transition:all 0.3s ease;
+  border:none;
+  font-weight:600;
+}
+
+.btn.primary{
+  color:#0b1220;
+  border:1px solid rgba(200, 186, 148, 0.6);
+  background:linear-gradient(180deg,#efe7d2,#e2d6b5);
+  box-shadow:0 2px 8px rgba(200, 186, 148, 0.2);
+  position:relative;
+  overflow:hidden;
+}
+
+.btn.primary::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn.primary:hover{
+  transform:translateY(-2px);
+  box-shadow:0 6px 16px rgba(200, 186, 148, 0.35);
+  border-color:rgba(200, 186, 148, 0.8);
+}
+
+.btn.primary:active::before {
+  width: 300px;
+  height: 300px;
+}
+
+/* 加载状态 */
+.loading-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: #c8d2dd;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(200, 186, 148, 0.2);
+  border-top-color: var(--gold-2);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  margin: 0 auto 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 页脚加载 */
+.loadmore{
+  margin:16px auto 28px;padding:10px 14px;border-radius:12px;border:1px solid var(--lineD);
+  background:rgba(255,255,255,.06);color:#e6edf6;font-size:13px;cursor:pointer;
+  transition:all 0.2s ease;
+  display:block;
+  text-align:center;
+}
+
+.loadmore:hover {
+  background:rgba(255,255,255,.08);
+  border-color:rgba(200, 186, 148, 0.3);
+}
+</style>
+</head>
+<body>
+<!-- 顶部 -->
+<div class="topbar">
+  <div class="brand">
+    <a href="javascript:history.back()" class="back-btn">←</a>
+    <div class="logo"></div>
+    <h1 class="page-title">固收优选系列</h1>
+    <div class="badge">PROVIDENCE</div>
+  </div>
+</div>
+
+<!-- Hero区域 - 使用稳健增值资产池卡片样式 -->
+<section class="hero wrap">
+  <div class="hero-card">
+    <div class="hero-header">
+      <h2 class="hero-title">固收优选系列</h2>
+    </div>
+    <p class="hero-desc">以固收为核心，辅以可转债、基金与精选 IPO 配售，追求长期稳健复利。</p>
+    <div class="hero-stats">
+      <div class="stat-item">
+        <div class="stat-label">目前募集资金</div>
+        <div class="stat-value" id="totalAmount">¥97,538,437</div>
+      </div>
+      <div class="stat-item" style="text-align: right;">
+        <div class="stat-label">当前参与人数</div>
+        <div class="stat-value white" id="participantCount">1,234</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 筛选条 -->
+<div class="filters">
+  <div class="row wrap" style="gap:10px">
+    <div class="row" style="flex:1">
+      <div class="chip active" data-chip="all">全部</div>
+      <div class="chip" data-chip="ipo">IPO 配售</div>
+      <div class="chip" data-chip="bond">债券 / 可转债</div>
+      <div class="chip" data-chip="newbie">新手友好</div>
+      <div class="chip" data-chip="vip">VIP 专属</div>
+    </div>
+  </div>
+</div>
+
+<!-- 列表 -->
+<section class="list wrap" id="list">
+  <div id="loading" class="loading-state">
+    <div class="spinner"></div>
+    <div>加载中...</div>
+  </div>
+  <!-- 卡片将动态从后端API加载 -->
+  <button class="loadmore" id="more" style="display:none">加载更多</button>
+</section>
+
+<script src="config.js?v=1763365517"></script>
+<script>
+// 等待API对象加载
+function waitForAPI() {
+    return new Promise((resolve) => {
+        if (window.API && window.API_CONFIG) {
+            resolve();
+            return;
+        }
+        let attempts = 0;
+        const check = setInterval(() => {
+            if (window.API && window.API_CONFIG || attempts++ > 6) {
+                clearInterval(check);
+                resolve();
+            }
+        }, 50);
+    });
+}
+
+// 项目数据
+let projectData = {
+    categories: [],
+    projects: []
+};
+
+// 筛选和排序
+const chips = document.querySelectorAll('.chip');
+const list  = document.getElementById('list');
+const loading = document.getElementById('loading');
+
+function applyFilter(){
+  const active = document.querySelector('.chip.active')?.dataset.chip || 'all';
+  [...list.querySelectorAll('.card')].forEach(card=>{
+    const type = card.dataset.type;
+    const isVip = card.dataset.vip === 'true';
+    let show = true;
+    if(active==='ipo') show = type==='ipo';
+    if(active==='bond') show = type==='bond';
+    if(active==='newbie') show = card.innerText.includes('新手友好');
+    if(active==='vip') show = isVip;
+    card.style.display = show ? '' : 'none';
+  });
+}
+
+chips.forEach(c=>c.addEventListener('click',()=>{
+  chips.forEach(x=>x.classList.remove('active'));
+  c.classList.add('active'); applyFilter();
+}));
+
+// ========== 加载项目数据 ==========
+async function loadProjects() {
+    try {
+        await waitForAPI();
+        
+        const API_BASE = window.API_CONFIG?.baseURL || "https://apis.copla.top";
+        const token = localStorage.getItem('providence_token') || localStorage.getItem('token') || '';
+
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        try {
+            let data = null;
+            if (window.API && window.API.fund && window.API.fund.getList) {
+                try {
+                    const apiPromise = window.API.fund.getList();
+                    const timeoutPromise = new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('API调用超时')), 5000)
+                    );
+                    const result = await Promise.race([apiPromise, timeoutPromise]);
+
+                    if (result && result.success && result.data) {
+                        data = { code: 1, data: { list: result.data }, msg: "ok" };
+                        console.log("[Projects List] ✓ 使用统一API封装");
+                    }
+                } catch (apiError) {
+                    console.warn("[Projects List] 统一API封装调用失败:", apiError.message);
+                }
+            }
+
+            if (!data) {
+                const response = await fetch(API_BASE + "/index.php/fund/project/all", {
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-Type": "application/json",
+                        "token": token
+                    },
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const text = await response.text();
+                try {
+                    data = JSON.parse(text);
+                    console.log("[Projects List] ✓ 使用直接API调用");
+                } catch (parseError) {
+                    console.error("[Projects List] JSON解析失败:", text.substring(0, 100));
+                    throw new Error("服务器返回格式错误");
+                }
+            }
+
+            console.log("[Projects List] API响应:", data);
+
+            let projectList = null;
+            if (data && data.code === 1 && data.data) {
+                if (data.data.list && Array.isArray(data.data.list)) {
+                    projectList = data.data.list;
+                } else if (Array.isArray(data.data)) {
+                    projectList = data.data;
+                }
+            } else if (data && Array.isArray(data)) {
+                projectList = data;
+            }
+
+            if (projectList && projectList.length > 0) {
+                projectData.projects = projectList.map(p => ({
+                    id: p.id,
+                    title: p.name || p.title || "投资项目",
+                    rate: parseFloat(p.daily_rate || p.base_rate || p.rate || 0),
+                    vip_rate: parseFloat(p.added_rate || p.vip_rate || 0),
+                    day: parseInt(p.total_days || p.cycle_days || p.day || 0),
+                    min: parseFloat(p.min_invest || p.min || 0),
+                    max: parseFloat(p.max_invest || p.max || 0),
+                    status: parseInt(p.status || 1),
+                    vip: parseInt(p.vip_min || p.vip || 0),
+                    added: parseFloat(p.added_rate || p.added || 0),
+                    gift: parseFloat(p.gift_rate || p.gift || 0),
+                    clock: parseInt(p.clock || 0),
+                    categoryName: p.category || p.categoryName || "固收优选",
+                    image: p.cover_image || p.image || "",
+                    description: p.description || p.desc || p.intro || "",
+                    company: {
+                        name: p.manager_name || p.company_name || "PROVIDENCE",
+                        image: p.manager_avatar || p.company_image || ""
+                    }
+                }));
+
+                console.log("[Projects List] ✓ 加载成功，共", projectData.projects.length, "个项目");
+                renderProjects();
+                loading.style.display = "none";
+            } else {
+                loading.innerHTML = '<div>暂无项目数据</div>';
+                console.warn("[Projects List] ⚠️ 项目列表为空");
+            }
+        } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (fetchError.name === 'AbortError') {
+                console.warn("[Projects List] ⚠️ 请求超时（5秒）");
+                loading.innerHTML = '<div>加载超时，请稍后重试</div>';
+            } else {
+                console.error("[Projects List] ❌ 加载失败:", fetchError.message);
+                loading.innerHTML = '<div>加载失败，请重试</div>';
+            }
+        }
+    } catch (error) {
+        console.error("[Projects List] ❌ 初始化失败:", error);
+        loading.innerHTML = '<div>加载失败，请重试</div>';
+    }
+}
+
+// ========== 渲染项目列表 ==========
+function renderProjects() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const isNewbieMode = urlParams.get('type') === 'newbie';
+    
+    if (isNewbieMode) {
+        const titleEl = document.querySelector('.page-title, h1');
+        const heroTitleEl = document.querySelector('.hero-title, .hero h2');
+        const heroDescEl = document.querySelector('.hero-desc, .hero p');
+        if (titleEl) titleEl.textContent = '新人体验金专区';
+        if (heroTitleEl) heroTitleEl.textContent = '新人体验金专区';
+        if (heroDescEl) heroDescEl.textContent = '专为新手用户打造的体验项目，低门槛、高收益，助您快速上手投资。';
+    }
+    
+    const existingCards = list.querySelectorAll('.card');
+    existingCards.forEach(card => card.remove());
+
+    if (projectData.projects.length === 0) {
+        loading.innerHTML = '<div>暂无项目</div>';
+        loading.style.display = 'block';
+        return;
+    }
+
+    let projectsToShow = projectData.projects;
+    if (isNewbieMode) {
+        projectsToShow = projectData.projects.filter(p => {
+            const min = parseFloat(p.min || 0) || 0;
+            const day = parseInt(p.day || 0);
+            const rate = parseFloat(p.rate || 0) || 0;
+            return min <= 20000 && day >= 15 && day <= 90 && rate >= 7 && rate <= 12;
+        });
+        
+        if (projectsToShow.length === 0) {
+            loading.innerHTML = '<div style="text-align:center;padding:40px;color:rgba(255,255,255,0.7);"><div style="font-size:48px;margin-bottom:16px;">🎁</div><div style="font-size:16px;margin-bottom:8px;">新人体验金专区</div><div style="font-size:14px;">暂无适合新手的项目，请查看其他项目</div><a href="projects-list.html" style="display:inline-block;margin-top:20px;padding:10px 20px;background:linear-gradient(135deg, rgba(200, 186, 148, 0.2), rgba(200, 186, 148, 0.1));border:1px solid rgba(200, 186, 148, 0.3);border-radius:8px;color:var(--gold-2);text-decoration:none;">查看全部项目</a></div>';
+            loading.style.display = 'block';
+            return;
+        }
+    }
+
+    projectsToShow.forEach(project => {
+        const card = createProjectCard(project);
+        list.insertBefore(card, document.getElementById('more'));
+    });
+}
+
+// ========== 创建项目卡片 ==========
+function createProjectCard(project) {
+    const rate = parseFloat(project.rate || 0);
+    const vipRate = parseFloat(project.vip_rate || 0);
+    const totalRate = rate + vipRate;
+    const day = parseInt(project.day || 0);
+    const min = parseFloat(project.min || 0);
+    const max = parseFloat(project.max || 0);
+    const status = parseInt(project.status || 0);
+    const vipReq = parseInt(project.vip || 0);
+    const isVipOnly = vipReq > 0;
+    const clock = parseInt(project.clock || 0);
+    const added = parseFloat(project.added || 0);
+    const gift = parseFloat(project.gift || 0);
+
+    let type = 'bond';
+    const catName = (project.categoryName || '').toLowerCase();
+    const title = (project.title || '').toLowerCase();
+    if (catName.includes('ipo') || title.includes('ipo') || title.includes('配售')) type = 'ipo';
+    if (catName.includes('基金') || title.includes('基金') || title.includes('组合')) type = 'fund';
+    const isNewbie = title.includes('新手') || min <= 10000;
+
+    const tags = [];
+    if (isVipOnly) tags.push({ text: 'VIP 专属', viponly: true });
+    if (isNewbie) tags.push({ text: '新手友好', viponly: false });
+    if (added > 0) tags.push({ text: '增值收益', viponly: false });
+    if (gift > 0) tags.push({ text: '红包收益', viponly: false });
+    if (clock === 1) tags.push({ text: '限时抢购', viponly: false });
+    if (status === 2) tags.push({ text: '已售罄', viponly: false });
+
+    const card = document.createElement('article');
+    card.className = 'card';
+    card.dataset.type = type;
+    card.dataset.vip = isVipOnly ? 'true' : 'false';
+    card.dataset.yield = totalRate.toFixed(1);
+    card.dataset.cycle = day;
+    card.dataset.min = min;
+
+    const tagsHtml = tags.map(t =>
+        `<span class="tag ${t.viponly ? 'viponly' : ''}">${t.text}</span>`
+    ).join('');
+
+    let vipBadge = '';
+    if (vipRate > 0) {
+        vipBadge = `<span class="badge-vip">VIP${vipReq}+ 加息至 ${totalRate.toFixed(1)}%</span>`;
+    } else if (isVipOnly) {
+        vipBadge = '<span class="badge-vip">VIP Only</span>';
+    }
+
+    let cycleText = '灵活';
+    if (day > 0) {
+        if (day < 30) {
+            cycleText = `${day} 天`;
+        } else if (day < 365) {
+            const months = Math.floor(day / 30);
+            cycleText = `${months} 个月`;
+        } else {
+            const years = Math.floor(day / 365);
+            cycleText = `${years} 年`;
+        }
+    }
+
+    const rateText = totalRate > 0 ? `${totalRate.toFixed(2)}%` : '—';
+    const companyImage = project.company?.image || project.image || 'img/good/img001.jpg';
+    const companyName = project.company?.name || 'PROVIDENCE';
+
+    const introText = project.description ||
+      `${project.title || '投资项目'}是${project.categoryName || '固收优选'}系列的核心产品，采用稳健的投资策略，致力于为投资者提供稳定的收益回报。项目经过严格的风险评估和资产配置，确保资金安全与收益平衡。`;
+    const shortIntro = introText.length > 100 ? introText.substring(0, 100) + '...' : introText;
+
+    card.innerHTML = `
+    <div class="head">
+      <div style="flex:1;min-width:0;">
+        <h3 class="title">${project.title || '投资项目'}</h3>
+        <div class="sub">${project.categoryName || project.catName || '固收优选'}</div>
+      </div>
+      ${vipBadge}
+    </div>
+    <div class="meta">
+      <div class="kv"><b>${rateText}</b><small>年化收益率</small></div>
+      <div class="kv"><b>${cycleText}</b><small>投资周期</small></div>
+      <div class="kv"><b>¥ ${min.toLocaleString('zh-CN')}</b><small>起投金额</small></div>
+      ${max > 0 ? `<div class="kv"><b>¥ ${max.toLocaleString('zh-CN')}</b><small>封顶金额</small></div>` : '<div class="kv"><b>—</b><small>封顶金额</small></div>'}
+    </div>
+    ${project.description ? `<div style="margin-top:16px;padding:14px;background:rgba(8, 20, 31, 0.3);border:1px solid rgba(200, 186, 148, 0.15);border-radius:10px;"><p style="margin:0;color:rgba(255,255,255,0.85);font-size:14px;line-height:1.7;text-align:justify;">${shortIntro}</p></div>` : ''}
+    ${clock === 1 ? `<div class="countdown-section" data-countdown-id="${project.id}">
+      <span class="countdown-label">限时抢购倒计时</span>
+      <span class="countdown-time" id="countdown-${project.id}">00:00:00</span>
+    </div>` : ''}
+    <div class="pm">
+      <img src="${companyImage}" alt="" onerror="this.src='img/good/img001.jpg'">
+      <span>${companyName} · 项目负责人</span>
+    </div>
+    <div class="tags-actions">
+      <div class="tags">
+        ${tagsHtml || '<span class="tag">稳健收益</span>'}
+      </div>
+      <div class="actions">
+        <button class="btn primary" onclick="location.href='project-detail.html?id=${project.id}'">查看详情</button>
+      </div>
+    </div>
+    `;
+
+    return card;
+}
+
+// ========== 倒计时功能 ==========
+function initCountdowns() {
+    const countdownSections = document.querySelectorAll('.countdown-section');
+
+    countdownSections.forEach(section => {
+        const countdownId = section.dataset.countdownId;
+        const countdownEl = document.getElementById(`countdown-${countdownId}`);
+        if (!countdownEl) return;
+
+        const targetTime = Date.now() + 24 * 60 * 60 * 1000;
+
+        function updateCountdown() {
+            const now = Date.now();
+            const diff = Math.max(0, targetTime - now);
+
+            if (diff <= 0) {
+                countdownEl.textContent = "00:00:00";
+                section.style.opacity = '0.6';
+                return;
+            }
+
+            const hours = Math.floor(diff / (1000 * 60 * 60));
+            const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+            countdownEl.textContent =
+                String(hours).padStart(2, '0') + ':' +
+                String(minutes).padStart(2, '0') + ':' +
+                String(seconds).padStart(2, '0');
+        }
+
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+    });
+}
+
+// ========== 初始化 ==========
+document.addEventListener('DOMContentLoaded', () => {
+    loadProjects();
+});
+</script>
+
+</body>
+</html>

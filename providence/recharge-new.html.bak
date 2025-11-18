@@ -1,0 +1,540 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>充值 - Providence</title>
+    <link rel="stylesheet" href="styles.css?v=1763343791" />
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #0a1929 0%, #1a2332 100%);
+        color: #fff;
+        min-height: 100vh;
+        padding-bottom: 80px;
+      }
+
+      /* 顶部栏 */
+      .header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        background: rgba(10, 25, 41, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 215, 0, 0.1);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+      }
+
+      .back-btn {
+        font-size: 24px;
+        color: #ffd700;
+        cursor: pointer;
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 8px;
+        background: rgba(255, 215, 0, 0.1);
+      }
+
+      .header-title {
+        flex: 1;
+        font-size: 18px;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      /* 余额卡片 */
+      .balance-card {
+        margin: 20px;
+        padding: 30px 24px;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 215, 0, 0.15) 0%,
+          rgba(255, 215, 0, 0.05) 100%
+        );
+        border-radius: 16px;
+        border: 1px solid rgba(255, 215, 0, 0.2);
+        text-align: center;
+      }
+
+      .balance-label {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 8px;
+      }
+
+      .balance-amount {
+        font-size: 42px;
+        font-weight: 700;
+        color: #ffd700;
+        letter-spacing: -1px;
+      }
+
+      /* 表单卡片 */
+      .form-card {
+        margin: 20px;
+        padding: 24px;
+        background: rgba(26, 35, 50, 0.8);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 215, 0, 0.15);
+      }
+
+      .form-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #ffd700;
+      }
+
+      /* 支付方式 */
+      .payment-methods {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+
+      .payment-method {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .payment-method.active {
+        background: rgba(255, 215, 0, 0.1);
+        border-color: #ffd700;
+      }
+
+      .payment-icon {
+        font-size: 32px;
+        margin-bottom: 8px;
+      }
+
+      .payment-name {
+        font-size: 14px;
+        font-weight: 500;
+      }
+
+      /* 输入框 */
+      .input-group {
+        margin-bottom: 20px;
+      }
+
+      .input-label {
+        display: block;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .input-field {
+        width: 100%;
+        padding: 14px 16px;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 215, 0, 0.2);
+        border-radius: 12px;
+        color: #fff;
+        font-size: 16px;
+        transition: all 0.3s;
+      }
+
+      .input-field:focus {
+        outline: none;
+        border-color: #ffd700;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .input-field::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+
+      /* 快捷金额 */
+      .quick-amounts {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .quick-btn {
+        padding: 10px;
+        background: rgba(255, 215, 0, 0.1);
+        border: 1px solid rgba(255, 215, 0, 0.3);
+        border-radius: 8px;
+        color: #ffd700;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+
+      .quick-btn:active {
+        transform: scale(0.95);
+        background: rgba(255, 215, 0, 0.2);
+      }
+
+      /* 上传区域 */
+      .upload-area {
+        margin-top: 20px;
+        padding: 24px;
+        background: rgba(255, 255, 255, 0.03);
+        border: 2px dashed rgba(255, 215, 0, 0.3);
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.3s;
+      }
+
+      .upload-area:hover {
+        border-color: #ffd700;
+        background: rgba(255, 215, 0, 0.05);
+      }
+
+      .upload-icon {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.6;
+      }
+
+      .upload-text {
+        font-size: 14px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .upload-hint {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        margin-top: 8px;
+      }
+
+      .preview-image {
+        max-width: 100%;
+        border-radius: 12px;
+        margin-top: 16px;
+      }
+
+      /* 提交按钮 */
+      .submit-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+        border: none;
+        border-radius: 12px;
+        color: #0a1929;
+        font-size: 16px;
+        font-weight: 700;
+        cursor: pointer;
+        margin-top: 24px;
+        transition: all 0.3s;
+        box-shadow: 0 4px 20px rgba(255, 215, 0, 0.3);
+      }
+
+      .submit-btn:active {
+        transform: translateY(2px);
+        box-shadow: 0 2px 10px rgba(255, 215, 0, 0.3);
+      }
+
+      .submit-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+      }
+
+      /* 提示信息 */
+      .tips-card {
+        margin: 20px;
+        padding: 20px;
+        background: rgba(255, 215, 0, 0.08);
+        border-radius: 12px;
+        border-left: 4px solid #ffd700;
+      }
+
+      .tips-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #ffd700;
+        margin-bottom: 12px;
+      }
+
+      .tips-list {
+        list-style: none;
+        padding: 0;
+      }
+
+      .tips-list li {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.7);
+        line-height: 1.8;
+        padding-left: 16px;
+        position: relative;
+      }
+
+      .tips-list li:before {
+        content: "•";
+        position: absolute;
+        left: 0;
+        color: #ffd700;
+      }
+
+      /* 隐藏文件输入 */
+      input[type="file"] {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- 顶部栏 -->
+    <div class="header">
+      <div class="back-btn" onclick="history.back()">‹</div>
+      <div class="header-title">充值</div>
+      <div style="width: 32px"></div>
+    </div>
+
+    <!-- 余额卡片 -->
+    <div class="balance-card">
+      <div class="balance-label">当前余额</div>
+      <div class="balance-amount" id="userBalance">¥0.00</div>
+    </div>
+
+    <!-- 表单卡片 -->
+    <div class="form-card">
+      <div class="form-title">充值方式</div>
+
+      <!-- 支付方式 -->
+      <div class="payment-methods">
+        <div
+          class="payment-method active"
+          onclick="selectMethod('bank')"
+          id="method-bank"
+        >
+          <div class="payment-icon">🏦</div>
+          <div class="payment-name">银行转账</div>
+        </div>
+        <div
+          class="payment-method"
+          onclick="selectMethod('usdt')"
+          id="method-usdt"
+        >
+          <div class="payment-icon">₿</div>
+          <div class="payment-name">USDT</div>
+        </div>
+      </div>
+
+      <form id="rechargeForm">
+        <!-- 充值金额 -->
+        <div class="input-group">
+          <label class="input-label">充值金额</label>
+          <input
+            type="number"
+            class="input-field"
+            id="amount"
+            placeholder="请输入充值金额（最低100元）"
+            min="100"
+          />
+          <div class="quick-amounts">
+            <button type="button" class="quick-btn" onclick="setAmount(100)">
+              100
+            </button>
+            <button type="button" class="quick-btn" onclick="setAmount(500)">
+              500
+            </button>
+            <button type="button" class="quick-btn" onclick="setAmount(1000)">
+              1000
+            </button>
+            <button type="button" class="quick-btn" onclick="setAmount(5000)">
+              5000
+            </button>
+          </div>
+        </div>
+
+        <!-- 支付密码 -->
+        <div class="input-group">
+          <label class="input-label">支付密码</label>
+          <input
+            type="password"
+            class="input-field"
+            id="payPassword"
+            placeholder="请输入6位支付密码"
+            maxlength="6"
+          />
+        </div>
+
+        <!-- 上传凭证 -->
+        <div
+          class="upload-area"
+          onclick="document.getElementById('receipt').click()"
+        >
+          <div class="upload-icon">📷</div>
+          <div class="upload-text">点击上传转账凭证</div>
+          <div class="upload-hint">支持JPG、PNG格式，最大5MB</div>
+          <img id="preview" class="preview-image" style="display: none" />
+        </div>
+        <input
+          type="file"
+          id="receipt"
+          accept="image/*"
+          onchange="previewImage(this)"
+        />
+
+        <!-- 提交按钮 -->
+        <button type="submit" class="submit-btn">提交充值申请</button>
+      </form>
+    </div>
+
+    <!-- 提示信息 -->
+    <div class="tips-card">
+      <div class="tips-title">💡 充值说明</div>
+      <ul class="tips-list">
+        <li>最低充值金额100元</li>
+        <li>上传转账凭证后等待审核</li>
+        <li>银行转账1-3小时到账</li>
+        <li>USDT需等待区块确认</li>
+        <li>如有疑问请联系客服</li>
+      </ul>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="tabbar" id="tabbar"></nav>
+
+    <script src="config.js?v=1763365517"></script>
+    <script src="ios-toast.js?v=17630668562427b227"></script>
+    <script>
+      let selectedMethod = "bank";
+      let selectedFile = null;
+
+      document.addEventListener("DOMContentLoaded", function () {
+        if (!ApiService.auth.ensureLogin()) return;
+        loadBalance();
+      });
+
+      async function loadBalance() {
+        try {
+          const result = await ApiService.finance.getUserBalance();
+          if (result.code === 1 && result.data) {
+            const balance = result.data.balance || result.data.cny_balance || 0;
+            document.getElementById("userBalance").textContent =
+              "¥" + parseFloat(balance).toFixed(2);
+          }
+        } catch (error) {
+          console.error("加载余额失败:", error);
+        }
+      }
+
+      function selectMethod(method) {
+        selectedMethod = method;
+        document
+          .querySelectorAll(".payment-method")
+          .forEach((el) => el.classList.remove("active"));
+        document.getElementById("method-" + method).classList.add("active");
+      }
+
+      function setAmount(value) {
+        document.getElementById("amount").value = value;
+      }
+
+      function previewImage(input) {
+        if (input.files && input.files[0]) {
+          selectedFile = input.files[0];
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            const preview = document.getElementById("preview");
+            preview.src = e.target.result;
+            preview.style.display = "block";
+            document.querySelector(".upload-icon").style.display = "none";
+            document.querySelector(".upload-text").textContent = "点击更换凭证";
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      document
+        .getElementById("rechargeForm")
+        .addEventListener("submit", async function (e) {
+          e.preventDefault();
+
+          const amount = parseFloat(document.getElementById("amount").value);
+          const password = document.getElementById("payPassword").value;
+
+          if (!amount || amount < 100) {
+            showToast("充值金额不能低于100元", "error");
+            return;
+          }
+
+          if (!password || password.length !== 6) {
+            showToast("请输入6位支付密码", "error");
+            return;
+          }
+
+          if (!selectedFile) {
+            showToast("请上传转账凭证", "error");
+            return;
+          }
+
+          try {
+            // 1. 提交充值申请
+            const result = await ApiService.finance.recharge({
+              amount: amount,
+              pay_password: password,
+              payment_method: selectedMethod,
+              currency: selectedMethod === "usdt" ? "USDT" : "CNY",
+            });
+
+            if (result.code === 1 && result.data) {
+              const orderNo = result.data.order_no;
+
+              // 2. 上传凭证
+              const formData = new FormData();
+              formData.append("file", selectedFile);
+              formData.append("order_no", orderNo);
+
+              const uploadResult = await fetch(
+                API_CONFIG.baseURL + "/index.php/upload",
+                {
+                  method: "POST",
+                  headers: {
+                    token:
+                      ApiService.auth.getToken() ||
+                      localStorage.getItem("providence_token") ||
+                      "",
+                  },
+                  body: formData,
+                }
+              );
+
+              const uploadData = await uploadResult.json();
+
+              if (uploadData.code === 1) {
+                showToast("充值申请已提交", "success");
+                setTimeout(() => {
+                  location.href = "records.html?type=recharge";
+                }, 1500);
+              } else {
+                showToast(uploadData.message || "凭证上传失败", "error");
+              }
+            } else {
+              showToast(result.message || "充值失败", "error");
+            }
+          } catch (error) {
+            console.error("充值失败:", error);
+            showToast("操作失败，请重试", "error");
+          }
+        });
+    </script>
+  </body>
+</html>

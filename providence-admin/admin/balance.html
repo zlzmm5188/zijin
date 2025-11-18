@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>资金流水</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h2>资金流水记录</h2>
+        <table class="layui-hide" id="balanceTable"></table>
+    </div>
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    layui.use('table', function(){
+        var table = layui.table;
+        table.render({
+            elem: '#balanceTable',
+            url: '../config/mock-balance.php',
+            page: true,
+            cols: [[
+                {field: 'id', title: 'ID', width: 80},
+                {field: 'username', title: '用户', width: 120},
+                {field: 'type', title: '类型', width: 100},
+                {field: 'amount', title: '金额', width: 120},
+                {field: 'balance_after', title: '余额', width: 120},
+                {field: 'remark', title: '备注', width: 300},
+                {field: 'created_at', title: '时间', width: 180}
+            ]]
+        });
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="format-detection" content="telephone=no">
+    <title>积分兑换 - Providence</title>
+    <link rel="stylesheet" href="styles.css?v=1763030000">
+    <style>
+        :root {
+            --gold: #c8ba94;
+            --gold2: #f5d771;
+            --ink: #0f172a;
+            --lineD: rgba(255,255,255,0.08);
+            --lineL: #e5e7eb;
+        }
+
+        * {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        html, body {
+            color: rgba(255,255,255,0.85);
+            -webkit-font-smoothing: antialiased;
+            width: 100%;
+            height: 100%;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+
+        body {
+            background: linear-gradient(180deg, #0a1723 0%, #0f1c2a 100%) !important;
+            padding-bottom: 65px !important;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* 顶部导航栏 */
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background: linear-gradient(180deg, rgba(10,23,35,.95), rgba(10,23,35,.75));
+            backdrop-filter: blur(6px);
+            padding: 3vw 4vw;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--lineD);
+            flex-shrink: 0;
+        }
+
+        .back-btn {
+            width: 8.5vw;
+            height: 8.5vw;
+            min-width: 32px;
+            min-height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            background: rgba(255,255,255,.08);
+            color: #fff;
+            font-size: 5vw;
+            text-decoration: none;
+            flex-shrink: 0;
+        }
+
+        .brand h1 {
+            margin: 0;
+            font-size: 4.5vw;
+            letter-spacing: .3px;
+            color: #fff;
+            font-weight: 600;
+            flex: 1;
+            text-align: center;
+        }
+
+        .history-link {
+            font-size: 3.5vw;
+            color: #fff;
+            text-decoration: none;
+            padding: 1.5vw 3vw;
+            border-radius: 8px;
+            background: rgba(255,255,255,.08);
+            flex-shrink: 0;
+        }
+
+        /* 内容区域 */
+        .content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 4vw;
+        }
+
+        /* KPI 统计卡片区域 */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2.5vw;
+            margin-bottom: 4vw;
+        }
+
+        .kpi-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+            border: 1.5px solid rgba(220,178,79,0.3);
+            border-radius: 12px;
+            padding: 3.5vw 2.5vw;
+            text-align: center;
+            box-shadow: 
+                0 2px 8px rgba(0,0,0,0.15),
+                inset 0 1px 1px rgba(255,255,255,0.1);
+        }
+
+        .kpi-value {
+            font-size: 5.5vw;
+            font-weight: 700;
+            color: var(--gold2);
+            margin-bottom: 1vw;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .kpi-label {
+            font-size: 3vw;
+            color: rgba(255,255,255,0.65);
+            font-weight: 500;
+        }
+
+        /* 兑换表单区域 */
+        .section {
+            background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04));
+            border: 2px solid rgba(220,178,79,0.35);
+            border-radius: 16px;
+            padding: 4.5vw 4vw;
+            margin-bottom: 4vw;
+            box-shadow: 
+                0 4px 16px rgba(0,0,0,0.2),
+                inset 0 1px 2px rgba(255,255,255,0.08);
+        }
+
+        .section-title {
+            font-size: 4vw;
+            font-weight: 700;
+            color: var(--gold2);
+            margin-bottom: 4vw;
+            display: flex;
+            align-items: center;
+            gap: 2vw;
+        }
+
+        .form-group {
+            margin-bottom: 4vw;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 3.5vw;
+            color: rgba(255,255,255,0.75);
+            margin-bottom: 2vw;
+            font-weight: 600;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 3.5vw 4vw;
+            background: rgba(255,255,255,0.06);
+            border: 1.5px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            color: #fff;
+            font-size: 4vw;
+            outline: none;
+            box-sizing: border-box;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            background: rgba(255,255,255,0.08);
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(220,178,79,0.15);
+        }
+
+        .form-hint {
+            font-size: 3vw;
+            color: rgba(255,255,255,0.5);
+            margin-top: 1.5vw;
+        }
+
+        .exchange-rate-display {
+            background: rgba(220,178,79,0.1);
+            border: 1.5px solid rgba(220,178,79,0.25);
+            border-radius: 10px;
+            padding: 3vw;
+            margin-bottom: 3vw;
+            text-align: center;
+        }
+
+        .exchange-rate-text {
+            font-size: 3.5vw;
+            color: var(--gold2);
+            font-weight: 600;
+        }
+
+        .preview-box {
+            background: rgba(245,215,113,0.08);
+            border: 1.5px solid rgba(245,215,113,0.2);
+            border-radius: 10px;
+            padding: 3.5vw;
+            margin-bottom: 4vw;
+        }
+
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-label {
+            font-size: 3.5vw;
+            color: rgba(255,255,255,0.7);
+        }
+
+        .preview-value {
+            font-size: 4.5vw;
+            font-weight: 700;
+            color: var(--gold2);
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 3.5vw;
+            background: linear-gradient(135deg, var(--gold2), var(--gold));
+            border: none;
+            border-radius: 12px;
+            color: #0a1723;
+            font-size: 4vw;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(245,215,113,0.3);
+        }
+
+        .submit-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* 提示区域 */
+        .tips-box {
+            background: rgba(255,255,255,0.04);
+            border: 1.5px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 3.5vw 4vw;
+        }
+
+        .tips-box h4 {
+            margin: 0 0 2.5vw 0;
+            font-size: 3.5vw;
+            color: var(--gold2);
+            font-weight: 600;
+        }
+
+        .tips-box ul {
+            margin: 0;
+            padding-left: 4vw;
+            list-style: none;
+        }
+
+        .tips-box li {
+            font-size: 3vw;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 2vw;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .tips-box li::before {
+            content: '·';
+            position: absolute;
+            left: -2vw;
+            color: var(--gold);
+        }
+
+        /* 支付密码弹窗 */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: flex-end;
+            z-index: 9999;
+            backdrop-filter: blur(4px);
+        }
+
+        .popup-overlay.show {
+            display: flex;
+        }
+
+        .popup-content {
+            width: 100%;
+            background: linear-gradient(180deg, #1a2937, #0f1c2a);
+            border-radius: 20px 20px 0 0;
+            padding: 5vw 5vw 8vw 5vw;
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .popup-title {
+            font-size: 4.5vw;
+            font-weight: 700;
+            color: var(--gold2);
+            margin-bottom: 4vw;
+            text-align: center;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 4vw;
+            background: rgba(255,255,255,0.08);
+            border: 1.5px solid rgba(220,178,79,0.3);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 5vw;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1vw;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 4vw;
+        }
+
+        .password-input:focus {
+            border-color: var(--gold);
+            box-shadow: 0 0 0 3px rgba(220,178,79,0.15);
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .popup-content.shake {
+            animation: shake 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="topbar">
+        <a href="javascript:history.back()" class="back-btn">‹</a>
+        <div class="brand">
+            <h1>积分兑换</h1>
+        </div>
+        <a href="points-history.html" class="history-link">明细</a>
+    </div>
+
+    <div class="content">
+        <!-- KPI 统计卡片 -->
+        <div class="kpi-grid">
+            <div class="kpi-card">
+                <div class="kpi-value" id="currentPoints">0</div>
+                <div class="kpi-label">当前积分</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value" id="todayEarned">+0</div>
+                <div class="kpi-label">今日获得</div>
+            </div>
+            <div class="kpi-card">
+                <div class="kpi-value" id="totalExchanged">0</div>
+                <div class="kpi-label">累计兑换</div>
+            </div>
+        </div>
+
+        <!-- 兑换表单 -->
+        <div class="section">
+            <div class="section-title">
+                <span>💰</span>
+                <span>积分兑换人民币</span>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">兑换金额</label>
+                <input type="tel" class="form-input" id="exchangeAmount" placeholder="请输入兑换金额" autocomplete="off">
+                <div class="form-hint">最低兑换金额 ¥10</div>
+            </div>
+
+            <div class="exchange-rate-display">
+                <div class="exchange-rate-text">兑换比例：1 积分 = ¥1</div>
+            </div>
+
+            <div class="preview-box">
+                <div class="preview-row">
+                    <span class="preview-label">需要积分</span>
+                    <span class="preview-value" id="previewPoints">0 分</span>
+                </div>
+            </div>
+
+            <button class="submit-btn" onclick="confirmExchange()">确认兑换</button>
+        </div>
+
+        <!-- 兑换说明 -->
+        <div class="tips-box">
+            <h4>💡 兑换说明</h4>
+            <ul>
+                <li>最低兑换金额 ¥10</li>
+                <li>兑换比例：1 积分 = ¥1</li>
+                <li>兑换需要输入支付密码</li>
+                <li>积分兑换后实时到账</li>
+                <li>积分可用于消费抵扣等</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 支付密码弹窗 -->
+    <div class="popup-overlay" id="passwordPopup" onclick="closePopup()">
+        <div class="popup-content" id="popupContent" onclick="event.stopPropagation()">
+            <div class="popup-title">请输入支付密码</div>
+            <input type="tel" class="password-input" id="payPassword" placeholder="••••••" maxlength="6" inputmode="numeric">
+            <button class="submit-btn" onclick="submitExchange()">确认兑换</button>
+        </div>
+    </div>
+
+    <script src="config.js?v=1763030000"></script>
+    <script src="ios-toast.js?v=1763030000"></script>
+    <script>
+        let exchangeAmount = 0;
+        let pointsData = {
+            current: 0,
+            todayEarned: 0,
+            totalExchanged: 0
+        };
+
+        // 右滑返回
+        let touchStartX = 0, touchEndX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+        
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            if (touchEndX - touchStartX > 100) {
+                history.back();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!ApiService.auth.ensureLogin()) return;
+            loadPointsData();
+
+            // 监听金额输入，实时计算需要的积分
+            document.getElementById('exchangeAmount').addEventListener('input', function(e) {
+                const amount = parseFloat(e.target.value) || 0;
+                // 兑换比例 1积分 = 1元
+                document.getElementById('previewPoints').textContent = amount.toFixed(0) + ' 分';
+            });
+        });
+
+        async function loadPointsData() {
+            try {
+                const res = await fetch('https://api.frevix.top/api/points/balance.php', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': localStorage.getItem('token') || ''
+                    }
+                });
+                const result = await res.json();
+                if (result.code === 1 && result.data) {
+                    pointsData.current = result.data.current_points || 0;
+                    pointsData.todayEarned = result.data.today_earned || 0;
+                    pointsData.totalExchanged = result.data.total_exchanged || 0;
+                    updateDisplay();
+                }
+            } catch (e) {
+                console.error('加载积分数据失败:', e);
+            }
+        }
+
+        function updateDisplay() {
+            document.getElementById('currentPoints').textContent = pointsData.current.toLocaleString();
+            document.getElementById('todayEarned').textContent = '+' + pointsData.todayEarned.toLocaleString();
+            document.getElementById('totalExchanged').textContent = pointsData.totalExchanged.toLocaleString();
+        }
+
+        function confirmExchange() {
+            const amount = parseFloat(document.getElementById('exchangeAmount').value);
+
+            if (!amount) {
+                showToast('', '请输入兑换金额');
+                return;
+            }
+
+            if (amount < 10) {
+                showToast('', '最低兑换金额为 ¥10');
+                return;
+            }
+
+            // 检查积分是否足够（1积分=1元）
+            if (amount > pointsData.current) {
+                showToast('', '积分余额不足');
+                return;
+            }
+
+            exchangeAmount = amount;
+            document.getElementById('passwordPopup').classList.add('show');
+            
+            setTimeout(() => {
+                document.getElementById('payPassword').focus();
+            }, 300);
+        }
+
+        async function submitExchange() {
+            const pwd = document.getElementById('payPassword').value.trim();
+
+            if (!pwd || pwd.length !== 6) {
+                const popup = document.getElementById('popupContent');
+                popup.classList.add('shake');
+                setTimeout(() => popup.classList.remove('shake'), 300);
+                showToast('', '请输入6位支付密码');
+                return;
+            }
+
+            try {
+                const res = await fetch('https://api.frevix.top/api/points/exchange.php', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'token': localStorage.getItem('token') || ''
+                    },
+                    body: JSON.stringify({
+                        amount: exchangeAmount,
+                        pay_password: pwd
+                    })
+                });
+                const result = await res.json();
+
+                if (result.code === 1) {
+                    closePopup();
+                    showToast('', '兑换成功！');
+                    document.getElementById('exchangeAmount').value = '';
+                    document.getElementById('payPassword').value = '';
+                    document.getElementById('previewPoints').textContent = '0 分';
+                    loadPointsData();
+                } else {
+                    showToast('', result.message || '兑换失败');
+                }
+            } catch (e) {
+                showToast('', '网络错误，请重试');
+            }
+        }
+
+        function closePopup() {
+            document.getElementById('passwordPopup').classList.remove('show');
+            document.getElementById('payPassword').value = '';
+        }
+    </script>
+</body>
+</html>

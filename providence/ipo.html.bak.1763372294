@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <title>投资项目 - Providence</title>
+    <link rel="stylesheet" href="styles.css?v=1763343791">
+<script src="gestures.js?v=1762554425"></script>
+<style>.detail-header,.hero-simple,.projects-header-theme{background:linear-gradient(135deg,#0e2b44,#1a3a5f)!important}.detail-header-title,.back-btn,.back-btn-projects{color:#fff!important}</style>
+</head>
+<body class="page-projects-ipo">
+<div id="app">
+    <!-- 顶部导航 - 深蓝主题 -->
+    <header class="projects-header-theme">
+        <a href="index.html" class="back-btn-projects">‹</a>
+        <h1 class="projects-title">投资项目</h1>
+        <div class="header-spacer"></div>
+    </header>
+
+    <!-- 项目列表 -->
+    <section class="product-list" id="projectsList">
+        <!-- 动态加载 -->
+        <div class="loading-container">
+            <div class="loading-spinner"></div>
+            <div class="loading-text">加载中...</div>
+        </div>
+    </section>
+</div>
+
+<!-- 底部导航 -->
+<nav class="tabbar" id="tabbar">
+    <a class="tab" data-tab="home" href="index.html">
+        <div class="ico ico-home"></div>
+        <div class="txt">首页</div>
+    </a>
+    <a class="tab" data-tab="market" href="market.html">
+        <div class="ico ico-finance"></div>
+        <div class="txt">数据</div>
+    </a>
+    <a class="tab active" data-tab="project">
+        <div class="ico ico-market"></div>
+        <div class="txt">项目</div>
+    </a>
+    <a class="tab" data-tab="news" href="messages.html">
+        <div class="ico dot ico-message"></div>
+        <div class="txt">消息</div>
+    </a>
+    <a class="tab" data-tab="me" href="profile.html">
+        <div class="ico ico-me"></div>
+        <div class="txt">我的</div>
+    </a>
+</nav>
+
+<script>
+console.log('✅ 投资项目页面已加载');
+window.addEventListener('error', function(e) {
+    console.error('❌ JS错误:', e.message, e.filename, e.lineno);
+});
+</script>
+<script src="projects.js?v=1762554425"></script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<?php
+/**
+ * 提款申请
+ * POST /pay/pay/withdraw
+ */
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    Response::error('请求方法错误');
+}
+
+// 验证用户登录
+$authUser = Auth::user();
+if (!$authUser) {
+    Response::error('未登录或登录已过期', 401);
+}
+
+$userId = $authUser['user_id'];
+$input = json_decode(file_get_contents('php://input'), true);
+
+$amount = (float)($input['amount'] ?? 0);
+$currency = trim($input['currency'] ?? 'CNY');
+$bankCardId = (int)($input['bank_card_id'] ?? 0);
+$payPassword = trim($input['pay_password'] ?? '');
+
+if ($amount <= 0) {
+    Response::error('提款金额必须大于0');
+}
+
+if ($currency === 'CNY' && $amount < 100) {
+    Response::error('CNY最低提款金额为100元');
+}
+
+if ($currency === 'USDT' && $amount < 10) {
+    Response::error('USDT最低提款金额为10');
+}
+
+if (empty($payPassword)) {
+    Response::error('请输入支付密码');
+}
+
+$db = Database::getInstance();
+
+try {
+    $db->beginTransaction();
+
+    // 验证支付密码
+    $user = $db->fetchOne(
+        "SELECT trade_password FROM users WHERE id = :id",
+        ['id' => $userId]
+    );
+
+    if (!$user || !password_verify($payPassword, $user['trade_password'])) {
+        $db->rollBack();
+        Response::error('支付密码错误');
+    }
+
+    // 验证银行卡/USDT地址
+    $bankCard = $db->fetchOne(
+        "SELECT * FROM user_bank_cards WHERE id = :id AND user_id = :user_id",
+        ['id' => $bankCardId, 'user_id' => $userId]
+    );
+
+    if (!$bankCard) {
+        $db->rollBack();
+        Response::error('提款账户不存在');
+    }
+
+    // 检查余额
+    $wallet = $db->fetchOne(
+        "SELECT balance FROM wallet_balance WHERE user_id = :user_id AND currency = :currency",
+        ['user_id' => $userId, 'currency' => $currency]
+    );
+
+    $balance = (float)($wallet['balance'] ?? 0);
+
+    if ($balance < $amount) {
+        $db->rollBack();
+        Response::error('余额不足，当前余额: ' . $balance);
+    }
+
+    // 生成提款单号
+    $withdrawNo = 'WD' . date('YmdHis') . str_pad(mt_rand(1, 9999), 4, '0', STR_PAD_LEFT);
+
+    // 创建提款记录
+    $withdrawData = [
+        'order_no' => $withdrawNo,
+        'user_id' => $userId,
+        'amount' => $amount,
+        'currency' => $currency,
+        'bank_card_id' => $bankCardId,
+        'bank_name' => $bankCard['bank_name'] ?? '',
+        'bank_card' => $bankCard['bank_card'] ?? '',
+        'usdt_address' => $bankCard['usdt_address'] ?? '',
+        'status' => 0, // 0: 待审核
+        'created_at' => date('Y-m-d H:i:s')
+    ];
+
+    $withdrawId = $db->insert('withdraw_records', $withdrawData);
+
+    if (!$withdrawId) {
+        throw new Exception('创建提款申请失败');
+    }
+
+    // 冻结余额
+    $db->update(
+        'wallet_balance',
+        ['balance' => $balance - $amount],
+        'user_id = :user_id AND currency = :currency',
+        ['user_id' => $userId, 'currency' => $currency]
+    );
+
+    // 记录钱包流水
+    $db->insert('wallet_logs', [
+        'user_id' => $userId,
+        'type' => 'WITHDRAW_PENDING',
+        'amount' => -$amount,
+        'balance_after' => $balance - $amount,
+        'currency' => $currency,
+        'description' => '提款申请（待审核）',
+        'related_id' => $withdrawId,
+        'created_at' => date('Y-m-d H:i:s')
+    ]);
+
+    // 审计日志
+    AuditLog::log('withdraw', '用户发起提款申请', 'USER', $userId, 'withdraw_records', $withdrawId, [
+        'order_no' => $withdrawNo,
+        'amount' => $amount,
+        'currency' => $currency
+    ]);
+
+    $db->commit();
+
+    Response::success([
+        'withdraw_id' => $withdrawId,
+        'order_no' => $withdrawNo,
+        'amount' => $amount,
+        'currency' => $currency
+    ], '提款申请已提交，请等待审核');
+
+} catch (Exception $e) {
+    $db->rollBack();
+    error_log("提款申请API错误: " . $e->getMessage());
+    Response::error('提款失败: ' . $e->getMessage());
+}

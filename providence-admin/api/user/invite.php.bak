@@ -1,0 +1,25 @@
+<?php
+/**
+ * 邀请信息
+ * GET /user/user/invite
+ */
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+$authUser = Auth::user();
+if (!$authUser) {
+    Response::error('未登录或登录已过期', 401);
+}
+
+$db = Database::getInstance();
+
+$user = $db->fetchOne("SELECT invite_code FROM " . $db->getPrefix() . "users WHERE id = :id", ['id' => $authUser['user_id']]);
+
+// 统计邀请数据
+$directCount = $db->count('users', 'parent_id = :id', ['id' => $authUser['user_id']]);
+
+Response::success([
+    'invite_code' => $user['invite_code'],
+    'invite_url' => 'http://' . $_SERVER['HTTP_HOST'] . '/register?code=' . $user['invite_code'],
+    'direct_count' => $directCount,
+    'total_reward' => 0 // TODO: 统计总奖励
+]);

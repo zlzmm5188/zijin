@@ -1,0 +1,167 @@
+/**
+ * AI客服服务集成
+ * API: 对接后端数据库
+ */
+
+const AI_SERVICE_CONFIG = {
+  endpoint: 'https://yztxqifunsylbgwxnbju.supabase.co/functions/v1/ai-customer-service',
+  timeout: 15000
+};
+
+/**
+ * 获取用户信息和token
+ */
+async function getUserContext() {
+  // 使用正确的localStorage key
+  const token = localStorage.getItem('providence_token');
+  let userId = localStorage.getItem('user_id') || localStorage.getItem('providence_user_id');
+  let userName = localStorage.getItem('user_name') || localStorage.getItem('providence_user_name');
+  let userMobile = localStorage.getItem('user_mobile') || localStorage.getItem('providence_user_mobile');
+
+  // 如果有token但没有用户信息，尝试从API获取
+  if (token && !userId) {
+    try {
+      const response = await fetch('https://v2.abcmall.one/index.php/user/user/index', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'token': token
+        }
+      });
+
+      const data = await response.json();
+      if (data.code === 200 && data.data) {
+        userId = data.data.id || data.data.user_id;
+        userName = data.data.username || data.data.name;
+        userMobile = data.data.mobile || data.data.phone;
+
+        // 保存到localStorage
+        if (userId) localStorage.setItem('providence_user_id', userId);
+        if (userName) localStorage.setItem('providence_user_name', userName);
+        if (userMobile) localStorage.setItem('providence_user_mobile', userMobile);
+      }
+    } catch (error) {
+      console.error('获取用户信息失败:', error);
+    }
+  }
+
+  console.log('🔍 检查用户登录状态:', {
+    hasToken: !!token,
+    userId: userId,
+    userName: userName,
+    userMobile: userMobile
+  });
+
+  return {
+    token: token,
+    userId: userId,
+    userName: userName,
+    userMobile: userMobile,
+    isLoggedIn: !!token && !!userId
+  };
+}
+
+/**
+ * 发送消息到AI客服
+ * @param {string} userMessage - 用户消息
+ * @param {string} userId - 用户ID
+ * @param {string} action - 可选的快捷操作
+ * @param {object} data - 可选的额外数据
+ */
+async function sendToAI(userMessage, userId = null, action = null, data = null) {
+  try {
+    // 获取用户上下文（现在是异步的）
+    const userContext = await getUserContext();
+    const finalUserId = userId || userContext.userId || 'guest';
+
+    console.log('📤 发送消息到AI:', {
+      message: userMessage,
+      userId: finalUserId,
+      isLoggedIn: userContext.isLoggedIn,
+      userName: userContext.userName
+    });
+
+    const requestBody = {
+      message: userMessage,
+      userId: finalUserId,
+      token: userContext.token,
+      userName: userContext.userName,
+      userMobile: userContext.userMobile,
+      isLoggedIn: userContext.isLoggedIn
+    };
+
+    if (action) requestBody.action = action;
+    if (data) requestBody.data = data;
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), AI_SERVICE_CONFIG.timeout);
+
+    const response = await fetch(AI_SERVICE_CONFIG.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(userContext.token ? { 'Authorization': `Bearer ${userContext.token}` } : {})
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    const result = await response.json();
+    console.log('📥 AI回复:', result);
+
+    return {
+      success: true,
+      message: result.message || '抱歉，我现在无法回复',
+      userProfile: result.userProfile || null
+    };
+
+  } catch (error) {
+    console.error('❌ AI服务错误:', error);
+
+    if (error.name === 'AbortError') {
+      return {
+        success: false,
+        message: '请求超时，请稍后再试',
+        error: 'timeout'
+      };
+    }
+
+    return {
+      success: false,
+      message: '服务暂时不可用，请稍后再试',
+      error: error.message
+    };
+  }
+}
+
+/**
+ * 快捷操作
+ */
+const AI_ACTIONS = {
+  // 获取用户资料
+  getProfile: () => sendToAI('查询我的资料', null, 'get_profile'),
+
+  // 获取充值记录
+  getRechargeRecords: () => sendToAI('查询充值记录', null, 'get_recharge_records'),
+
+  // 获取投资记录
+  getInvestmentRecords: () => sendToAI('查询投资记录', null, 'get_investment_records'),
+
+  // 获取账户余额
+  getBalance: () => sendToAI('查询账户余额', null, 'get_balance')
+};
+
+// 导出
+if (typeof window !== 'undefined') {
+  window.sendToAI = sendToAI;
+  window.AI_ACTIONS = AI_ACTIONS;
+  window.AI_SERVICE_CONFIG = AI_SERVICE_CONFIG;
+}
+
+console.log('🤖 AI客服服务已加载');

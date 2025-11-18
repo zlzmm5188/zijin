@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+<title>积分兑换 | PROVIDENCE</title>
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" href="styles.css?v=20250117003">
+<style>
+/* 参考IPO详情页的红色主题 */
+.points-page{
+    background:#f7f8fa;
+    min-height:100vh;
+    padding-bottom:80px;
+}
+
+/* 顶部黑金渐变 */
+.points-hero{
+    background:linear-gradient(135deg,#2a2a2a,#1a1a1a);
+    padding:50px 20px 25px;
+    position:relative;
+    overflow:hidden;
+    color:#fff;
+}
+
+.points-hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at top left,rgba(212,175,55,0.15),transparent 60%),
+               radial-gradient(circle at bottom right,rgba(212,175,55,0.1),transparent 60%);
+    opacity:0.8;
+}
+
+.points-back{
+    position:absolute;
+    left:16px;
+    top:16px;
+    color:#fff;
+    font-size:28px;
+    cursor:pointer;
+}
+
+.points-title-text{
+    font-size:18px;
+    opacity:0.9;
+    margin-bottom:20px;
+    position:relative;
+    z-index:1;
+}
+
+.points-balance-card{
+    background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.08));
+    backdrop-filter:blur(10px);
+    border:2px solid rgba(212,175,55,0.3);
+    border-radius:16px;
+    padding:20px;
+    position:relative;
+    z-index:1;
+    box-shadow:0 8px 24px rgba(212,175,55,0.2);
+}
+
+.balance-label{
+    font-size:13px;
+    opacity:0.8;
+    margin-bottom:8px;
+}
+
+.balance-value{
+    font-size:42px;
+    font-weight:700;
+    font-family:-apple-system,sans-serif;
+    color:#f5d771;
+    text-shadow:0 2px 12px rgba(212,175,55,0.4);
+}
+
+.balance-rate{
+    margin-top:10px;
+    font-size:13px;
+    opacity:0.9;
+}
+
+/* 积分来源卡片 */
+.source-section{
+    padding:16px;
+}
+
+.source-title{
+    font-size:16px;
+    font-weight:700;
+    color:#333;
+    margin:0 0 12px 4px;
+}
+
+.source-grid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+}
+
+.source-card{
+    background:#fff;
+    border-radius:12px;
+    padding:16px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    position:relative;
+    overflow:hidden;
+}
+
+.source-card::before{
+    content:"";
+    position:absolute;
+    top:-20px;
+    right:-20px;
+    width:60px;
+    height:60px;
+    background:radial-gradient(circle,rgba(212,175,55,0.1),transparent);
+}
+
+.source-icon{
+    font-size:32px;
+    margin-bottom:8px;
+}
+
+.source-name{
+    font-size:14px;
+    font-weight:600;
+    color:#333;
+    margin-bottom:4px;
+}
+
+.source-points{
+    font-size:20px;
+    font-weight:700;
+    color:#d4af37;
+}
+
+.source-desc{
+    font-size:11px;
+    color:#999;
+    margin-top:4px;
+}
+
+/* 兑换区域 */
+.exchange-section{
+    padding:0 16px 16px;
+}
+
+.exchange-card{
+    background:#fff;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 2px 8px rgba(0,0,0,.06);
+    margin-bottom:16px;
+}
+
+.exchange-top{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:16px;
+}
+
+.exchange-icon-big{
+    font-size:48px;
+}
+
+.exchange-label{
+    text-align:right;
+}
+
+.exchange-label-text{
+    font-size:12px;
+    color:#999;
+}
+
+.exchange-label-rate{
+    font-size:16px;
+    font-weight:700;
+    color:#d4af37;
+}
+
+.exchange-input-wrap{
+    margin-bottom:16px;
+}
+
+.exchange-input{
+    width:100%;
+    padding:14px;
+    border:2px solid #f0f0f0;
+    border-radius:12px;
+    font-size:18px;
+    font-weight:600;
+    text-align:center;
+    color:#333;
+}
+
+.exchange-input:focus{
+    outline:none;
+    border-color:#d4af37;
+}
+
+.exchange-result{
+    padding:14px;
+    background:#fff5f5;
+    border-radius:12px;
+    margin-bottom:16px;
+}
+
+.result-row{
+    display:flex;
+    justify-content:space-between;
+    padding:6px 0;
+}
+
+.result-label{
+    font-size:14px;
+    color:#666;
+}
+
+.result-value{
+    font-size:14px;
+    font-weight:600;
+    color:#333;
+}
+
+.result-value.highlight{
+    font-size:18px;
+    color:#d4af37;
+}
+
+.btn-exchange-red{
+    width:100%;
+    padding:15px;
+    background:linear-gradient(135deg,#d4af37,#c99b2b);
+    color:#1a1a1a;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(212,175,55,.4);
+}
+
+.btn-exchange-red:active{
+    transform:scale(0.98);
+}
+
+/* 兑换记录 */
+.record-list{
+    padding:0 16px 16px;
+}
+
+.record-card{
+    background:#fff;
+    border-radius:12px;
+    padding:16px;
+    margin-bottom:12px;
+    box-shadow:0 2px 6px rgba(0,0,0,.04);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.record-info{
+    flex:1;
+}
+
+.record-title{
+    font-size:15px;
+    font-weight:600;
+    color:#333;
+    margin-bottom:4px;
+}
+
+.record-time{
+    font-size:12px;
+    color:#999;
+}
+
+.record-amount{
+    text-align:right;
+}
+
+.record-points{
+    font-size:18px;
+    font-weight:700;
+    color:#d4af37;
+    margin-bottom:4px;
+}
+
+.record-status{
+    font-size:12px;
+    color:#52c41a;
+}
+</style>
+</head>
+<body>
+<div id="app" class="points-page">
+    <!-- 顶部积分展示（红色主题） -->
+    <div class="points-hero">
+        <div class="points-back" onclick="history.back()">‹</div>
+        <div class="points-title-text">我的积分</div>
+        <div class="points-balance-card">
+            <div class="balance-label">当前可用积分</div>
+            <div class="balance-value" id="userPoints">0</div>
+            <div class="balance-rate">兑换比例：<strong>1 积分 = 1 元</strong></div>
+        </div>
+    </div>
+
+    <!-- 积分来源 -->
+    <div class="source-section">
+        <div class="source-title">💎 积分来源</div>
+        <div class="source-grid">
+            <div class="source-card">
+                <div class="source-icon">📊</div>
+                <div class="source-name">投资收益</div>
+                <div class="source-points">+100</div>
+                <div class="source-desc">每笔投资可获积分</div>
+            </div>
+            <div class="source-card">
+                <div class="source-icon">✅</div>
+                <div class="source-name">每日签到</div>
+                <div class="source-points">+10</div>
+                <div class="source-desc">连续签到翻倍</div>
+            </div>
+            <div class="source-card">
+                <div class="source-icon">👑</div>
+                <div class="source-name">升级VIP</div>
+                <div class="source-points">+500</div>
+                <div class="source-desc">每次升级奖励</div>
+            </div>
+            <div class="source-card" style="grid-column:span 2;">
+                <div class="source-icon">🎁</div>
+                <div class="source-name">邀请好友（根据VIP等级）</div>
+                <div class="source-points" id="invitePoints">+200</div>
+                <div class="source-desc" id="inviteDesc">首投再得300</div>
+                <div id="vipRewardTable" style="margin-top:12px;font-size:11px;color:#666;line-height:1.8;">
+                    <!-- VIP奖励表格 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 兑换现金 -->
+    <div class="exchange-section">
+        <div class="source-title">💰 兑换现金</div>
+        <div class="exchange-card">
+            <div class="exchange-top">
+                <div class="exchange-icon-big">💵</div>
+                <div class="exchange-label">
+                    <div class="exchange-label-text">兑换比例</div>
+                    <div class="exchange-label-rate">1:1</div>
+                </div>
+            </div>
+
+            <div class="exchange-input-wrap">
+                <input type="number"
+                    class="exchange-input"
+                    id="exchangeAmount"
+                    placeholder="请输入兑换金额"
+                    oninput="calculateExchange()">
+            </div>
+
+            <div class="exchange-result" id="exchangeResult" style="display:none;">
+                <div class="result-row">
+                    <div class="result-label">兑换金额</div>
+                    <div class="result-value" id="resultAmount">0 元</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">消耗积分</div>
+                    <div class="result-value highlight" id="resultPoints">0</div>
+                </div>
+                <div class="result-row">
+                    <div class="result-label">剩余积分</div>
+                    <div class="result-value" id="resultRemaining">0</div>
+                </div>
+            </div>
+
+            <button class="btn-exchange-red" onclick="handleExchange()">确认兑换</button>
+        </div>
+    </div>
+
+    <!-- 兑换记录 -->
+    <div class="record-list">
+        <div class="source-title">📋 兑换记录</div>
+        <div id="recordList">
+            <div class="record-card">
+                <div class="record-info">
+                    <div class="record-title">兑换现金</div>
+                    <div class="record-time">2025-10-23 12:30</div>
+                </div>
+                <div class="record-amount">
+                    <div class="record-points">-1,000</div>
+                    <div class="record-status">已完成</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="tabbar">
+        <a class="tab" href="index.html">
+            <div class="ico ico-home"></div>
+            <div class="txt">首页</div>
+        </a>
+        <a class="tab" href="market.html">
+            <div class="ico ico-finance"></div>
+            <div class="txt">数据</div>
+        </a>
+        <a class="tab" href="finance.html">
+            <div class="ico ico-market"></div>
+            <div class="txt">项目</div>
+        </a>
+        <a class="tab" href="messages.html">
+            <div class="ico dot ico-message"></div>
+            <div class="txt">消息</div>
+        </a>
+        <a class="tab active" href="profile.html">
+            <div class="ico ico-me"></div>
+            <div class="txt">我的</div>
+        </a>
+    </nav>
+</div>
+
+<script src="config.js"></script>
+<script>
+let userPoints = 0;
+const EXCHANGE_RATE = 1; // 1积分=1元
+
+// 页面加载
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadUserPoints();
+    await loadInviteConfig();
+    await loadExchangeRecords();
+});
+
+// 获取用户积分
+async function loadUserPoints() {
+    try {
+        const result = await API.user.getInfo();
+        if (result.success && result.data) {
+            userPoints = parseInt(result.data.integral || 0);
+            document.getElementById('userPoints').textContent = formatNumber(userPoints);
+        }
+    } catch (error) {
+        console.error('获取积分失败:', error);
+    }
+}
+
+// 获取邀请活动配置（根据VIP等级）
+async function loadInviteConfig() {
+    try {
+        // 获取用户VIP等级
+        const userResult = await API.user.getInfo();
+        const userVipLevel = userResult.data?.level || 1;
+        
+        // 获取配置
+        const response = await fetch(`config.php?action=invite_config&vip=${userVipLevel}`);
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            const invitePoints = result.data.invite_points || 200;
+            const firstBonus = result.data.first_invest_bonus || 0;
+            const totalReward = result.data.total_reward || invitePoints;
+            
+            document.getElementById('invitePoints').textContent = '+' + totalReward;
+            document.getElementById('inviteDesc').textContent = `VIP${userVipLevel} 专属奖励`;
+            
+            // 显示VIP奖励表格
+            if (result.data.all_vip_rewards) {
+                const vipTable = Object.entries(result.data.all_vip_rewards).map(([vip, points]) => {
+                    const bonus = result.data.all_first_bonus[vip] || 0;
+                    const total = points + bonus;
+                    const isCurrent = parseInt(vip) === userVipLevel;
+                    return `<div style="display:flex;justify-content:space-between;padding:4px 0;${isCurrent ? 'color:#d4af37;font-weight:600;' : ''}">
+                        <span>VIP${vip}</span>
+                        <span>${points}${bonus > 0 ? '+' + bonus : ''} = ${total}积分</span>
+                    </div>`;
+                }).join('');
+                document.getElementById('vipRewardTable').innerHTML = vipTable;
+            }
+        }
+    } catch (error) {
+        console.error('获取配置失败:', error);
+    }
+}
+
+// 计算兑换
+function calculateExchange() {
+    const amount = parseFloat(document.getElementById('exchangeAmount').value) || 0;
+    const needPoints = Math.ceil(amount * EXCHANGE_RATE);
+    const remaining = userPoints - needPoints;
+
+    if (amount > 0) {
+        document.getElementById('exchangeResult').style.display = 'block';
+        document.getElementById('resultAmount').textContent = amount.toFixed(2) + ' 元';
+        document.getElementById('resultPoints').textContent = formatNumber(needPoints) + ' 积分';
+        document.getElementById('resultRemaining').textContent = formatNumber(Math.max(0, remaining)) + ' 积分';
+
+        if (needPoints > userPoints) {
+            document.getElementById('resultRemaining').style.color = '#ff4d4f';
+        } else {
+            document.getElementById('resultRemaining').style.color = '#52c41a';
+        }
+    } else {
+        document.getElementById('exchangeResult').style.display = 'none';
+    }
+}
+
+// 执行兑换
+async function handleExchange() {
+    const amount = parseFloat(document.getElementById('exchangeAmount').value);
+    if (!amount || amount <= 0) {
+        alert('请输入兑换金额');
+        return;
+    }
+
+    const needPoints = Math.ceil(amount * EXCHANGE_RATE);
+
+    if (needPoints > userPoints) {
+        alert('❌ 积分不足！\n\n需要：' + formatNumber(needPoints) + ' 积分\n当前：' + formatNumber(userPoints) + ' 积分');
+        return;
+    }
+
+    if (!confirm(`确认兑换 ${amount} 元？\n将消耗 ${formatNumber(needPoints)} 积分\n\n到账时间：1-3个工作日`)) {
+        return;
+    }
+
+    try {
+        const result = await http.post('/index.php/user/points/exchange', {
+            amount: amount,
+            points: needPoints,
+            type: 'cash'
+        });
+
+        if (result.success) {
+            alert('✅ 兑换成功！\n\n兑换金额：' + amount + ' 元\n消耗积分：' + formatNumber(needPoints));
+            location.reload();
+        } else {
+            alert('❌ 兑换失败：' + (result.msg || '请稍后重试'));
+        }
+    } catch (error) {
+        alert('❌ 网络错误，请稍后重试');
+    }
+}
+
+// 加载兑换记录
+async function loadExchangeRecords() {
+    try {
+        const response = await fetch('api/points/records.php');
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.length > 0) {
+            const html = result.data.map(record => `
+                <div class="record-card">
+                    <div class="record-info">
+                        <div class="record-title">${record.type_text || '兑换现金'}</div>
+                        <div class="record-time">${record.create_time}</div>
+                    </div>
+                    <div class="record-amount">
+                        <div class="record-points">${record.points >= 0 ? '+' : ''}${formatNumber(record.points)}</div>
+                        <div class="record-status">${record.status_text || '已完成'}</div>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('recordList').innerHTML = html;
+        }
+    } catch (error) {
+        console.log('使用默认记录');
+    }
+}
+
+// 格式化数字
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>测试AI接口</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        h1 { color: #0b3b5e; }
+        #result {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+        pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success { color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+    <h1>🧪 测试 AI 接口</h1>
+    <p>正在测试 <code>https://apis.copla.top/index.php/ai/chat</code></p>
+    <div id="result">加载中...</div>
+    
+    <script>
+    async function testAI() {
+        const apiBase = 'https://apis.copla.top';
+        const testMessage = '你好';
+        const apiUrl = apiBase + '/index.php/ai/chat';
+        
+        const resultDiv = document.getElementById('result');
+        resultDiv.innerHTML = '正在发送请求...<br>URL: ' + apiUrl;
+        
+        try {
+            console.log('🚀 发送请求到:', apiUrl);
+            console.log('📦 请求数据:', { message: testMessage });
+            
+            const response = await fetch(apiUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: testMessage,
+                    conversation_id: ''
+                })
+            });
+            
+            console.log('📨 响应状态:', response.status, response.statusText);
+            
+            const data = await response.json();
+            console.log('✅ 响应数据:', data);
+            
+            if (data.code === 200 || data.code === 1) {
+                resultDiv.innerHTML = 
+                    '<div class="success"><h2>✅ 测试成功！</h2></div>' +
+                    '<p><strong>API响应：</strong></p>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            } else {
+                resultDiv.innerHTML = 
+                    '<div class="error"><h2>❌ API返回错误</h2></div>' +
+                    '<p><strong>错误信息：</strong> ' + (data.message || '未知错误') + '</p>' +
+                    '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+            }
+        } catch (error) {
+            console.error('❌ 请求失败:', error);
+            resultDiv.innerHTML = 
+                '<div class="error"><h2>❌ 请求失败</h2></div>' +
+                '<p><strong>错误类型：</strong> ' + error.name + '</p>' +
+                '<p><strong>错误信息：</strong> ' + error.message + '</p>' +
+                '<p><strong>可能原因：</strong></p>' +
+                '<ul>' +
+                '<li>CORS跨域问题</li>' +
+                '<li>网络连接问题</li>' +
+                '<li>API服务器未响应</li>' +
+                '</ul>';
+        }
+    }
+    
+    // 页面加载后立即测试
+    testAI();
+    </script>
+</body>
+</html>
+

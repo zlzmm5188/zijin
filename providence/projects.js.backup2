@@ -1,0 +1,312 @@
+// 投资项目页面 - 大戶豐IPO风格
+const API_BASE = 'https://v2.abcmall.one';
+let userData = {
+    token: localStorage.getItem('userToken') || '',
+    level: 1
+};
+
+let allProjects = [];
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('✅ projects.js 已加载');
+    console.log('📍 当前页面:', window.location.href);
+    initPage();
+});
+
+async function initPage() {
+    console.log('🚀 初始化页面');
+    console.log('🔑 Token:', userData.token ? '已登录' : '未登录');
+
+    // 即使未登录也加载项目列表
+    await getUserLevel();
+    await loadProjects();
+}
+
+async function getUserLevel() {
+    // 如果没有token，设置默认等级为0（游客）
+    if (!userData.token) {
+        console.log('👤 未登录用户，设置默认等级为0');
+        userData.level = 0;
+        return;
+    }
+
+    try {
+        const response = await fetch(API_BASE + '/user/user/index', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'token': userData.token
+            }
+        });
+        const data = await response.json();
+        console.log('用户数据:', data);
+        if (data.code === 200 && data.data) {
+            userData.level = parseInt(data.data.level) || 1;
+        } else {
+            userData.level = 0; // API调用失败，设置为游客
+        }
+    } catch (error) {
+        console.error('获取用户等级失败:', error);
+        userData.level = 0; // 错误时设置为游客
+    }
+}
+
+async function loadProjects() {
+    try {
+        const response = await fetch(API_BASE + '/fund/project/all', {
+            method: 'GET'
+        });
+        const data = await response.json();
+
+        console.log('API返回数据:', data);
+
+        // 后端返回格式: {data: [{name:"新手专区",list:[]}, ...], msg:"ok"}
+        if (data.data && Array.isArray(data.data)) {
+            allProjects = [];
+            data.data.forEach(category => {
+                if (category.list && Array.isArray(category.list)) {
+                    allProjects = allProjects.concat(category.list);
+                }
+            });
+
+            console.log('解析到的项目数量:', allProjects.length);
+
+            if (allProjects.length > 0) {
+                renderProjectsNew();
+            } else {
+                showEmpty('暂无项目');
+            }
+        } else {
+            console.error('数据格式错误:', data);
+            showEmpty('加载失败，请重试');
+        }
+    } catch (error) {
+        console.error('加载项目失败:', error);
+        showEmpty('网络错误，请重试');
+    }
+}
+
+function renderProjectsNew() {
+    const container = document.getElementById('projectsList');
+
+    if (allProjects.length === 0) {
+        showEmpty('暂无项目');
+        return;
+    }
+
+    const projectsHtml = allProjects.map(project => {
+        const vipRequired = parseInt(project.vip) || 0;
+        const isLocked = vipRequired > userData.level;
+        const rate = parseFloat(project.rate) || 0;
+        const vipRate = parseFloat(project.vip_rate) || 0;
+        const totalRate = rate + vipRate;
+        const status = parseInt(project.status);
+        const totalAmount = parseFloat(project.total_money) || 0;
+        const soldAmount = parseFloat(project.sold_money) || 0;
+        const progress = totalAmount > 0 ? (soldAmount / totalAmount * 100) : 0;
+        const remaining = Math.max(0, totalAmount - soldAmount);
+
+        return `
+            <div class="ipo-card ${isLocked ? 'ipo-locked' : ''}" onclick="viewProjectDetail(${project.id})">
+                <!-- 顶部状态栏 -->
+                <div class="ipo-status-bar ${getStatusClass(status)}">
+                    <span class="status-text">${getStatusText(status)}</span>
+                    ${isLocked ? `<span class="vip-lock">🔒 需要VIP${vipRequired}</span>` : ''}
+                </div>
+
+                <!-- 项目名称 -->
+                <div class="ipo-title-section">
+                    <h3 class="ipo-title">${project.title || '投资项目'}</h3>
+                    ${rate >= 8 ? '<span class="hot-tag">热门</span>' : ''}
+                </div>
+
+                <!-- 关键数据行 -->
+                <div class="ipo-data-row">
+                    <div class="data-col main-col">
+                        <div class="data-label">年化收益率</div>
+                        <div class="data-value primary">${totalRate.toFixed(2)}%</div>
+                        ${vipRate > 0 ? `<div class="vip-bonus-mini">含VIP加息+${vipRate.toFixed(2)}%</div>` : ''}
+                    </div>
+                    <div class="data-divider"></div>
+                    <div class="data-col">
+                        <div class="data-label">投资期限</div>
+                        <div class="data-value">${project.day}天</div>
+                    </div>
+                    <div class="data-divider"></div>
+                    <div class="data-col">
+                        <div class="data-label">起投金额</div>
+                        <div class="data-value">${formatMoney(project.min_money || 1000)}</div>
+                    </div>
+                </div>
+
+                <!-- 募集进度 -->
+                <div class="ipo-progress-section">
+                    <div class="progress-header">
+                        <span class="progress-title">募集进度</span>
+                        <span class="progress-value">${progress.toFixed(1)}%</span>
+                    </div>
+                    <div class="progress-bar-ipo">
+                        <div class="progress-fill-ipo" style="width:${progress}%"></div>
+                    </div>
+                    <div class="progress-footer">
+                        <span class="progress-stat">已募集 ${formatMoney(soldAmount)}</span>
+                        <span class="progress-stat">剩余 ${formatMoney(remaining)}</span>
+                    </div>
+                </div>
+
+                <!-- 底部信息 -->
+                <div class="ipo-footer">
+                    <div class="footer-info">
+                        <span class="info-item">募集总额 ${formatMoney(totalAmount)}</span>
+                        <span class="info-divider">|</span>
+                        <span class="info-item">到期还本付息</span>
+                    </div>
+                    <button class="btn-subscribe" onclick="event.stopPropagation(); viewProjectDetail(${project.id})">
+                        ${isLocked ? '查看详情' : '立即申购'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = projectsHtml;
+}
+
+function viewProjectDetail(projectId) {
+    window.location.href = `project-detail.html?id=${projectId}`;
+}
+
+function getStatusClass(status) {
+    switch(parseInt(status)) {
+        case 0: return 'status-active';
+        case 1: return 'status-paused';
+        case 2: return 'status-sold';
+        default: return '';
+    }
+}
+
+function getStatusText(status) {
+    switch(parseInt(status)) {
+        case 0: return '募集中';
+        case 1: return '已暂停';
+        case 2: return '已售罄';
+        default: return '未知';
+    }
+}
+
+function formatMoney(value) {
+    const num = parseFloat(value) || 0;
+    if (num >= 10000) {
+        return (num / 10000).toFixed(1) + '万';
+    }
+    return num.toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+}
+
+function showEmpty(message) {
+    document.getElementById('projectsList').innerHTML = `
+        <div class="empty-state">
+            <div class="empty-icon">📦</div>
+            <div class="empty-text">${message}</div>
+        </div>
+    `;
+}
+// 新的UI渲染函数
+function renderProjectsNew() {
+    const container = document.getElementById('projectsList');
+
+    if (allProjects.length === 0) {
+        showEmpty('暂无项目');
+        return;
+    }
+
+    // 更新统计数据
+    updateStats();
+
+    const projectsHtml = allProjects.map(project => {
+        const vipRequired = parseInt(project.vip) || 0;
+        const isLocked = vipRequired > userData.level;
+        const rate = parseFloat(project.rate) || 0;
+        const vipRate = parseFloat(project.vip_rate) || 0;
+        const totalRate = rate + vipRate;
+        const status = parseInt(project.status);
+        const totalAmount = parseFloat(project.total_money) || 0;
+        const soldAmount = parseFloat(project.sold_money) || 0;
+        const progress = totalAmount > 0 ? (soldAmount / totalAmount * 100) : 0;
+        const dailyRate = totalRate / 365; // 日收益率
+
+        return `
+            <div class="product-card ${isLocked ? 'product-locked' : ''}" onclick="viewProjectDetail(${project.id})">
+                <!-- 产品头部 -->
+                <div class="product-card-header">
+                    <div class="product-title">${project.title || '投资项目'}</div>
+                    ${(isLocked && vipRequired > 0) ? `<div class="product-tag">专享</div>` : ''}
+                </div>
+
+                <!-- 产品副标题 -->
+                <div class="product-subtitle">${project.code || ''} · ${project.tag || '优质理财'}</div>
+
+                <!-- 关键数据 -->
+                <div class="product-stats">
+                    <div class="product-stat">
+                        <div class="stat-icon-small">⭐</div>
+                        <div class="stat-content">
+                            <div class="stat-label-small">平均日收益</div>
+                            <div class="stat-value-small">${dailyRate.toFixed(3)}%</div>
+                        </div>
+                    </div>
+                    <div class="product-stat">
+                        <div class="stat-icon-small">⏱</div>
+                        <div class="stat-content">
+                            <div class="stat-label-small">锁定期</div>
+                            <div class="stat-value-small">${project.day}天</div>
+                        </div>
+                    </div>
+                    <div class="product-stat">
+                        <div class="stat-icon-small">💵</div>
+                        <div class="stat-content">
+                            <div class="stat-label-small">起投</div>
+                            <div class="stat-value-small">${formatMoneyShort(project.min_money || 1000)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 募集进度 -->
+                <div class="product-progress">
+                    <div class="progress-info">
+                        <span class="progress-label">已售</span>
+                        <span class="progress-percent">${progress.toFixed(0)}%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width:${Math.min(progress, 100)}%"></div>
+                    </div>
+                </div>
+
+                <!-- 申购按钮 -->
+                <div class="product-footer">
+                    <button class="btn-subscribe" onclick="event.stopPropagation(); viewProjectDetail(${project.id})">
+                        ${isLocked ? '查看详情' : '立即申购'}
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.innerHTML = projectsHtml;
+}
+
+// 更新统计数据
+function updateStats() {
+    // 这里可以根据实际API返回统计数据
+    document.getElementById('statsProjectCount').textContent = allProjects.length + '个';
+    document.getElementById('statsProfit').textContent = '+847,293.50';
+    document.getElementById('statsRate').textContent = '8.47%';
+}
+
+// 简化的金额格式化
+function formatMoneyShort(value) {
+    const num = parseFloat(value) || 0;
+    if (num >= 10000) {
+        return (num / 10000).toFixed(1) + '万元';
+    }
+    return num.toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0}) + '元';
+}

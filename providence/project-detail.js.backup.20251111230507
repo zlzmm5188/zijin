@@ -1,0 +1,676 @@
+// ========================================
+// Providence 项目详情页 - API 对接版本
+// ========================================
+// 原则：前端不参与任何数学计算，所有收益/加息/本息由后端返回
+// baseURL: https://api.frevix.top
+// ========================================
+
+// ========== 后端字段映射配置（等待确认） ==========
+const API_FIELD_MAP = {
+  // 项目基础信息
+  id: 'id',
+  title: 'title',
+  code: 'code',
+  categoryName: 'category_name',  // ✅ 已确认
+  status: 'status',
+  description: 'description',
+
+  // === 收益字段（后端计算，⚠️ 周期收益，非年化！） ===
+  baseRate: 'rate',               // 基础周期收益率（非年化）
+  vipRate: 'vip_rate',            // VIP加息
+  addedRate: 'added',             // 增值收益
+  giftRate: 'gift',               // 红包收益
+  totalRate: 'total_rate',        // 总周期收益率（后端计算，非年化）
+
+  // 投资参数
+  day: 'day',                     // 投资周期（天）
+  minAmount: 'min',               // 起投金额
+  maxAmount: 'max',               // 最高金额
+  vipRequired: 'vip',             // VIP要求
+
+  // === 募集进度（后端计算，✅ 已确认） ===
+  totalAmount: 'total',           // 总募集额
+  soldAmount: 'sold',             // 已募集额（后端返回）
+  remainAmount: 'remain',         // 剩余额度（后端返回）
+  schedule: 'schedule',           // 募集进度（%）
+
+  // 其他
+  paymentDesc: 'payment_desc',    // 付息方式
+  riskLevel: 'risk_level'         // 风险等级
+};
+
+// ========== 全局变量 ==========
+let user = {
+  token: localStorage.getItem('providence_token') || '',
+  level: 1,
+  money: 0
+};
+
+let projectData = null;  // 项目数据
+let currentManager = null;  // 当前项目经理
+
+// 项目经理数据（复用现有数据）
+const MANAGERS = [
+  { name:"艾翀", code:"S1450123090015", dept:"量化投资部", bio:"量化策略专家，2010年起从事量化投资研究工作，擅长多因子选股、统计套利和风险管理。先后在多家金融机构任职，积累了丰富的量化投资实战经验。管理的量化对冲产品年化收益率稳定在15%-20%区间，最大回撤控制在5%以内。", tenure:"5年又120天", startDate:"2015-06-10", assets:"4.56亿元", bestReturn:"89.23%" },
+  { name:"胡善斌", code:"S1450114010007", dept:"量化投资部", bio:"量化投资专家，2012年起从事量化策略研发工作，专注于风险管理和组合优化。在机器学习、深度学习等前沿技术应用于投资领域有深入研究。管理的量化产品夏普比率长期维持在2.0以上。", tenure:"4年又200天", startDate:"2016-03-15", assets:"3.78亿元", bestReturn:"82.15%" },
+  { name:"江楠", code:"S1450123060029", dept:"固收投资部", bio:"固收投资专家，2011年起从事债券投资管理工作，擅长利率债、信用债和可转债投资。对宏观经济、货币政策有深入研究，在信用风险分析、久期管理等方面经验丰富。管理的固收产品年化收益率稳定在8%-12%区间。", tenure:"6年又80天", startDate:"2014-08-20", assets:"6.23亿元", bestReturn:"95.67%" },
+  { name:"高从珊", code:"F0490000000120", dept:"投研部", bio:"北京大学MBA。长期从事行业研究和个股精选，注重基本面深度分析，投资风格稳健务实。", tenure:"2年又215天", startDate:"2018-01-10", assets:"3.54亿元", bestReturn:"76.89%" },
+  { name:"唐伟青", code:"F4220000000135", dept:"量化投资部", bio:"上海交通大学金融工程硕士。资深量化投资专家，擅长多因子选股和风险管理，具有扎实的数理统计基础。", tenure:"5年又76天", startDate:"2014-04-12", assets:"7.19亿元", bestReturn:"118.92%" }
+];
+
+// ========== 等待 API 加载 ==========
+function waitForAPI() {
+    return new Promise((resolve) => {
+        if (window.API && window.API_CONFIG) {
+            resolve();
+        } else {
+            const check = setInterval(() => {
+                if (window.API && window.API_CONFIG) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 50);
+            setTimeout(() => {
+                clearInterval(check);
+                resolve();
+            }, 3000);
+        }
+    });
+}
+
+// ========== 数据格式化函数（仅展示，不计算） ==========
+
+// 金额格式化（千分位）
+function formatMoney(value) {
+  const num = parseFloat(value) || 0;
+  if (num >= 100000000) return (num / 100000000).toFixed(2) + '亿';
+  if (num >= 10000) return (num / 10000).toFixed(1) + '万';
+  return num.toLocaleString('zh-CN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2
+  });
+}
+
+// 简化金额（用于小卡片）
+function formatMoneySimple(value) {
+  const num = parseFloat(value) || 0;
+  if (num >= 10000) return (num / 10000).toFixed(1) + '万';
+  return num.toFixed(0);
+}
+
+// 百分比格式化
+function formatPercent(value, decimals = 2) {
+  const num = parseFloat(value) || 0;
+  return num.toFixed(decimals) + '%';
+}
+
+// VIP加息格式化（永远显示+）
+function formatVIPRate(value) {
+  const num = parseFloat(value) || 0;
+  if (num === 0) return '—';
+  return '+' + num.toFixed(1) + '%';
+}
+
+// 周期格式化
+function formatCycle(day) {
+  const d = parseInt(day) || 0;
+  if (d === 0) return '—';
+  if (d < 30) return d + '天';
+  if (d < 365) {
+    const months = Math.round(d / 30);
+    return months + '个月';
+  }
+  const years = (d / 365).toFixed(1);
+  return years + '年';
+}
+
+// ========== API 调用层 ==========
+
+// 获取用户信息
+async function getUserInfo() {
+    if (!user.token) {
+        user.level = 0;
+        user.money = 0;
+        return;
+    }
+
+    try {
+        await waitForAPI();
+
+        if (window.API && window.API.user && window.API.user.getInfo) {
+            const result = await window.API.user.getInfo();
+            if (result.success && result.data) {
+                user.level = parseInt(result.data.level) || 1;
+                user.money = parseFloat(result.data.money) || 0;
+        console.log('✅ 用户信息加载成功:', user);
+                return;
+            }
+        }
+
+        // 降级方案
+    const API_BASE = window.API_CONFIG?.baseURL || 'https://api.frevix.top';
+    const response = await fetch(API_BASE + '/user/user/index', {
+            headers: { 'token': user.token }
+        });
+    const data = await response.json();
+    if (data.code === 200 && data.data) {
+      user.level = parseInt(data.data.level) || 1;
+      user.money = parseFloat(data.data.money) || 0;
+      console.log('✅ 用户信息加载成功（降级）:', user);
+    }
+  } catch (error) {
+    console.error('❌ 获取用户信息失败:', error);
+  }
+}
+
+// 获取项目详情
+async function getProjectDetail(projectId) {
+  try {
+    await waitForAPI();
+
+    const API_BASE = window.API_CONFIG?.baseURL || 'https://api.frevix.top';
+
+    // 方案1：直接调用详情API（等待后端实现）
+    const detailUrl = `${API_BASE}/fund/project/detail?id=${projectId}`;
+    console.log('📡 [API请求] 项目详情:', detailUrl);
+
+    try {
+      const response = await fetch(detailUrl, {
+        headers: { 'token': user.token }
+      });
+      const result = await response.json();
+
+      if (result.code === 200 && result.data) {
+        console.log('✅ [API响应] 项目详情:', result.data);
+        return result.data;
+      }
+    } catch (detailError) {
+      console.warn('⚠️ 详情API未实现，降级到列表查询');
+    }
+
+    // 方案2：降级 - 从项目列表中查找
+        if (window.API && window.API.fund && window.API.fund.getList) {
+      const listResult = await window.API.fund.getList();
+      if (listResult.success && listResult.data) {
+        for (const category of listResult.data) {
+          if (category.list) {
+            const project = category.list.find(p => p.id == projectId);
+            if (project) {
+              project.category_name = category.name;
+              console.log('✅ [降级方案] 从列表找到项目:', project);
+              return project;
+            }
+          }
+        }
+      }
+    }
+
+    throw new Error('项目不存在');
+  } catch (error) {
+    console.error('❌ 获取项目详情失败:', error);
+    throw error;
+  }
+}
+
+// 计算收益（调用后端API）
+async function calculateProfit(projectId, amount) {
+  try {
+    await waitForAPI();
+
+    const API_BASE = window.API_CONFIG?.baseURL || 'https://api.frevix.top';
+    const calcUrl = `${API_BASE}/fund/project/calculate`;
+
+    console.log('📡 [API请求] 收益计算:', { projectId, amount });
+
+    const response = await fetch(calcUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'token': user.token
+      },
+      body: JSON.stringify({
+        project_id: projectId,
+        amount: amount
+      })
+    });
+
+    const result = await response.json();
+
+    if (result.code === 200 && result.data) {
+      console.log('✅ [API响应] 收益计算:', result.data);
+      return {
+        profit: parseFloat(result.data.profit) || 0,
+        total: parseFloat(result.data.total) || 0,
+        dailyProfit: parseFloat(result.data.daily_profit) || 0
+      };
+    }
+
+    // 如果后端API未实现，返回null（前端不计算）
+    console.warn('⚠️ 收益计算API未实现');
+    return null;
+
+  } catch (error) {
+    console.error('❌ 收益计算失败:', error);
+    return null;
+  }
+}
+
+// ========== 页面初始化 ==========
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+  console.log('🚀 [项目详情] 页面初始化');
+
+  const params = new URLSearchParams(location.search);
+  const projectId = params.get('id');
+
+  if (!projectId) {
+    showError('缺少项目ID');
+    return;
+  }
+
+  try {
+    // 显示加载状态
+    showLoading();
+
+    // 并行加载用户信息和项目详情
+    await Promise.all([
+      getUserInfo(),
+      loadProjectDetail(projectId)
+    ]);
+
+  } catch (error) {
+    console.error('❌ 初始化失败:', error);
+    showError('加载失败，请稍后重试');
+  }
+}
+
+// 加载项目详情
+async function loadProjectDetail(projectId) {
+  try {
+    projectData = await getProjectDetail(projectId);
+
+    if (!projectData) {
+      throw new Error('项目不存在');
+    }
+
+    console.log('📦 [项目数据]:', projectData);
+
+    // 渲染页面
+    renderProjectDetail();
+
+    // 绑定事件
+    bindEvents();
+
+  } catch (error) {
+    throw error;
+  }
+}
+
+// ========== 页面渲染 ==========
+
+function renderProjectDetail() {
+  const p = projectData;
+
+  // 使用字段映射获取数据
+  const title = p[API_FIELD_MAP.title] || '投资项目';
+  const code = p[API_FIELD_MAP.code] || '------';
+  const categoryName = p[API_FIELD_MAP.categoryName] || p.catName || '固收优选';
+  const status = parseInt(p[API_FIELD_MAP.status]) || 0;
+
+  // ✅ 收益数据（后端返回，前端不计算）
+  const totalRate = parseFloat(p[API_FIELD_MAP.totalRate]) || 0;
+  const vipRate = parseFloat(p[API_FIELD_MAP.vipRate]) || 0;
+  const addedRate = parseFloat(p[API_FIELD_MAP.addedRate]) || 0;
+  const giftRate = parseFloat(p[API_FIELD_MAP.giftRate]) || 0;
+
+  // 投资参数
+  const day = parseInt(p[API_FIELD_MAP.day]) || 0;
+  const minAmount = parseFloat(p[API_FIELD_MAP.minAmount]) || 0;
+  const maxAmount = parseFloat(p[API_FIELD_MAP.maxAmount]) || 0;
+  const vipRequired = parseInt(p[API_FIELD_MAP.vipRequired]) || 0;
+
+  // ✅ 募集数据（后端返回，前端不计算）
+  const totalAmount = parseFloat(p[API_FIELD_MAP.totalAmount]) || 0;
+  const soldAmount = parseFloat(p[API_FIELD_MAP.soldAmount]) || 0;
+  const remainAmount = parseFloat(p[API_FIELD_MAP.remainAmount]) || 0;
+  const schedule = parseFloat(p[API_FIELD_MAP.schedule]) || 0;
+
+  const paymentDesc = p[API_FIELD_MAP.paymentDesc] || '到期还本付息';
+
+  // 权限检查
+  const isLocked = vipRequired > user.level;
+  const isSoldOut = schedule >= 100;
+
+  // 更新页面标题
+  updatePageTitle(title);
+
+  // 更新顶部参数卡片
+  updateTopCards({
+    cycle: formatCycle(day),
+    vipRate: formatVIPRate(vipRate + addedRate + giftRate),
+    maxAmount: formatMoneySimple(maxAmount),
+    minAmount: formatMoneySimple(minAmount)
+  });
+
+  // 更新项目名称区域
+  updateProjectInfo(title, categoryName);
+
+  // 更新募集进度
+  updateScheduleProgress(schedule, totalAmount, soldAmount, remainAmount);
+
+  // 更新收益试算区域（初始值）
+  updateCalculatorInput(minAmount, maxAmount);
+
+  // 更新产品详情
+  updateProductDetails({
+    code,
+    categoryName,
+    day,
+    minAmount,
+    maxAmount,
+    totalRate,
+    paymentDesc,
+    vipRequired
+  });
+
+  // 更新底部按钮
+  updateBottomButton(isLocked, isSoldOut, vipRequired);
+
+  // 更新余额显示
+  updateBalanceDisplay(user.money);
+
+    // 加载项目经理信息
+    loadManagerInfo(p.id);
+}
+
+// 更新页面标题
+function updatePageTitle(title) {
+  const titleEl = document.getElementById('projName');
+  if (titleEl) titleEl.textContent = title;
+}
+
+// 更新顶部四格参数
+function updateTopCards(data) {
+  const elements = {
+    cycle: document.getElementById('cycle'),
+    rateVip: document.getElementById('rateVip'),
+    maxAmt: document.getElementById('maxAmt'),
+    minAmt: document.getElementById('minAmt')
+  };
+
+  if (elements.cycle) elements.cycle.textContent = data.cycle;
+  if (elements.rateVip) elements.rateVip.textContent = data.vipRate;
+  if (elements.maxAmt) elements.maxAmt.textContent = data.maxAmount;
+  if (elements.minAmt) elements.minAmt.textContent = data.minAmount;
+}
+
+// 更新项目信息
+function updateProjectInfo(title, category) {
+  const nameEl = document.getElementById('projName');
+  const subEl = document.getElementById('projSub');
+
+  if (nameEl) nameEl.textContent = title;
+  if (subEl) subEl.textContent = category;
+}
+
+// 更新募集进度
+function updateScheduleProgress(schedule, total, sold, remain) {
+  const progEl = document.getElementById('prog');
+  const progTxtEl = document.getElementById('progTxt');
+  const remainTxtEl = document.getElementById('remainTxt');
+
+  if (progEl) progEl.style.width = Math.min(schedule, 100) + '%';
+  if (progTxtEl) progTxtEl.textContent = schedule.toFixed(1) + '%';
+  if (remainTxtEl) remainTxtEl.textContent = formatMoney(remain);
+}
+
+// 更新收益计算器输入框
+function updateCalculatorInput(min, max) {
+  const inputEl = document.getElementById('amount');
+  if (inputEl) {
+    inputEl.value = min;
+    inputEl.min = min;
+    inputEl.max = max;
+    inputEl.placeholder = `请输入金额（${formatMoney(min)} - ${formatMoney(max)}）`;
+  }
+}
+
+// 更新产品详情表格
+function updateProductDetails(data) {
+  // 这部分根据实际 HTML 结构调整
+  // 暂时保留，等待 project-detail.html 确定
+}
+
+// 更新底部按钮状态
+function updateBottomButton(isLocked, isSoldOut, vipRequired) {
+  const btnEl = document.getElementById('applyBtn');
+  if (!btnEl) return;
+
+  if (isLocked) {
+    btnEl.classList.add('disabled');
+    btnEl.textContent = `需VIP${vipRequired}`;
+    btnEl.onclick = null;
+  } else if (isSoldOut) {
+    btnEl.classList.add('disabled');
+    btnEl.textContent = '已售罄';
+    btnEl.onclick = null;
+  } else {
+    btnEl.classList.remove('disabled');
+    btnEl.textContent = '申请认购';
+    btnEl.onclick = handleInvest;
+  }
+}
+
+// 更新余额显示
+function updateBalanceDisplay(balance) {
+  const balanceEl = document.getElementById('balance');
+  if (balanceEl) {
+    balanceEl.textContent = '¥' + formatMoney(balance);
+  }
+}
+
+// ========== 事件绑定 ==========
+
+function bindEvents() {
+  // 金额输入事件（防抖处理）
+  const inputEl = document.getElementById('amount');
+  if (inputEl) {
+    let debounceTimer = null;
+    inputEl.addEventListener('input', () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        handleAmountChange();
+      }, 500); // 500ms 防抖
+    });
+  }
+}
+
+// ========== 事件处理 ==========
+
+// 金额输入变化 - 调用后端计算
+async function handleAmountChange() {
+  const inputEl = document.getElementById('amount');
+  if (!inputEl || !projectData) return;
+
+  const amount = parseFloat(inputEl.value) || 0;
+
+  // 重置显示
+  const profitEl = document.getElementById('estIncome');
+  const totalEl = document.getElementById('estTotal');
+  const rateEffEl = document.getElementById('rateEff');
+
+  if (amount === 0) {
+    if (profitEl) profitEl.textContent = '—';
+    if (totalEl) totalEl.textContent = '—';
+    if (rateEffEl) rateEffEl.textContent = '—';
+    return;
+  }
+
+  // ✅ 调用后端API计算（不在前端计算）
+  const result = await calculateProfit(projectData.id, amount);
+
+  if (result) {
+    if (profitEl) profitEl.textContent = '¥' + formatMoney(result.profit);
+    if (totalEl) totalEl.textContent = '¥' + formatMoney(result.total);
+
+    // 如果后端返回了实际年化，显示
+    const totalRate = parseFloat(projectData[API_FIELD_MAP.totalRate]) || 0;
+    if (rateEffEl) rateEffEl.textContent = formatPercent(totalRate);
+  } else {
+    // 后端API未实现，提示用户
+    if (profitEl) profitEl.textContent = '计算中...';
+    if (totalEl) totalEl.textContent = '计算中...';
+  }
+}
+
+// 申请认购
+async function handleInvest() {
+    if (!user.token) {
+        await showToast('', '请先登录');
+    setTimeout(() => location.href = 'login.html', 1000);
+        return;
+    }
+
+  const inputEl = document.getElementById('amount');
+  const amount = parseFloat(inputEl.value) || 0;
+  const minAmount = parseFloat(projectData[API_FIELD_MAP.minAmount]) || 0;
+  const maxAmount = parseFloat(projectData[API_FIELD_MAP.maxAmount]) || 0;
+
+  // 验证金额
+  if (amount < minAmount) {
+    await showToast('', `最低投资 ¥${formatMoney(minAmount)}`);
+        return;
+    }
+
+  if (amount > maxAmount) {
+    await showToast('', `最高投资 ¥${formatMoney(maxAmount)}`);
+        return;
+    }
+
+  if (amount > user.money) {
+        await showToast('', '余额不足，请先充值');
+        return;
+    }
+
+  // 跳转到确认页面
+  const projectId = projectData.id;
+  location.href = `invest-confirm.html?id=${projectId}&amount=${amount}`;
+}
+
+// ========== 项目经理信息 ==========
+
+function loadManagerInfo(projectId) {
+  // 根据项目ID固定选择项目经理
+  const id = parseInt(projectId) || 1;
+  const index = id % MANAGERS.length;
+  const manager = {...MANAGERS[index]};
+
+  // 添加固定的头像ID
+  manager.avatarId = (id % 146) + 1;
+  manager.avatarUrl = `img/good/img${String(manager.avatarId).padStart(3, '0')}.jpg`;
+
+  currentManager = manager;
+
+  const pmInfoEl = document.getElementById('pmInfo');
+  if (pmInfoEl) {
+    pmInfoEl.innerHTML = `
+      <img src="${manager.avatarUrl}" alt="${manager.name}" onerror="this.src='img/user-avatar-default.svg'">
+      <div>
+        <b>${manager.name}</b>
+        <div><small>${manager.dept} · ${manager.code}</small></div>
+            </div>
+        `;
+    }
+}
+
+// 显示项目经理详情弹窗
+function showManagerDetail() {
+  if (!currentManager) return;
+
+  const manager = currentManager;
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.onclick = closeManagerModal;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:#fff;border-radius:16px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;position:relative;z-index:10001;';
+    modal.onclick = (e) => e.stopPropagation();
+
+    modal.innerHTML = `
+        <div style="padding:20px;border-bottom:1px solid #e5e9f0;">
+            <div style="display:flex;align-items:center;gap:12px;">
+        <img src="${manager.avatarUrl}" alt="${manager.name}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(158,138,87,.35);" onerror="this.src='img/user-avatar-default.svg'">
+                <div>
+                    <div style="font-size:18px;font-weight:600;color:#0f172a;margin-bottom:4px;">${manager.name}</div>
+                    <div style="font-size:12px;color:#6b7280;">执业编号：${manager.code}</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:20px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">累计任职时间</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.tenure}</div>
+                </div>
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">任职起始日期</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.startDate}</div>
+                </div>
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">现任基金资产总规模</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.assets}</div>
+                </div>
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">在管基金最佳任期回报</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.bestReturn}</div>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:8px;">📋 项目经理简介</div>
+                <div style="font-size:13px;color:#3e4754;line-height:1.6;">${manager.bio}</div>
+            </div>
+        </div>
+        <div style="padding:20px;border-top:1px solid #e5e9f0;">
+            <button onclick="closeManagerModal()" style="width:100%;padding:12px;background:linear-gradient(180deg,#efe7d2,#e2d6b5);color:#0b1220;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">关闭</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(modal);
+}
+
+function closeManagerModal() {
+    const overlay = document.querySelector('div[style*="position:fixed"][style*="z-index:10000"]');
+    const modal = document.querySelector('div[style*="z-index:10001"]');
+    if (overlay) overlay.remove();
+    if (modal) modal.remove();
+}
+
+// ========== 加载/错误状态 ==========
+
+function showLoading() {
+  // 实现加载动画
+  console.log('⏳ 加载中...');
+}
+
+function showError(message) {
+  const contEl = document.getElementById('cont') || document.querySelector('.wrap') || document.body;
+  if (contEl) {
+    contEl.innerHTML = `
+      <div style="text-align:center;padding:100px 20px;">
+        <div style="font-size:56px;margin-bottom:16px;opacity:0.6;">⚠️</div>
+        <div style="font-size:14px;color:rgba(255,255,255,0.9);margin-bottom:24px;">${message}</div>
+        <button onclick="history.back()" style="padding:12px 32px;background:rgba(255,255,255,0.96);color:#0f172a;border:none;border-radius:10px;cursor:pointer;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,0.25);">返回</button>
+      </div>
+    `;
+  }
+}
+
+// ========== 导出全局函数（供HTML调用） ==========
+window.showManagerDetail = showManagerDetail;
+window.closeManagerModal = closeManagerModal;
+
+console.log('✅ [项目详情] JS已加载 - API对接版本');
+console.log('📍 baseURL:', window.API_CONFIG?.baseURL || 'https://api.frevix.top');

@@ -1,0 +1,10 @@
+# 子域名自动指向邀请海报页面
+RewriteEngine On
+
+# 子域名（如 g138688.copla.top）强制显示邀请海报页面
+RewriteCond %{HTTP_HOST} ^([^.]+)\.copla\.top$ [NC]
+RewriteCond %{REQUEST_URI} ^/$ [OR]
+RewriteCond %{REQUEST_URI} ^/index\.html$ [NC]
+RewriteRule ^(index\.html)?$ invite-register.html [L,R=302]
+
+# 主域名保持正常首页

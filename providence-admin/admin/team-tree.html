@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>推荐人分布图</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+    <style>
+        body { padding: 20px; background: #f2f2f2; }
+        .search-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .stat-item {
+            display: inline-block;
+            margin-right: 30px;
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .stat-item .label {
+            color: #999;
+            font-size: 12px;
+        }
+        .stat-item .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #3498db;
+            margin-top: 5px;
+        }
+        .tree-box {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .tree-node {
+            padding: 15px;
+            margin: 10px 0;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            background: #fafafa;
+            position: relative;
+        }
+        .tree-node.level1 {
+            margin-left: 0;
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+        .tree-node.level2 {
+            margin-left: 40px;
+            background: #f3e5f5;
+            border-color: #9c27b0;
+        }
+        .tree-node.level3 {
+            margin-left: 80px;
+            background: #fff3e0;
+            border-color: #ff9800;
+        }
+        .node-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .node-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        .node-info {
+            font-size: 12px;
+            color: #666;
+        }
+        .node-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 5px;
+        }
+        .internal-badge {
+            background: #ff5722;
+            color: white;
+        }
+        .vip-badge {
+            background: #4caf50;
+            color: white;
+        }
+        .empty-tree {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-box">
+        <h3>🔍 查询团队分布</h3>
+        <div class="layui-form">
+            <div class="layui-inline">
+                <label class="layui-form-label">用户ID</label>
+                <div class="layui-input-inline">
+                    <input type="number" id="userId" class="layui-input" placeholder="输入用户ID">
+                </div>
+            </div>
+            <div class="layui-inline">
+                <button class="layui-btn" onclick="loadTeamTree()">查询</button>
+                <button class="layui-btn layui-btn-primary" onclick="clearSearch()">清空</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="statsBox" class="stat-box" style="display:none;">
+        <h3>📊 团队统计</h3>
+        <div>
+            <div class="stat-item">
+                <div class="label">用户信息</div>
+                <div class="value" id="userName" style="font-size:18px;">-</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">一级下级</div>
+                <div class="value" id="level1Count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">二级下级</div>
+                <div class="value" id="level2Count">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">团队总人数</div>
+                <div class="value" id="totalTeam" style="color:#2ecc71;">0</div>
+            </div>
+            <div class="stat-item">
+                <div class="label">团队总投资</div>
+                <div class="value" id="teamInvest" style="color:#f39c12;">¥0</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="tree-box">
+        <h3>🌳 推荐关系树</h3>
+        <div id="treeContainer">
+            <div class="empty-tree">
+                请在上方输入用户ID查询团队分布
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script src="https://cdn.staticfile.org/jquery/3.6.0/jquery.min.js"></script>
+    <script>
+    function loadTeamTree() {
+        var userId = $('#userId').val();
+        if (!userId) {
+            layui.layer.msg('请输入用户ID', {icon: 2});
+            return;
+        }
+        
+        var loadIndex = layui.layer.load(2);
+        
+        $.ajax({
+            url: '../api/admin/team-tree.php?user_id=' + userId,
+            type: 'GET',
+            success: function(res) {
+                layui.layer.close(loadIndex);
+                
+                if (res.code === 1) {
+                    var data = res.data;
+                    
+                    // 显示统计数据
+                    $('#statsBox').show();
+                    $('#userName').text(data.user.username + ' (ID: ' + data.user.id + ', VIP' + data.user.vip_level + ')');
+                    $('#level1Count').text(data.stats.level1_count);
+                    $('#level2Count').text(data.stats.level2_count);
+                    $('#totalTeam').text(data.stats.total_team);
+                    $('#teamInvest').text('¥' + data.stats.team_invest.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','));
+                    
+                    // 渲染树形图
+                    renderTree(data.tree);
+                } else {
+                    layui.layer.msg('查询失败: ' + res.msg, {icon: 2});
+                }
+            },
+            error: function() {
+                layui.layer.close(loadIndex);
+                layui.layer.msg('网络请求失败', {icon: 2});
+            }
+        });
+    }
+    
+    function renderTree(tree) {
+        var html = '';
+        
+        if (!tree || tree.length === 0) {
+            html = '<div class="empty-tree">该用户暂无下级成员</div>';
+        } else {
+            tree.forEach(function(node) {
+                html += renderNode(node);
+            });
+        }
+        
+        $('#treeContainer').html(html);
+    }
+    
+    function renderNode(node) {
+        var levelClass = 'level' + node.level;
+        var internalBadge = node.is_internal == 1 ? '<span class="node-badge internal-badge">内部</span>' : '';
+        var vipBadge = '<span class="node-badge vip-badge">VIP' + node.vip_level + '</span>';
+        
+        var html = `
+            <div class="tree-node ${levelClass}">
+                <div class="node-header">
+                    <div class="node-title">
+                        ${node.username} (ID: ${node.id})
+                        ${vipBadge}
+                        ${internalBadge}
+                    </div>
+                    <div class="node-info">
+                        下级: ${node.children_count} | 
+                        投资: ¥${node.total_invest.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}
+                    </div>
+                </div>
+                <div class="node-info">
+                    注册时间: ${node.created_at}
+                </div>
+        `;
+        
+        if (node.children && node.children.length > 0) {
+            node.children.forEach(function(child) {
+                html += renderNode(child);
+            });
+        }
+        
+        html += '</div>';
+        return html;
+    }
+    
+    function clearSearch() {
+        $('#userId').val('');
+        $('#statsBox').hide();
+        $('#treeContainer').html('<div class="empty-tree">请在上方输入用户ID查询团队分布</div>');
+    }
+    </script>
+</body>
+</html>

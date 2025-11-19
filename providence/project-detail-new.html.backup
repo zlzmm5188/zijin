@@ -1,0 +1,1031 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>项目详情 - Providence</title>
+<link rel="stylesheet" href="styles.css?v=20251105">
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    height: 100%;
+    background: url('../img/1a170c215ff5dc163297525d67a04251.jpg') no-repeat center center fixed;
+    background-size: cover;
+    position: relative;
+}
+
+body {
+    overflow-x: hidden;
+    padding-bottom: 120px;
+}
+
+/* 背景层次效果 */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(10, 20, 35, 0.88);
+    pointer-events: none;
+    z-index: 0;
+}
+
+body::after {
+    content: '';
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 30%;
+    background: radial-gradient(ellipse at bottom, rgba(12, 32, 48, 0.6), transparent);
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* 移动端背景优化 */
+@media (max-width: 768px) {
+    html, body {
+        background-size: cover;
+        background-position: center center;
+    }
+
+    body::before {
+        background: rgba(10, 20, 35, 0.90);
+    }
+}
+
+/* 容器需要提升层级 */
+.top-nav,
+.container,
+.bottom-bar {
+    position: relative;
+    z-index: 1;
+}
+
+/* 顶部导航 */
+.top-nav {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 56px;
+    background: linear-gradient(135deg, #1a3a52, #0e2b44);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    z-index: 999;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.top-nav .back-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+.top-nav .title {
+    flex: 1;
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+}
+
+.top-nav .share-btn {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d4af37;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+/* 主容器 */
+.container {
+    padding: 16px;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* 项目头部卡片 - 紧凑排版 */
+.project-header {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.project-name {
+    font-size: 18px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.4;
+    margin-bottom: 12px;
+    display: block;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.project-tags {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.tag {
+    padding: 4px 12px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 500;
+    background: rgba(212, 175, 55, 0.2);
+    color: #d4af37;
+    border: 1px solid rgba(212, 175, 55, 0.3);
+}
+
+.tag.tag-vip {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.3), rgba(147, 51, 234, 0.3));
+    color: #c084fc;
+    border: 1px solid rgba(192, 132, 252, 0.5);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(138, 43, 226, 0.2);
+}
+
+/* 收益率大卡片 - 优雅深色 */
+.rate-showcase {
+    background: linear-gradient(135deg, rgba(30, 58, 82, 1), rgba(20, 48, 72, 1));
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(212, 175, 55, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+.rate-showcase::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.08) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.rate-label {
+    font-size: 13px;
+    color: rgba(212, 175, 55, 0.8);
+    margin-bottom: 8px;
+    font-weight: 500;
+}
+
+.rate-value {
+    font-size: 40px;
+    font-weight: 800;
+    color: #d4af37;
+    line-height: 1;
+    text-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+.rate-desc {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-top: 8px;
+}
+
+/* 核心信息 - 紧凑网格 */
+.info-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.05));
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.info-label {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.95);
+    font-weight: 600;
+}
+
+.info-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 产品详情 - 紧凑段落 */
+.detail-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.08));
+    backdrop-filter: blur(20px);
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+}
+
+.detail-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detail-section {
+    margin-bottom: 14px;
+}
+
+.detail-section:last-child {
+    margin-bottom: 0;
+}
+
+.section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #d4af37;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.section-content {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.95);
+    line-height: 1.6;
+    padding-left: 20px;
+}
+
+.section-content p {
+    margin: 0 0 6px 0;
+}
+
+.section-content ul,
+.section-content ol {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.section-content li {
+    margin-bottom: 4px;
+}
+
+/* 投资进度 */
+.progress-section {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.25), rgba(0, 0, 0, 0.2));
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.progress-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.progress-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.progress-value {
+    font-size: 12px;
+    font-weight: 600;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.progress-bar {
+    height: 6px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #10b981, #34d399);
+    border-radius: 3px;
+}
+
+/* 底部投资栏 */
+.bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(26, 58, 82, 0.95);
+    backdrop-filter: blur(20px);
+    padding: 12px 16px;
+    box-shadow: 0 -2px 16px rgba(0, 0, 0, 0.3);
+    z-index: 100;
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.bottom-content {
+    max-width: 800px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.balance-info {
+    flex: 1;
+}
+
+.balance-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.85);
+    margin-bottom: 2px;
+}
+
+.balance-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+/* 项目经理信息 */
+.manager-card {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 80px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.manager-avatar {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(212, 175, 55, 0.5);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    flex-shrink: 0;
+}
+
+.manager-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.manager-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 4px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.manager-code {
+    font-size: 12px;
+    color: rgba(212, 175, 55, 1);
+    font-family: monospace;
+    font-weight: 600;
+}
+
+.manager-desc {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-top: 6px;
+}
+
+.invest-btn {
+    padding: 12px 40px;
+    background: linear-gradient(135deg, #d4af37, #f6c952);
+    color: #1a3a52;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+    transition: all 0.3s;
+}
+
+.invest-btn:active {
+    transform: scale(0.98);
+}
+
+/* 加载状态 */
+.loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.spinner {
+    width: 40px;
+    height: 40px;
+    margin: 0 auto 16px;
+    border: 3px solid rgba(255, 255, 255, 0.1);
+    border-top-color: #d4af37;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* 弹窗动画 */
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes fadeOut {
+    from { opacity: 1; }
+    to { opacity: 0; }
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+</head>
+<body>
+
+<!-- 顶部导航 -->
+<div class="top-nav">
+    <div class="back-btn" onclick="history.back()">←</div>
+    <div class="title">项目详情</div>
+    <div class="share-btn" onclick="shareProject()">⋯</div>
+</div>
+
+<!-- 主容器 -->
+<div class="container" id="mainContainer">
+    <div class="loading">
+        <div class="spinner"></div>
+        <div>加载中...</div>
+    </div>
+</div>
+
+<!-- 底部投资栏 -->
+<div class="bottom-bar">
+    <div class="bottom-content">
+        <div class="balance-info">
+            <div class="balance-label">可用余额</div>
+            <div class="balance-value">¥<span id="balanceValue">0.00</span></div>
+        </div>
+        <button class="invest-btn" onclick="showInvestDialog()">立即购买</button>
+    </div>
+</div>
+
+<script src="ios-toast.js?v=20251105h"></script>
+<script>
+const API_BASE = 'https://v2.abcmall.one/index.php';
+let projectData = null;
+let userBalance = 0;
+
+// 获取URL参数
+function getQueryParam(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
+// 项目经理数据
+const MANAGERS = [
+    { name:"胡善斌", code:"S1450114010007" },
+    { name:"江楠", code:"S1450123060029" },
+    { name:"高从珊", code:"F0490000000120" },
+    { name:"唐伟青", code:"F4220000000135" },
+    { name:"王珍珍", code:"S1450123080005" },
+    { name:"高璐", code:"S1450121020002" },
+    { name:"徐晓航", code:"S1450116120184" },
+    { name:"李志超", code:"S1450116060168" },
+    { name:"李想", code:"S1450112050037" },
+    { name:"丁云妹", code:"S1450116100021" },
+    { name:"孙春华", code:"A20190702034278" },
+    { name:"程昊", code:"S1450114060028" },
+    { name:"裴京辰", code:"S1450124090002" },
+    { name:"甘露", code:"S1450122120012" },
+    { name:"陶金铭", code:"S1450122100062" },
+    { name:"王云驰", code:"S1450123010001" },
+    { name:"张毓东", code:"S1450123050007" },
+    { name:"孟祥淼", code:"S1450123010017" },
+    { name:"潘秉化", code:"S1450121120028" },
+    { name:"孙悦", code:"S1450121080093" },
+    { name:"李春杨", code:"S1450121060077" },
+    { name:"马梓萌", code:"S1450120100001" },
+    { name:"赵建楠", code:"S1450120050014" },
+    { name:"吴紫岚", code:"S1450118100102" },
+    { name:"班昊", code:"S1450123070062" },
+    { name:"裴以坤", code:"S1450124040045" },
+    { name:"马嘉宏", code:"A202411108001863" },
+    { name:"曾倩", code:"A20190605035842" },
+    { name:"郭义琳", code:"S1450120080041" },
+    { name:"钟优文", code:"A20190703001643" },
+    { name:"张世瑶", code:"S1450115090019" }
+];
+
+// 随机选择项目经理
+function getRandomManager() {
+    return MANAGERS[Math.floor(Math.random() * MANAGERS.length)];
+}
+
+// 页面加载
+document.addEventListener('DOMContentLoaded', function() {
+    const projectId = getQueryParam('id');
+    if (!projectId) {
+        showToast('', '项目ID错误');
+        setTimeout(() => history.back(), 1500);
+        return;
+    }
+
+    loadProjectDetail(projectId);
+    loadUserBalance();
+});
+
+// 加载项目详情
+async function loadProjectDetail(id) {
+    const token = localStorage.getItem('providence_token');
+
+    try {
+        // 使用旧接口：从所有项目中查找
+        const response = await fetch(API_BASE + '/fund/project/all', {
+            method: 'GET',
+            headers: token ? { 'token': token } : {}
+        });
+
+        const result = await response.json();
+        console.log('[项目列表] API响应:', result);
+
+        // 从所有分类中查找目标项目
+        let foundProject = null;
+        if (result.data && Array.isArray(result.data)) {
+            for (const category of result.data) {
+                if (category.list && Array.isArray(category.list)) {
+                    foundProject = category.list.find(p => p.id == id);
+                    if (foundProject) {
+                        foundProject.categoryName = category.name;
+                        break;
+                    }
+                }
+            }
+        }
+
+        if (foundProject) {
+            projectData = foundProject;
+            renderProjectDetail(foundProject);
+        } else {
+            throw new Error('项目不存在');
+        }
+    } catch (error) {
+        console.error('[项目详情] 加载失败:', error);
+        document.getElementById('mainContainer').innerHTML = `
+            <div class="loading">
+                <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                <div>加载失败: ${error.message}</div>
+                <div style="margin-top: 20px;">
+                    <button onclick="history.back()" style="padding: 10px 30px; background: #d4af37; color: #fff; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;">返回</button>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// 渲染项目详情
+function renderProjectDetail(data) {
+    const container = document.getElementById('mainContainer');
+
+    // 格式化数据 - 适配旧API字段
+    const name = data.title || data.name || '未命名项目';
+    const code = data.id || 'N/A';
+    const categoryName = data.categoryName || 'USDT专区';
+
+    // 收益率计算
+    const baseRate = parseFloat(data.rate || 0);
+    const vipRate = parseFloat(data.vip_rate || 0);
+    const addedRate = parseFloat(data.added || 0);
+    const giftRate = parseFloat(data.gift || 0);
+    const totalRate = baseRate + vipRate + addedRate + giftRate;
+
+    const days = parseInt(data.day || data.days || 0);
+    const minInvest = parseFloat(data.min || data.money || 0);
+    const maxInvest = parseFloat(data.max || data.max_money || 999999999);
+
+    // 项目进度
+    const schedule = parseFloat(data.schedule || 0);
+    const totalAmount = parseFloat(data.total || 0);
+    const soldAmount = totalAmount * (schedule / 100);
+    const remainAmount = totalAmount - soldAmount;
+
+    // VIP要求
+    const vipRequired = parseInt(data.vip || 0);
+
+    // 随机选择项目经理
+    const manager = getRandomManager();
+    const managerAvatar = `img/good/${Math.floor(Math.random() * 20) + 1}.jpg`;
+
+    container.innerHTML = `
+        <!-- 项目头部 -->
+        <div class="project-header">
+            <div class="project-name">${name}</div>
+            <div class="project-tags">
+                <span class="tag">代码：${String(code).padStart(6, '0')}</span>
+                <span class="tag">分类：${categoryName}</span>
+                ${vipRequired > 0 ? `<span class="tag tag-vip">👑 VIP${vipRequired}专享</span>` : ''}
+            </div>
+        </div>
+
+        <!-- 收益率展示 -->
+        <div class="rate-showcase">
+            <div class="rate-label">年化收益率</div>
+            <div class="rate-value">${totalRate.toFixed(2)}%</div>
+            <div class="rate-desc">
+                ${baseRate > 0 ? `基础${baseRate}%` : ''}
+                ${vipRate > 0 ? ` + VIP加息${vipRate}%` : ''}
+                ${addedRate > 0 ? ` + 平台补贴${addedRate}%` : ''}
+                ${giftRate > 0 ? ` + 新手福利${giftRate}%` : ''}
+            </div>
+        </div>
+
+        <!-- 核心信息网格 -->
+        <div class="info-grid">
+            <div class="info-item">
+                <span class="info-label">投资期限</span>
+                <span class="info-value">${days}天</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">起投金额</span>
+                <span class="info-value">¥${formatMoney(minInvest)}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">最高投资</span>
+                <span class="info-value">¥${formatMoney(maxInvest)}</span>
+            </div>
+            <div class="info-item">
+                <span class="info-label">付息方式</span>
+                <span class="info-value">到期还本付息</span>
+            </div>
+        </div>
+
+        <!-- 投资进度 -->
+        ${totalAmount > 0 ? `
+        <div class="progress-section">
+            <div class="progress-header">
+                <span class="progress-label">项目进度</span>
+                <span class="progress-value">${schedule.toFixed(1)}%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: ${Math.min(schedule, 100)}%"></div>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: rgba(255, 255, 255, 0.6);">
+                <span>已售 ¥${formatMoney(soldAmount)}</span>
+                <span>剩余 ¥${formatMoney(remainAmount)}</span>
+            </div>
+        </div>
+        ` : ''}
+
+        <!-- 产品详情 -->
+        <div class="detail-card">
+            <div class="detail-title">📋 产品详情</div>
+
+            <div class="detail-section">
+                <div class="section-title">💎 产品介绍</div>
+                <div class="section-content">
+                    <p><strong>【${categoryName}】</strong>${name}</p>
+                    <p>本产品为固定收益类理财产品，投资期限${days}天，年化收益率${totalRate.toFixed(2)}%。项目由专业团队运营，资金安全有保障。</p>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">⭐ 产品特色</div>
+                <div class="section-content">
+                    <ul>
+                        <li><strong>收益稳定：</strong>年化${totalRate.toFixed(2)}%，收益按日计息，到期还本付息</li>
+                        <li><strong>期限灵活：</strong>${days}天投资周期，资金流动性好</li>
+                        <li><strong>起投门槛低：</strong>最低${formatMoney(minInvest)}元即可参与</li>
+                        <li><strong>资金安全：</strong>专业风控团队，严格项目筛选</li>
+                        ${vipRate > 0 ? `<li><strong>VIP特权：</strong>VIP用户可享额外${vipRate}%加息</li>` : ''}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">💰 收益计算</div>
+                <div class="section-content">
+                    <p><strong>年化收益率：</strong>${totalRate.toFixed(2)}%</p>
+                    <p><strong>投资期限：</strong>${days}天（约${(days/30).toFixed(1)}个月）</p>
+                    <p><strong>收益示例：</strong></p>
+                    <ul>
+                        <li>投资 ¥${formatMoney(minInvest)}，预期收益 ¥${(minInvest * totalRate / 100 * days / 365).toFixed(2)}</li>
+                        <li>投资 ¥100,000，预期收益 ¥${(100000 * totalRate / 100 * days / 365).toFixed(2)}</li>
+                        ${maxInvest < 999999 ? `<li>投资 ¥${formatMoney(maxInvest)}，预期收益 ¥${(maxInvest * totalRate / 100 * days / 365).toFixed(2)}</li>` : ''}
+                    </ul>
+                    <p><strong>付息方式：</strong>到期一次性还本付息，资金到账快</p>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="section-title">📖 投资指南</div>
+                <div class="section-content">
+                    <p><strong>适合人群：</strong>稳健型投资者，追求固定收益，可承受中低风险</p>
+                    <p><strong>投资建议：</strong></p>
+                    <ul>
+                        <li>建议使用闲置资金投资，不影响日常生活</li>
+                        <li>分散投资，降低风险</li>
+                        <li>仔细阅读产品说明</li>
+                        <li>根据自身资金需求选择合适期限</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 项目经理 -->
+        <div class="manager-card">
+            <img src="${managerAvatar}" alt="${manager.name}" class="manager-avatar" onerror="this.src='img/user-avatar-default.svg'">
+            <div class="manager-info">
+                <div class="manager-name">👤 项目经理：${manager.name}</div>
+                <div class="manager-code">执业编号：${manager.code}</div>
+                <div class="manager-desc">专业理财顾问，为您提供一对一投资咨询服务</div>
+            </div>
+        </div>
+    `;
+}
+
+// 加载用户余额
+async function loadUserBalance() {
+    const token = localStorage.getItem('providence_token');
+    if (!token) return;
+
+    try {
+        const response = await fetch(API_BASE + '/user/user/index', {
+            method: 'GET',
+            headers: {
+                'token': token
+            }
+        });
+
+        const result = await response.json();
+        if (result.code === 200 && result.data) {
+            userBalance = parseFloat(result.data.money || 0);
+            document.getElementById('balanceValue').textContent = formatMoney(userBalance);
+        }
+    } catch (error) {
+        console.error('[余额] 加载失败:', error);
+    }
+}
+
+// 显示投资对话框
+async function showInvestDialog() {
+    if (!projectData) {
+        await showToast('', '项目数据加载中，请稍后');
+        return;
+    }
+
+    const minInvest = parseFloat(projectData.min || projectData.money || 0);
+    const maxInvest = parseFloat(projectData.max || projectData.max_money || 999999999);
+
+    // 创建自定义输入弹窗
+    const modal = document.createElement('div');
+    modal.id = 'investModal';
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10000;
+        animation: fadeIn 0.3s ease-out;
+    `;
+
+    modal.innerHTML = `
+        <div style="
+            background: rgba(255, 255, 255, 0.98);
+            border-radius: 16px;
+            padding: 24px;
+            width: 85%;
+            max-width: 340px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease-out;
+        ">
+            <div style="font-size: 18px; font-weight: 700; color: #1a3a52; margin-bottom: 20px; text-align: center;">
+                输入购买金额
+            </div>
+            <div style="font-size: 15px; color: #1a3a52; margin-bottom: 20px; line-height: 1.8; background: #f9fafb; padding: 16px; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <div style="margin-bottom: 8px; font-weight: 600;">💰 起投金额：<span style="color: #d4af37;">¥${formatMoney(minInvest)}</span></div>
+                <div style="margin-bottom: 8px; font-weight: 600;">📈 最高金额：<span style="color: #d4af37;">¥${formatMoney(maxInvest)}</span></div>
+                <div style="font-weight: 700; color: #10b981;">💳 可用余额：<span style="font-size: 16px;">¥${formatMoney(userBalance)}</span></div>
+            </div>
+            <input
+                type="number"
+                id="investAmount"
+                placeholder="请输入购买金额"
+                style="
+                    width: 100%;
+                    padding: 14px 16px;
+                    border: 2px solid #d4af37;
+                    border-radius: 10px;
+                    font-size: 18px;
+                    font-weight: 600;
+                    margin-bottom: 20px;
+                    background: #fff;
+                    color: #1a3a52;
+                    box-sizing: border-box;
+                    box-shadow: 0 2px 8px rgba(212, 175, 55, 0.2);
+                "
+                inputmode="decimal"
+            />
+            <div style="display: flex; gap: 12px;">
+                <button onclick="closeInvestModal()" style="
+                    flex: 1;
+                    padding: 14px;
+                    background: #e5e7eb;
+                    color: #4b5563;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    font-weight: 600;
+                    cursor: pointer;
+                ">取消</button>
+                <button onclick="confirmInvest()" style="
+                    flex: 1;
+                    padding: 14px;
+                    background: linear-gradient(135deg, #d4af37, #f6c952);
+                    color: #1a3a52;
+                    border: none;
+                    border-radius: 10px;
+                    font-size: 16px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+                ">确认购买</button>
+            </div>
+        </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // 聚焦输入框
+    setTimeout(() => {
+        document.getElementById('investAmount').focus();
+    }, 300);
+}
+
+// 关闭投资弹窗
+window.closeInvestModal = function() {
+    const modal = document.getElementById('investModal');
+    if (modal) {
+        modal.style.animation = 'fadeOut 0.2s ease-out';
+        setTimeout(() => {
+            modal.remove();
+        }, 200);
+    }
+}
+
+// 确认投资
+window.confirmInvest = async function() {
+    const input = document.getElementById('investAmount');
+    const amount = input.value.trim();
+
+    if (!amount) {
+        await showToast('', '请输入购买金额');
+        return;
+    }
+
+    const minInvest = parseFloat(projectData.min || projectData.money || 0);
+    const maxInvest = parseFloat(projectData.max || projectData.max_money || 999999999);
+    const investAmount = parseFloat(amount);
+
+    if (isNaN(investAmount) || investAmount <= 0) {
+        await showToast('', '请输入有效的金额');
+        return;
+    }
+
+    if (investAmount < minInvest) {
+        await showToast('', `最低购买金额为 ¥${formatMoney(minInvest)}`);
+        return;
+    }
+
+    if (investAmount > maxInvest) {
+        await showToast('', `最高购买金额为 ¥${formatMoney(maxInvest)}`);
+        return;
+    }
+
+    if (investAmount > userBalance) {
+        await showToast('', '余额不足，请先充值');
+        return;
+    }
+
+    // 关闭弹窗
+    closeInvestModal();
+
+    // 执行投资
+    await performInvest(investAmount);
+}
+
+// 执行投资
+async function performInvest(amount) {
+    const token = localStorage.getItem('providence_token');
+
+    try {
+        const response = await fetch(API_BASE + '/user/project/invest', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'token': token
+            },
+            body: JSON.stringify({
+                project_id: projectData.id,
+                amount: amount
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.code === 200) {
+            await showToast('', '投资成功！');
+            setTimeout(() => {
+                window.location.href = 'my-investments.html';
+            }, 1500);
+        } else {
+            await showToast('', result.msg || '投资失败');
+        }
+    } catch (error) {
+        console.error('[投资] 失败:', error);
+        await showToast('', '网络错误，请重试');
+    }
+}
+
+// 分享项目
+async function shareProject() {
+    await showToast('', '分享功能开发中');
+}
+
+// 刷新数据
+function refreshData() {
+    window.location.reload();
+}
+
+// 格式化金额
+function formatMoney(amount) {
+    return parseFloat(amount || 0).toLocaleString('zh-CN', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+</script>
+</body>
+</html>

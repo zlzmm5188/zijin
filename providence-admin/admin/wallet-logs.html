@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户钱包流水</title>
+    <link rel="stylesheet" href="../css/admin.css?v=1762820000">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .page-header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .filter-bar {
+            background: #fff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .filter-select, .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background: #007AFF;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            background: #0051D5;
+        }
+
+        .log-table {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        thead {
+            background: #f5f5f7;
+        }
+
+        th {
+            padding: 16px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #1d1d1f;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        td {
+            padding: 16px;
+            font-size: 14px;
+            color: #1d1d1f;
+            border-bottom: 1px solid #f5f5f7;
+        }
+
+        tbody tr:hover {
+            background: #f9f9f9;
+        }
+
+        .amount-in {
+            color: #34C759;
+            font-weight: 600;
+        }
+
+        .amount-out {
+            color: #FF3B30;
+            font-weight: 600;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .type-badge.recharge {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .type-badge.withdraw {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .type-badge.invest {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        .type-badge.profit {
+            background: #e0f2f1;
+            color: #00695c;
+        }
+
+        .type-badge.refund {
+            background: #fce4ec;
+            color: #c2185b;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn.active {
+            background: #007AFF;
+            color: #fff;
+            border-color: #007AFF;
+        }
+
+        .page-btn:hover:not(.active) {
+            background: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-title">用户钱包流水</h1>
+        <div class="stats-row">
+            <div class="stat-card success">
+                <div class="stat-label">总收入</div>
+                <div class="stat-value" id="totalIn">¥0.00</div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-label">总支出</div>
+                <div class="stat-value" id="totalOut">¥0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">记录数量</div>
+                <div class="stat-value" id="totalCount">0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <input type="number" class="filter-input" id="userIdInput" placeholder="用户ID">
+        <select class="filter-select" id="typeFilter">
+            <option value="">全部类型</option>
+            <option value="recharge">充值</option>
+            <option value="withdraw">提现</option>
+            <option value="invest">投资</option>
+            <option value="profit">收益</option>
+            <option value="refund">退款</option>
+            <option value="ribao_in">日利宝转入</option>
+            <option value="ribao_out">日利宝转出</option>
+            <option value="ribao_profit">日利宝收益</option>
+        </select>
+        <select class="filter-select" id="currencyFilter">
+            <option value="">全部币种</option>
+            <option value="CNY">CNY</option>
+            <option value="USDT">USDT</option>
+        </select>
+        <input type="date" class="filter-input" id="startDate">
+        <input type="date" class="filter-input" id="endDate">
+        <button class="filter-btn" onclick="loadLogs(1)">搜索</button>
+        <button class="filter-btn" style="background: #5AC8FA;" onclick="exportLogs()">导出Excel</button>
+    </div>
+
+    <div class="log-table">
+        <table id="logTable">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>用户</th>
+                    <th>类型</th>
+                    <th>金额</th>
+                    <th>币种</th>
+                    <th>变动前</th>
+                    <th>变动后</th>
+                    <th>说明</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody id="logTableBody">
+                <tr>
+                    <td colspan="9" class="empty-state">加载中...</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+
+    <script>
+        let currentPage = 1;
+
+        async function loadLogs(page = 1) {
+            currentPage = page;
+            const userId = document.getElementById('userIdInput').value;
+            const type = document.getElementById('typeFilter').value;
+            const currency = document.getElementById('currencyFilter').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            try {
+                const params = new URLSearchParams();
+                params.append('page', page);
+                params.append('limit', 20);
+                if (userId) params.append('user_id', userId);
+                if (type) params.append('type', type);
+                if (currency) params.append('currency', currency);
+                if (startDate) params.append('start_date', startDate);
+                if (endDate) params.append('end_date', endDate);
+
+                const response = await fetch(`../api/admin/wallet-logs?${params.toString()}`);
+                const data = await response.json();
+
+                if (data.code === 1 && data.data) {
+                    renderLogs(data.data.list);
+                    renderPagination(data.data.pagination);
+                    updateStats(data.data.stats);
+                } else {
+                    document.getElementById('logTableBody').innerHTML =
+                        '<tr><td colspan="9" class="empty-state">加载失败: ' + (data.message || '未知错误') + '</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载钱包流水失败:', error);
+                document.getElementById('logTableBody').innerHTML =
+                    '<tr><td colspan="9" class="empty-state">网络请求失败</td></tr>';
+            }
+        }
+
+        function renderLogs(list) {
+            const tbody = document.getElementById('logTableBody');
+
+            if (!list || list.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="empty-state">暂无记录</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = list.map(item => {
+                const amount = parseFloat(item.amount);
+                const amountClass = amount >= 0 ? 'amount-in' : 'amount-out';
+                const amountText = amount >= 0 ? '+' + item.amount : item.amount;
+
+                return `
+                <tr>
+                    <td>${item.id}</td>
+                    <td>
+                        <div>${item.username || '未知'}</div>
+                        <div style="font-size:12px;color:#86868b;">ID:${item.user_id}</div>
+                    </td>
+                    <td><span class="type-badge ${item.type}">${getTypeText(item.type)}</span></td>
+                    <td class="${amountClass}">${amountText}</td>
+                    <td>${item.currency}</td>
+                    <td>${item.balance_before}</td>
+                    <td>${item.balance_after}</td>
+                    <td>${item.description || '-'}</td>
+                    <td>${item.created_at}</td>
+                </tr>
+            `}).join('');
+        }
+
+        function renderPagination(pagination) {
+            if (!pagination) return;
+
+            const container = document.getElementById('pagination');
+            let html = '';
+
+            if (pagination.current_page > 1) {
+                html += `<button class="page-btn" onclick="loadLogs(${pagination.current_page - 1})">上一页</button>`;
+            }
+
+            for (let i = 1; i <= pagination.total_pages; i++) {
+                if (i === pagination.current_page) {
+                    html += `<button class="page-btn active">${i}</button>`;
+                } else if (i === 1 || i === pagination.total_pages || Math.abs(i - pagination.current_page) <= 2) {
+                    html += `<button class="page-btn" onclick="loadLogs(${i})">${i}</button>`;
+                } else if (i === pagination.current_page - 3 || i === pagination.current_page + 3) {
+                    html += `<button class="page-btn" disabled>...</button>`;
+                }
+            }
+
+            if (pagination.current_page < pagination.total_pages) {
+                html += `<button class="page-btn" onclick="loadLogs(${pagination.current_page + 1})">下一页</button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updateStats(stats) {
+            if (!stats) return;
+            document.getElementById('totalIn').textContent = '¥' + parseFloat(stats.total_in).toFixed(2);
+            document.getElementById('totalOut').textContent = '¥' + parseFloat(stats.total_out).toFixed(2);
+            document.getElementById('totalCount').textContent = stats.count || 0;
+        }
+
+        function getTypeText(type) {
+            const map = {
+                'recharge': '充值',
+                'withdraw': '提现',
+                'invest': '投资',
+                'profit': '收益',
+                'refund': '退款',
+                'ribao_in': '日利宝转入',
+                'ribao_out': '日利宝转出',
+                'ribao_profit': '日利宝收益'
+            };
+            return map[type] || type;
+        }
+
+        function exportLogs() {
+            const userId = document.getElementById('userIdInput').value;
+            const type = document.getElementById('typeFilter').value;
+            const currency = document.getElementById('currencyFilter').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+
+            const params = new URLSearchParams();
+            if (userId) params.append('user_id', userId);
+            if (type) params.append('type', type);
+            if (currency) params.append('currency', currency);
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+            params.append('export', '1');
+
+            window.open(`../api/admin/wallet-logs-export?${params.toString()}`, '_blank');
+        }
+
+        // 初始化加载
+        loadLogs(1);
+    </script>
+</body>
+</html>

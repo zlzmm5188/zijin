@@ -1,0 +1,131 @@
+<?php
+/**
+ * 日利宝转入API
+ * POST /user/ribao/transfer-in
+ */
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+// 验证用户登录
+$authUser = Auth::user();
+if (!$authUser) {
+    Response::error('请先登录', 401);
+}
+
+// 获取POST数据
+$input = json_decode(file_get_contents('php://input'), true);
+$amount = isset($input['amount']) ? trim($input['amount']) : '';
+
+// 参数验证
+if (empty($amount) || !is_numeric($amount) || $amount <= 0) {
+    Response::error('请输入有效的转入金额');
+}
+
+$userId = $authUser['user_id'];
+$db = Database::getInstance();
+
+try {
+    // 获取日利宝配置
+    $config = $db->fetchOne(
+        "SELECT * FROM system_config WHERE config_key = 'ribao_settings'",
+        []
+    );
+
+    if (!$config) {
+        Response::error('日利宝功能未配置');
+    }
+
+    $settings = json_decode($config['config_value'], true);
+
+    // 检查是否开启
+    if (!$settings['is_enabled']) {
+        Response::error('日利宝功能暂未开放');
+    }
+
+    // 检查金额限制
+    $minAmount = $settings['min_amount'];
+    $maxAmount = $settings['max_amount'];
+
+    if ($amount < $minAmount) {
+        Response::error("转入金额不能少于{$minAmount}元");
+    }
+
+    if ($amount > $maxAmount) {
+        Response::error("转入金额不能超过{$maxAmount}元");
+    }
+
+    // 开启事务
+    $db->beginTransaction();
+
+    // 获取用户钱包（加锁）
+    $wallet = $db->fetchOne(
+        "SELECT * FROM wallets WHERE user_id = :user_id AND currency = 'CNY' FOR UPDATE",
+        ['user_id' => $userId]
+    );
+
+    if (!$wallet) {
+        $db->rollback();
+        Response::error('钱包不存在');
+    }
+
+    // 检查余额
+    if ($wallet['balance'] < $amount) {
+        $db->rollback();
+        Response::error('余额不足');
+    }
+
+    // 扣除余额，增加日利宝余额
+    $newBalance = bcsub($wallet['balance'], $amount, 8);
+    $newRibaoBalance = bcadd($wallet['ribao_balance'], $amount, 8);
+
+    $db->update('wallets', [
+        'balance' => $newBalance,
+        'ribao_balance' => $newRibaoBalance,
+        'updated_at' => date('Y-m-d H:i:s')
+    ], "id = {$wallet['id']}");
+
+    // 记录钱包流水（扣除余额）
+    $db->insert('wallet_logs', [
+        'user_id' => $userId,
+        'wallet_id' => $wallet['id'],
+        'currency' => 'CNY',
+        'change_amount' => '-' . $amount,
+        'balance_after' => $newBalance,
+        'biz_type' => 'SUBSCRIBE',
+        'ref_id' => 0,
+        'meta' => json_encode([
+            'description' => '转入日利宝',
+            'ribao_balance' => $newRibaoBalance
+        ], JSON_UNESCAPED_UNICODE),
+        'created_at' => date('Y-m-d H:i:s')
+    ]);
+
+    // 记录审计日志
+    AuditLog::log([
+        'user_id' => $userId,
+        'action' => 'ribao_transfer_in',
+        'target_type' => 'ribao',
+        'target_id' => $wallet['id'],
+        'details' => json_encode([
+            'amount' => $amount,
+            'old_balance' => $wallet['balance'],
+            'new_balance' => $newBalance,
+            'old_ribao_balance' => $wallet['ribao_balance'],
+            'new_ribao_balance' => $newRibaoBalance
+        ], JSON_UNESCAPED_UNICODE),
+        'ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0'
+    ]);
+
+    // 提交事务
+    $db->commit();
+
+    Response::success([
+        'balance' => number_format($newBalance, 8, '.', ''),
+        'ribao_balance' => number_format($newRibaoBalance, 8, '.', ''),
+        'amount' => number_format($amount, 8, '.', '')
+    ], '转入成功');
+
+} catch (Exception $e) {
+    $db->rollback();
+    error_log("日利宝转入失败: " . $e->getMessage());
+    Response::error('转入失败: ' . $e->getMessage());
+}

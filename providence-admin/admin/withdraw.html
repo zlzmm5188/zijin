@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>提现审核</title>
+    <style>
+      :root {
+        --primary: #0b3b5e;
+        --success: #25d0a6;
+        --warning: #f59e0b;
+        --danger: #ef4444;
+        --info: #3b82f6;
+        --surface: #fff;
+      }
+      body {
+        padding: 20px;
+        background: #f7f8fa;
+        font-family: -apple-system, sans-serif;
+      }
+      .table {
+        width: 100%;
+        background: var(--surface);
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 4px 12px rgba(5, 15, 30, 0.08);
+      }
+      .table th {
+        background: var(--primary);
+        color: #fff;
+        padding: 14px;
+        text-align: left;
+      }
+      .table td {
+        padding: 12px;
+        border-bottom: 1px solid #f3f4f6;
+      }
+      .badge {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-warning {
+        background: var(--warning);
+        color: #fff;
+      }
+      .badge-success {
+        background: var(--success);
+        color: #fff;
+      }
+      .badge-danger {
+        background: var(--danger);
+        color: #fff;
+      }
+      .badge-info {
+        background: var(--info);
+        color: #fff;
+      }
+      .btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        margin: 0 2px;
+      }
+      .btn-success {
+        background: var(--success);
+        color: #fff;
+      }
+      .btn-danger {
+        background: var(--danger);
+        color: #fff;
+      }
+      .btn-info {
+        background: var(--info);
+        color: #fff;
+      }
+      .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.8);
+        z-index: 9999;
+      }
+      .modal.active {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+      .modal-content {
+        background: var(--surface);
+        padding: 30px;
+        border-radius: 12px;
+        max-width: 600px;
+        max-height: 90vh;
+        overflow: auto;
+      }
+      .modal-close {
+        float: right;
+        font-size: 28px;
+        cursor: pointer;
+        color: #999;
+      }
+      .bank-info {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div
+      style="display: flex; justify-content: space-between; margin-bottom: 20px"
+    >
+      <h2>💸 提现审核</h2>
+      <button class="btn btn-primary" onclick="loadData()">🔄 刷新</button>
+    </div>
+
+    <table class="table">
+      <thead>
+        <tr>
+          <th>订单号</th>
+          <th>用户</th>
+          <th>提现金额</th>
+          <th>手续费</th>
+          <th>实际到账</th>
+          <th>提现方式</th>
+          <th>状态</th>
+          <th>申请时间</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody id="dataList">
+        <tr>
+          <td colspan="9" style="text-align: center; padding: 40px">
+            加载中...
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="modal" id="reviewModal">
+      <div class="modal-content">
+        <span class="modal-close" onclick="closeModal()">&times;</span>
+        <h3>提现审核详情</h3>
+
+        <div id="modalBody">
+          <div><strong>订单号：</strong><span id="modalOrderNo"></span></div>
+          <div><strong>用户：</strong><span id="modalUser"></span></div>
+          <div>
+            <strong>提现金额：</strong
+            ><span
+              id="modalAmount"
+              style="color: #ef4444; font-size: 18px; font-weight: 700"
+            ></span>
+          </div>
+          <div><strong>手续费：</strong><span id="modalFee"></span></div>
+          <div>
+            <strong>实际到账：</strong
+            ><span
+              id="modalActual"
+              style="color: #25d0a6; font-size: 18px; font-weight: 700"
+            ></span>
+          </div>
+
+          <div class="bank-info" id="bankInfo"></div>
+
+          <div style="margin-top: 20px">
+            <label><strong>审核备注：</strong></label>
+            <textarea
+              id="remark"
+              style="
+                width: 100%;
+                padding: 10px;
+                border-radius: 8px;
+                border: 1px solid #e5e7eb;
+                margin: 10px 0;
+              "
+              rows="3"
+              placeholder="填写审核意见"
+            ></textarea>
+          </div>
+
+          <div style="margin-top: 15px" id="actionButtons"></div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      let currentReview = null;
+
+      async function loadData() {
+        document.getElementById("dataList").innerHTML =
+          '<tr><td colspan="9" style="text-align:center;padding:40px;">加载中...</td></tr>';
+
+        try {
+          const token = localStorage.getItem("admin_token");
+          if (!token) {
+            alert("❌ 请先登录");
+            window.location.href = "login.html";
+            return;
+          }
+
+          const response = await fetch(
+            "../api/index.php/admin/withdrawals?limit=100",
+            {
+              headers: {
+                Authorization: token,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          const data = await response.json();
+
+          if (data.code === 1 && data.data && data.data.list) {
+            const list = data.data.list;
+
+            if (list.length === 0) {
+              document.getElementById("dataList").innerHTML =
+                '<tr><td colspan="9" style="text-align:center;padding:40px;">暂无数据</td></tr>';
+              return;
+            }
+
+            const html = list
+              .map((item) => {
+                const statusMap = {
+                  0: "待审核",
+                  1: "已通过",
+                  2: "已拒绝",
+                  3: "已打款",
+                };
+                const badgeMap = {
+                  0: "badge-warning",
+                  1: "badge-info",
+                  2: "badge-danger",
+                  3: "badge-success",
+                };
+
+                const amount = parseFloat(item.amount || 0);
+                const fee = parseFloat(item.fee || 0);
+                const actualAmount = parseFloat(
+                  item.actual_amount || amount - fee
+                );
+                const currency = item.currency || "CNY";
+                const amountText =
+                  currency === "USDT"
+                    ? `$${amount.toFixed(2)}`
+                    : `¥${amount.toFixed(2)}`;
+                const feeText =
+                  currency === "USDT"
+                    ? `$${fee.toFixed(2)}`
+                    : `¥${fee.toFixed(2)}`;
+                const actualText =
+                  currency === "USDT"
+                    ? `$${actualAmount.toFixed(2)}`
+                    : `¥${actualAmount.toFixed(2)}`;
+
+                const withdrawMethod =
+                  item.withdraw_method || item.pay_method || "未知";
+                const createdAt = item.created_at || item.create_time || "-";
+                const status = item.status || 0;
+
+                // 转义JSON以便在onclick中使用
+                const itemJson = JSON.stringify(item).replace(/'/g, "&apos;");
+
+                return `
+                        <tr>
+                            <td>${item.order_no || "-"}</td>
+                            <td>${item.username || item.phone || "未知"}</td>
+                            <td style="font-weight:600;color:#ef4444;">${amountText}</td>
+                            <td>${feeText}</td>
+                            <td style="font-weight:600;color:#25d0a6;">${actualText}</td>
+                            <td>${withdrawMethod}</td>
+                            <td><span class="badge ${
+                              badgeMap[status] || "badge-warning"
+                            }">${statusMap[status] || "未知"}</span></td>
+                            <td>${createdAt}</td>
+                            <td>
+                                ${
+                                  status == 0
+                                    ? `<button class="btn btn-success" onclick='review(${itemJson}, "approve")'>通过</button>
+                                     <button class="btn btn-danger" onclick='review(${itemJson}, "reject")'>拒绝</button>`
+                                    : status == 1
+                                    ? `<button class="btn btn-info" onclick='review(${itemJson}, "pay")'>确认打款</button>`
+                                    : '<span style="color:#999;">已完成</span>'
+                                }
+                            </td>
+                        </tr>
+                    `;
+              })
+              .join("");
+
+            document.getElementById("dataList").innerHTML = html;
+          } else {
+            document.getElementById(
+              "dataList"
+            ).innerHTML = `<tr><td colspan="9" style="text-align:center;padding:40px;">加载失败: ${
+              data.message || "未知错误"
+            }</td></tr>`;
+          }
+        } catch (error) {
+          console.error("加载提现记录失败:", error);
+          document.getElementById("dataList").innerHTML =
+            '<tr><td colspan="9" style="text-align:center;padding:40px;">网络请求失败，请刷新重试</td></tr>';
+        }
+      }
+
+      function review(item, action) {
+        currentReview = item;
+        currentAction = action;
+
+        document.getElementById("modalOrderNo").textContent =
+          item.order_no || "-";
+        document.getElementById("modalUser").textContent =
+          item.username || item.phone || "未知";
+
+        const amount = parseFloat(item.amount || 0);
+        const fee = parseFloat(item.fee || 0);
+        const actualAmount = parseFloat(item.actual_amount || amount - fee);
+        const currency = item.currency || "CNY";
+        const amountText =
+          currency === "USDT"
+            ? `$${amount.toFixed(2)}`
+            : `¥${amount.toFixed(2)}`;
+        const feeText =
+          currency === "USDT" ? `$${fee.toFixed(2)}` : `¥${fee.toFixed(2)}`;
+        const actualText =
+          currency === "USDT"
+            ? `$${actualAmount.toFixed(2)}`
+            : `¥${actualAmount.toFixed(2)}`;
+
+        document.getElementById("modalAmount").textContent = amountText;
+        document.getElementById("modalFee").textContent = feeText;
+        document.getElementById("modalActual").textContent = actualText;
+
+        // 银行卡信息
+        let bankHtml = "<strong>提现账户：</strong><br>";
+        if (item.bank_info) {
+          try {
+            const info =
+              typeof item.bank_info === "string"
+                ? JSON.parse(item.bank_info)
+                : item.bank_info;
+            if (info.bank_name) {
+              bankHtml += `银行：${info.bank_name}<br>`;
+              bankHtml += `卡号：${info.card_number || "-"}<br>`;
+              bankHtml += `持卡人：${info.card_holder || "-"}`;
+            } else if (info.address) {
+              bankHtml += `USDT地址：${info.address}`;
+            } else {
+              bankHtml += "账户信息不完整";
+            }
+          } catch (e) {
+            bankHtml += item.bank_info;
+          }
+        } else {
+          bankHtml += "暂无账户信息";
+        }
+        document.getElementById("bankInfo").innerHTML = bankHtml;
+
+        // 操作按钮
+        let btnHtml = "";
+        if (action === "approve") {
+          btnHtml = `
+                <button class="btn btn-success" style="padding:10px 30px;" onclick="doApprove()">✅ 确认通过</button>
+                <button class="btn" style="padding:10px 30px;" onclick="closeModal()">取消</button>
+            `;
+        } else if (action === "reject") {
+          btnHtml = `
+                <button class="btn btn-danger" style="padding:10px 30px;" onclick="doReject()">❌ 确认拒绝</button>
+                <button class="btn" style="padding:10px 30px;" onclick="closeModal()">取消</button>
+            `;
+        } else if (action === "pay") {
+          btnHtml = `
+                <div style="margin-bottom:15px;">
+                    <label>打款凭证：</label>
+                    <input type="file" id="paymentProof" accept="image/*" style="margin:10px 0;">
+                </div>
+                <button class="btn btn-info" style="padding:10px 30px;" onclick="doPay()">💰 确认打款</button>
+                <button class="btn" style="padding:10px 30px;" onclick="closeModal()">取消</button>
+            `;
+        }
+
+        document.getElementById("actionButtons").innerHTML = btnHtml;
+        document.getElementById("remark").value = "";
+        document.getElementById("reviewModal").classList.add("active");
+      }
+
+      let currentAction = null;
+
+      async function doApprove() {
+        if (!currentReview) return;
+        if (
+          confirm(
+            `确认通过提现？\n订单：${currentReview.order_no}\n金额：${
+              document.getElementById("modalAmount").textContent
+            }`
+          )
+        ) {
+          try {
+            const token = localStorage.getItem("admin_token");
+            const response = await fetch(
+              "../api/index.php/admin/withdraw-approve",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: token,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: currentReview.id }),
+              }
+            );
+            const data = await response.json();
+            alert(
+              data.code === 1 ? "✅ " + data.message : "❌ " + data.message
+            );
+            if (data.code === 1) {
+              closeModal();
+              loadData();
+            }
+          } catch (e) {
+            console.error("审核失败:", e);
+            alert("请求失败: " + e.message);
+          }
+        }
+      }
+
+      async function doReject() {
+        if (!currentReview) return;
+        const remark = document.getElementById("remark").value;
+        if (!remark) {
+          alert("请填写拒绝原因！");
+          return;
+        }
+        if (confirm(`确认拒绝提现？\n原因：${remark}`)) {
+          try {
+            const token = localStorage.getItem("admin_token");
+            const response = await fetch(
+              "../api/index.php/admin/withdraw-reject",
+              {
+                method: "POST",
+                headers: {
+                  Authorization: token,
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ id: currentReview.id, reason: remark }),
+              }
+            );
+            const data = await response.json();
+            alert(
+              data.code === 1 ? "✅ " + data.message : "❌ " + data.message
+            );
+            if (data.code === 1) {
+              closeModal();
+              loadData();
+            }
+          } catch (e) {
+            console.error("拒绝失败:", e);
+            alert("请求失败: " + e.message);
+          }
+        }
+      }
+
+      async function doPay() {
+        if (!currentReview) return;
+        // 打款功能可以后续实现，暂时提示
+        alert(
+          "打款确认功能：\n订单: " +
+            currentReview.order_no +
+            "\n\n提示：打款后请手动更新订单状态"
+        );
+        closeModal();
+      }
+
+      function closeModal() {
+        document.getElementById("reviewModal").classList.remove("active");
+        currentReview = null;
+      }
+
+      loadData();
+    </script>
+  </body>
+</html>

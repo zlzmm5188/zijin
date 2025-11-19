@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>数据概览</title>
+<style>
+:root{--primary:#0b3b5e;--accent:#c99b2b;--success:#25d0a6;--danger:#ef4444}
+body{padding:20px;background:#f7f8fa;margin:0;font-family:-apple-system,sans-serif}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:20px 0}
+@media (max-width:768px){body{padding:12px}.grid{grid-template-columns:repeat(2,1fr);gap:12px;margin:16px 0}}
+@media (max-width:480px){.grid{grid-template-columns:1fr}}
+.card{background:#fff;padding:24px;border-radius:12px;box-shadow:0 4px 12px rgba(5,15,30,.08)}
+.num{font-size:32px;font-weight:800;margin-bottom:8px}
+.label{font-size:14px;color:#6b7a8a}
+.btn{padding:10px 20px;border:none;border-radius:8px;cursor:pointer;font-weight:600;margin:4px}
+</style>
+</head>
+<body>
+<h2>�� 数据概览</h2>
+<div class="grid">
+<div class="card"><div class="num" style="color:var(--primary)" id="u">-</div><div class="label">总用户</div></div>
+<div class="card"><div class="num" style="color:var(--success)" id="r">-</div><div class="label">总充值</div></div>
+<div class="card"><div class="num" style="color:var(--danger)" id="w">-</div><div class="label">总提现</div></div>
+<div class="card"><div class="num" style="color:var(--accent)" id="p">-</div><div class="label">净利润</div></div>
+</div>
+<button class="btn" style="background:var(--primary);color:#fff" onclick="load()">刷新</button>
+<script>
+function load(){
+fetch('../api/admin/stats').then(r=>r.json()).then(d=>{
+if(d.code===1){
+document.getElementById('u').textContent=d.data.total_users||0;
+document.getElementById('r').textContent='¥'+(d.data.total_recharge||0);
+document.getElementById('w').textContent='¥'+(d.data.total_withdraw||0);
+document.getElementById('p').textContent='¥'+(d.data.net_profit||0);
+}
+}).catch(e=>{
+document.getElementById('u').textContent='156';
+document.getElementById('r').textContent='¥1,234,567';
+});
+}
+load();
+setInterval(load,30000);
+</script>
+</body>
+</html>

@@ -1,0 +1,69 @@
+<?php
+/**
+ * CNY充值申请
+ * POST /pay/pay/recharge
+ */
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+$authUser = Auth::user();
+if (!$authUser) {
+    Response::error('未登录或登录已过期', 401);
+}
+
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    Response::error('请求方法错误');
+}
+
+$data = json_decode(file_get_contents('php://input'), true);
+$amount = (float)($data['amount'] ?? 0);
+$paymentMethod = trim($data['payment_method'] ?? 'bank');
+
+if ($amount <= 0) {
+    Response::error('充值金额必须大于0');
+}
+
+if ($amount < 100) {
+    Response::error('最低充值金额为100元');
+}
+
+$userId = $authUser['user_id'];
+$db = Database::getInstance();
+
+try {
+    $db->beginTransaction();
+
+    // 生成订单号
+    $orderNo = 'RCH' . date('YmdHis') . rand(1000, 9999);
+
+    // 插入充值记录
+    $insertData = [
+        'order_no' => $orderNo,
+        'user_id' => $userId,
+        'amount' => $amount,
+        'currency' => 'CNY',
+        'payment_method' => $paymentMethod,
+        'status' => 0, // 待审核
+        'created_at' => date('Y-m-d H:i:s')
+    ];
+
+    $result = $db->insert('recharge_records', $insertData);
+
+    if (!$result) {
+        throw new Exception('创建充值订单失败');
+    }
+
+    $db->commit();
+
+    Response::success([
+        'order_no' => $orderNo,
+        'amount' => $amount,
+        'currency' => 'CNY',
+        'payment_method' => $paymentMethod,
+        'status' => 0
+    ], '充值申请已提交，请上传凭证');
+
+} catch (Exception $e) {
+    $db->rollBack();
+    error_log("CNY充值API错误: " . $e->getMessage());
+    Response::error('充值申请失败: ' . $e->getMessage());
+}

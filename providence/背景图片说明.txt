@@ -1,0 +1,15 @@
+背景图片设置说明
+==================
+
+当前使用的临时背景图片：
+img/85012378fe02558f1271487f33a70226.jpg
+
+用户要求使用的背景图片：
+1a170c215ff5dc163297525d67a04251.jpg
+
+请将用户上传的图片保存到：
+/www/wwwroot/f.abcmall.one/providence/img/1a170c215ff5dc163297525d67a04251.jpg
+
+保存后，需要修改 project-detail-new.html 第18行：
+从: background: url('img/85012378fe02558f1271487f33a70226.jpg')
+改为: background: url('img/1a170c215ff5dc163297525d67a04251.jpg')

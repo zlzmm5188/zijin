@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试KYC Token</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #0a1723;
+            color: #fff;
+        }
+        .test-section {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4a5568;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #2d3748;
+        }
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 KYC Token 测试工具</h1>
+
+    <div class="test-section">
+        <h2>1. 检查本地Token</h2>
+        <button onclick="checkLocalToken()">检查LocalStorage</button>
+        <pre id="tokenResult"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 测试KYC API（模拟调用）</h2>
+        <button onclick="testKYCAPI()">测试API Token验证</button>
+        <pre id="apiResult"></pre>
+    </div>
+
+    <script>
+        function checkLocalToken() {
+            const token = localStorage.getItem('providence_token');
+            const userId = localStorage.getItem('providence_user_id');
+            const userName = localStorage.getItem('providence_user_name');
+            
+            const result = {
+                token: token ? token.substring(0, 30) + '...' : '❌ 未找到',
+                token_length: token ? token.length : 0,
+                user_id: userId || '❌ 未找到',
+                user_name: userName || '❌ 未找到'
+            };
+            
+            document.getElementById('tokenResult').textContent = JSON.stringify(result, null, 2);
+            
+            if (!token) {
+                alert('❌ 未找到Token，请先登录！\n点击确定跳转到登录页...');
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 500);
+            }
+        }
+
+        async function testKYCAPI() {
+            const token = localStorage.getItem('providence_token');
+            
+            if (!token) {
+                document.getElementById('apiResult').textContent = '❌ 未找到Token，请先登录';
+                return;
+            }
+            
+            // 创建FormData
+            const formData = new FormData();
+            formData.append('token', token);
+            formData.append('real_name', '测试用户');
+            formData.append('id_card', '110101199001011234');
+            
+            try {
+                document.getElementById('apiResult').textContent = '正在测试API...\nToken: ' + token.substring(0, 30) + '...';
+                
+                const response = await fetch('/kyc-face-verify.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                document.getElementById('apiResult').textContent = 
+                    '✅ API响应:\n' + JSON.stringify(result, null, 2);
+                    
+            } catch (error) {
+                document.getElementById('apiResult').textContent = 
+                    '❌ 请求失败:\n' + error.message;
+            }
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('DOMContentLoaded', function() {
+            checkLocalToken();
+        });
+    </script>
+</body>
+</html>

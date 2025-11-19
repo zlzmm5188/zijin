@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>系统配置</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h2>系统配置</h2>
+        <form class="layui-form" lay-filter="configForm">
+            <div class="layui-form-item">
+                <label class="layui-form-label">网站名称</label>
+                <div class="layui-input-block">
+                    <input type="text" name="site_name" value="PROVIDENCE" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">网站URL</label>
+                <div class="layui-input-block">
+                    <input type="text" name="site_url" value="https://4kp3l0iq.top" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">体验金额度</label>
+                <div class="layui-input-block">
+                    <input type="number" name="trial_fund" value="1000" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <label class="layui-form-label">最低提现额</label>
+                <div class="layui-input-block">
+                    <input type="number" name="min_withdraw" value="100" class="layui-input">
+                </div>
+            </div>
+            <div class="layui-form-item">
+                <button class="layui-btn" lay-submit>保存配置</button>
+            </div>
+        </form>
+    </div>
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    layui.use(['form', 'layer'], function(){
+        var form = layui.form, layer = layui.layer;
+        form.on('submit()', function(){
+            layer.msg('保存功能开发中...');
+            return false;
+        });
+    });
+    </script>
+</body>
+</html>

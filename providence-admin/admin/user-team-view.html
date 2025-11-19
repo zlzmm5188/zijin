@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>团队分布图 - Providence</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1d29;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        /* 统计信息 */
+        .stats-bar {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            display: flex;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-icon {
+            font-size: 32px;
+        }
+
+        .stat-content {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #6b7280;
+        }
+
+        .stat-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1d29;
+        }
+
+        /* 树形图容器 */
+        .tree-container {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        /* 树节点 */
+        .tree {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .tree ul {
+            padding-top: 20px;
+            position: relative;
+            transition: all 0.5s;
+            list-style-type: none;
+            margin: 0;
+            padding-left: 0;
+        }
+
+        .tree li {
+            float: left;
+            text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            transition: all 0.5s;
+        }
+
+        /* 连接线 */
+        .tree li::before, .tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-top: 2px solid #ddd;
+            width: 50%;
+            height: 20px;
+        }
+
+        .tree li::after {
+            right: auto;
+            left: 50%;
+            border-left: 2px solid #ddd;
+        }
+
+        .tree li:only-child::after, .tree li:only-child::before {
+            display: none;
+        }
+
+        .tree li:only-child {
+            padding-top: 0;
+        }
+
+        .tree li:first-child::before, .tree li:last-child::after {
+            border: 0 none;
+        }
+
+        .tree li:last-child::before {
+            border-right: 2px solid #ddd;
+            border-radius: 0 5px 0 0;
+        }
+
+        .tree li:first-child::after {
+            border-radius: 5px 0 0 0;
+        }
+
+        .tree ul ul::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-left: 2px solid #ddd;
+            width: 0;
+            height: 20px;
+        }
+
+        /* 节点卡片 */
+        .node-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            display: inline-block;
+            padding: 12px 16px;
+            text-align: center;
+            background: white;
+            transition: all 0.3s;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        .node-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-color: var(--primary);
+        }
+
+        .node-card.root {
+            background: linear-gradient(135deg, var(--primary), #0052cc);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .node-name {
+            font-weight: 600;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .node-uid {
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .node-card.root .node-uid {
+            color: rgba(255,255,255,0.8);
+        }
+
+        .node-stats {
+            display: flex;
+            justify-content: space-around;
+            gap: 12px;
+            margin-top: 8px;
+            padding-top: 8px;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .node-card.root .node-stats {
+            border-top-color: rgba(255,255,255,0.3);
+        }
+
+        .node-stat {
+            display: flex;
+            flex-direction: column;
+            font-size: 11px;
+        }
+
+        .node-stat-label {
+            color: #9ca3af;
+            margin-bottom: 2px;
+        }
+
+        .node-card.root .node-stat-label {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .node-stat-value {
+            font-weight: 600;
+            color: #1a1d29;
+            font-size: 13px;
+        }
+
+        .node-card.root .node-stat-value {
+            color: white;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 3px;
+            margin-left: 4px;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .node-card.root .badge-primary {
+            background: rgba(255,255,255,0.25);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 80px 20px;
+            color: #9ca3af;
+        }
+
+        /* 展开/折叠按钮 */
+        .toggle-btn {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            line-height: 22px;
+            text-align: center;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s;
+        }
+
+        .toggle-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .collapsed > ul {
+            display: none;
+        }
+
+        .collapsed .toggle-btn::before {
+            content: '+';
+        }
+
+        .toggle-btn::before {
+            content: '−';
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-title" id="pageTitle">团队分布图</h1>
+        <a href="users.html" class="btn btn-secondary">返回列表</a>
+    </div>
+
+    <!-- 统计信息 -->
+    <div class="stats-bar" id="statsBar" style="display: none;">
+        <div class="stat-item">
+            <div class="stat-icon">👥</div>
+            <div class="stat-content">
+                <div class="stat-label">团队总人数</div>
+                <div class="stat-value" id="totalMembers">0</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">💰</div>
+            <div class="stat-content">
+                <div class="stat-label">团队总投资</div>
+                <div class="stat-value" id="totalInvest">¥0.00</div>
+            </div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-icon">📊</div>
+            <div class="stat-content">
+                <div class="stat-label">层级分布</div>
+                <div class="stat-value" id="levelDist">-</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 树形图 -->
+    <div class="tree-container">
+        <div id="treeContent" class="loading">加载中...</div>
+    </div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let userId = urlParams.get('id');
+
+        // 如果URL中没有ID，尝试从localStorage获取
+        if (!userId) {
+            userId = localStorage.getItem('current_team_view_id');
+        }
+
+        // 如果还是没有ID，跳转回列表
+        if (!userId) {
+            alert('用户ID缺失');
+            window.location.href = 'users.html';
+        } else {
+            // 保存当前ID到localStorage
+            localStorage.setItem('current_team_view_id', userId);
+        }
+
+        // 加载团队树
+        async function loadTeamTree() {
+            try {
+                const response = await fetch(`../api/admin/user-team-tree.php?id=${userId}`);
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    renderTeamTree(result.data);
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                showError('网络请求失败');
+            }
+        }
+
+        // 渲染团队树
+        function renderTeamTree(data) {
+            document.getElementById('pageTitle').textContent = `团队分布图 - ${data.root.username}`;
+
+            // 更新统计信息
+            document.getElementById('statsBar').style.display = 'flex';
+            document.getElementById('totalMembers').textContent = data.stats.total_members + '人';
+            document.getElementById('totalInvest').textContent = '¥' + formatMoney(data.stats.total_invest);
+
+            // 层级分布
+            const levelDistText = Object.keys(data.stats.level_distribution)
+                .sort((a, b) => a - b)
+                .map(level => `L${level}: ${data.stats.level_distribution[level]}人`)
+                .join(', ');
+            document.getElementById('levelDist').textContent = levelDistText || '-';
+
+            // 渲染树形图
+            const treeHtml = `
+                <div class="tree">
+                    <ul>
+                        <li>
+                            <div class="node-card root" onclick="viewUserDetail(${data.root.id})">
+                                <div class="node-name">${escapeHtml(data.root.username)}</div>
+                                <div class="node-uid">${escapeHtml(data.root.uid)}</div>
+                                <span class="badge badge-primary">VIP${data.root.vip_level}</span>
+                            </div>
+                            ${data.tree.length > 0 ? renderTreeNodes(data.tree) : ''}
+                        </li>
+                    </ul>
+                </div>
+            `;
+
+            document.getElementById('treeContent').innerHTML = treeHtml;
+
+            if (data.tree.length === 0) {
+                document.getElementById('treeContent').innerHTML = `
+                    <div class="empty">
+                        <div style="font-size: 64px; margin-bottom: 16px;">🌳</div>
+                        <div style="font-size: 18px; color: #6b7280;">该用户还没有下级</div>
+                    </div>
+                `;
+            }
+        }
+
+        // 渲染树节点
+        function renderTreeNodes(nodes) {
+            if (!nodes || nodes.length === 0) return '';
+
+            return `
+                <ul>
+                    ${nodes.map(node => `
+                        <li ${node.children.length > 0 ? 'class="has-children"' : ''}>
+                            <div class="node-card" onclick="viewUserDetail(${node.id})">
+                                <div class="node-name">${escapeHtml(node.username)}</div>
+                                <div class="node-uid">${escapeHtml(node.uid)}</div>
+                                <span class="badge badge-primary">VIP${node.vip_level}</span>
+                                <div class="node-stats">
+                                    <div class="node-stat">
+                                        <div class="node-stat-label">投资</div>
+                                        <div class="node-stat-value">¥${formatMoney(node.total_invest)}</div>
+                                    </div>
+                                    <div class="node-stat">
+                                        <div class="node-stat-label">下级</div>
+                                        <div class="node-stat-value">${node.children_count}人</div>
+                                    </div>
+                                </div>
+                            </div>
+                            ${node.children.length > 0 ? `
+                                <div class="toggle-btn" onclick="toggleNode(event)"></div>
+                                ${renderTreeNodes(node.children)}
+                            ` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            `;
+        }
+
+        // 切换节点展开/折叠
+        function toggleNode(event) {
+            event.stopPropagation();
+            const li = event.target.parentElement;
+            li.classList.toggle('collapsed');
+        }
+
+        // 查看用户详情
+        function viewUserDetail(userId) {
+            window.open(`user-detail.html?id=${userId}`, '_blank');
+        }
+
+        // 显示错误
+        function showError(message) {
+            document.getElementById('treeContent').innerHTML = `
+                <div class="empty">
+                    <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+                    <div>${escapeHtml(message)}</div>
+                </div>
+            `;
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 格式化金额
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('zh-CN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            loadTeamTree();
+        });
+    </script>
+</body>
+</html>

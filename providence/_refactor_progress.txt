@@ -1,0 +1,31 @@
+🚀 PROVIDENCE 全站重构进度
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ✅ 已完成 (1/10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. ✅ brokers.html
+   - 应用 Navy/Gold/White Token
+   - 白色卡片 + 香槟金边框
+   - 统一底部导航
+   - 仅 transform/opacity 动画
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 🔄 进行中 (2/10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+2. 🔄 company-news.html - 正在重构...
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ ⏳ 待处理 (8/10)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+3. trial-money.html
+4. news-flash.html
+5. lawyer-team.html
+6. recharge.html
+7. withdraw.html
+8. points-exchange.html
+9. ribao.html
+10. my-investments.html
+

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试KYC API</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #0a1723;
+            color: #fff;
+        }
+        .test-section {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #4a5568;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background: #2d3748;
+        }
+        pre {
+            background: #000;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        input[type="file"] {
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 KYC人脸识别API测试</h1>
+
+    <div class="test-section">
+        <h2>1. 检查Token</h2>
+        <button onclick="checkToken()">检查LocalStorage Token</button>
+        <pre id="tokenResult"></pre>
+    </div>
+
+    <div class="test-section">
+        <h2>2. 测试API连接</h2>
+        <p>上传身份证和自拍照测试</p>
+        <div>
+            <label>身份证照片: </label>
+            <input type="file" id="idCardFile" accept="image/*">
+        </div>
+        <div>
+            <label>自拍照: </label>
+            <input type="file" id="selfieFile" accept="image/*">
+        </div>
+        <div>
+            <label>真实姓名: </label>
+            <input type="text" id="realName" placeholder="张三" style="padding: 5px;">
+        </div>
+        <div>
+            <label>身份证号: </label>
+            <input type="text" id="idCard" placeholder="110101199001011234" style="padding: 5px;">
+        </div>
+        <button onclick="testAPI()">提交测试</button>
+        <pre id="apiResult"></pre>
+    </div>
+
+    <script>
+        function checkToken() {
+            const token = localStorage.getItem('providence_token');
+            const result = {
+                token: token ? token.substring(0, 50) + '...' : '❌ 未找到',
+                token_length: token ? token.length : 0,
+                user_id: localStorage.getItem('providence_user_id') || '❌ 未找到',
+                user_name: localStorage.getItem('providence_user_name') || '❌ 未找到'
+            };
+            
+            document.getElementById('tokenResult').textContent = JSON.stringify(result, null, 2);
+            
+            if (!token) {
+                alert('❌ 未找到Token，请先登录！');
+            }
+        }
+
+        async function testAPI() {
+            const token = localStorage.getItem('providence_token');
+            const idCardFile = document.getElementById('idCardFile').files[0];
+            const selfieFile = document.getElementById('selfieFile').files[0];
+            const realName = document.getElementById('realName').value;
+            const idCard = document.getElementById('idCard').value;
+            
+            if (!token) {
+                document.getElementById('apiResult').textContent = '❌ 未找到Token，请先登录';
+                return;
+            }
+            
+            if (!idCardFile || !selfieFile) {
+                document.getElementById('apiResult').textContent = '❌ 请选择身份证照片和自拍照';
+                return;
+            }
+            
+            if (!realName || !idCard) {
+                document.getElementById('apiResult').textContent = '❌ 请填写真实姓名和身份证号';
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('real_name', realName);
+            formData.append('id_card', idCard);
+            formData.append('id_card_file', idCardFile);
+            formData.append('selfie', selfieFile);
+            formData.append('token', token);
+            
+            try {
+                document.getElementById('apiResult').textContent = '正在提交...\n请等待...';
+                
+                console.log('[测试] 开始调用API...');
+                console.log('[测试] Token:', token.substring(0, 30) + '...');
+                
+                const response = await fetch('/kyc-face-verify.php', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                console.log('[测试] HTTP状态:', response.status);
+                console.log('[测试] Response OK:', response.ok);
+                
+                const result = await response.json();
+                
+                document.getElementById('apiResult').textContent = 
+                    '✅ API响应:\n' + 
+                    'HTTP Status: ' + response.status + '\n' +
+                    'Response:\n' + 
+                    JSON.stringify(result, null, 2);
+                    
+                console.log('[测试] API响应:', result);
+                    
+            } catch (error) {
+                console.error('[测试] 请求失败:', error);
+                document.getElementById('apiResult').textContent = 
+                    '❌ 请求失败:\n' + 
+                    'Error: ' + error.message + '\n' +
+                    'Stack: ' + error.stack;
+            }
+        }
+
+        // 页面加载时自动检查
+        window.addEventListener('DOMContentLoaded', function() {
+            checkToken();
+        });
+    </script>
+</body>
+</html>

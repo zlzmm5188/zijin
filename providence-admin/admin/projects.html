@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>项目列表 - Providence</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f0f2f5;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .filter-bar {
+            background: #ffffff;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid #e8eaed;
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 14px;
+            color: #374151;
+            white-space: nowrap;
+            font-weight: 500;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.2s;
+        }
+
+        .filter-select:focus,
+        .filter-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .filter-input {
+            width: 200px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .btn-primary {
+            background: #4a90e2;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #357abd;
+        }
+
+        .btn-success {
+            background: #52c41a;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #389e0d;
+        }
+
+        .btn-danger {
+            background: #ff4d4f;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #cf1322;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .table-container {
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            border: 1px solid #e8eaed;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .table th {
+            background: #fafafa;
+            font-weight: 600;
+            font-size: 13px;
+            color: #1f2937;
+            white-space: nowrap;
+        }
+
+        .table td {
+            font-size: 14px;
+            color: #111827;
+            font-weight: 400;
+        }
+
+        .table tbody tr:hover {
+            background: #f5f5f5;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fed7aa;
+            color: #92400e;
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .btn-sm {
+            padding: 4px 12px;
+            font-size: 12px;
+        }
+
+        .btn-link {
+            background: none;
+            color: #4a90e2;
+            border: none;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .btn-link:hover {
+            text-decoration: underline;
+            color: #357abd;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #f3f4f6;
+        }
+
+        .pagination-info {
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .pagination-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #9ca3af;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        .rate-display {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .rate-main {
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        .rate-sub {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .project-title {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .project-name {
+            font-weight: 500;
+        }
+
+        .project-code {
+            font-size: 12px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-title">项目列表</h1>
+        <button class="btn btn-success" onclick="location.href='project-edit.html'">
+            + 添加项目
+        </button>
+    </div>
+
+    <div class="filter-bar">
+        <div class="filter-row">
+            <div class="filter-item">
+                <label class="filter-label">分类:</label>
+                <select class="filter-select" id="categoryFilter">
+                    <option value="">全部</option>
+                    <option value="IPO">IPO</option>
+                    <option value="BOND">债券</option>
+                    <option value="FUND">基金</option>
+                    <option value="FIXED">固收</option>
+                    <option value="INVEST">定投</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label class="filter-label">币种:</label>
+                <select class="filter-select" id="currencyFilter">
+                    <option value="">全部</option>
+                    <option value="CNY">CNY</option>
+                    <option value="USDT">USDT</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <label class="filter-label">状态:</label>
+                <select class="filter-select" id="statusFilter">
+                    <option value="-1">全部</option>
+                    <option value="1">启用</option>
+                    <option value="0">禁用</option>
+                </select>
+            </div>
+
+            <div class="filter-item">
+                <input type="text" class="filter-input" id="keywordInput" placeholder="搜索项目名称/编号">
+            </div>
+
+            <button class="btn btn-primary" onclick="loadProjects(1)">查询</button>
+            <button class="btn btn-secondary" onclick="resetFilters()">重置</button>
+        </div>
+    </div>
+
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>项目信息</th>
+                    <th>分类</th>
+                    <th>币种</th>
+                    <th>周期</th>
+                    <th>收益率</th>
+                    <th>投资额度</th>
+                    <th>排序</th>
+                    <th>首页</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="projectList">
+                <tr>
+                    <td colspan="11" class="loading">加载中...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="pagination" id="pagination" style="display: none;">
+            <div class="pagination-info">
+                共 <strong id="totalCount">0</strong> 条记录，当前第 <strong id="currentPage">1</strong> / <strong id="totalPages">1</strong> 页
+            </div>
+            <div class="pagination-controls">
+                <button class="btn btn-sm btn-secondary" onclick="prevPage()">上一页</button>
+                <button class="btn btn-sm btn-secondary" onclick="nextPage()">下一页</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // 页面加载时获取项目列表
+        window.addEventListener('DOMContentLoaded', () => {
+            loadProjects(1);
+        });
+
+        // 加载项目列表
+        async function loadProjects(page = 1) {
+            currentPage = page;
+
+            const category = document.getElementById('categoryFilter').value;
+            const currency = document.getElementById('currencyFilter').value;
+            const status = document.getElementById('statusFilter').value;
+            const keyword = document.getElementById('keywordInput').value;
+
+            const params = new URLSearchParams({
+                page: page,
+                limit: 20
+            });
+
+            if (category) params.append('category', category);
+            if (currency) params.append('currency', currency);
+            if (status !== '-1') params.append('status', status);
+            if (keyword) params.append('keyword', keyword);
+
+            try {
+                const response = await fetch(`../api/index.php/admin/projects?${params}`);
+
+                // 检查响应状态
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('HTTP错误:', response.status, text.substring(0, 200));
+                    showError('加载失败: HTTP ' + response.status);
+                    return;
+                }
+
+                // 检查响应类型
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('响应不是JSON:', text.substring(0, 200));
+                    showError('服务器返回了非JSON数据，请检查接口配置');
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    renderProjects(result.data.list);
+                    updatePagination(result.data.pagination);
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                showError('网络请求失败');
+            }
+        }
+
+        // 渲染项目列表
+        function renderProjects(projects) {
+            const tbody = document.getElementById('projectList');
+
+            if (projects.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="11" class="empty">
+                            <div class="empty-icon">📦</div>
+                            <div>暂无项目数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = projects.map(project => `
+                <tr>
+                    <td>${project.id}</td>
+                    <td>
+                        <div class="project-title">
+                            <div class="project-name" style="color: #111827; font-weight: 500;">${escapeHtml(project.title)}</div>
+                            <div class="project-code" style="color: #6b7280; font-size: 12px;">${escapeHtml(project.project_code || '')}</div>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-primary">${escapeHtml(project.category)}</span></td>
+                    <td><span class="badge badge-gray">${escapeHtml(project.currency)}</span></td>
+                    <td>${project.cycle_days}天</td>
+                    <td>
+                        <div class="rate-display">
+                            <span class="rate-main">${project.total_rate}%</span>
+                            <span class="rate-sub">(周期)</span>
+                        </div>
+                    </td>
+                    <td>
+                        ${formatMoney(project.min_invest)} - ${formatMoney(project.max_invest)}
+                    </td>
+                    <td>${project.sort}</td>
+                    <td>${project.is_index === 1 ? '<span class="badge badge-success">是</span>' : '-'}</td>
+                    <td>
+                        ${project.status === 1 ?
+                            '<span class="badge badge-success">启用</span>' :
+                            '<span class="badge badge-warning">禁用</span>'}
+                    </td>
+                    <td>
+                        <button class="btn-link" onclick="editProject(${project.id})">编辑</button>
+                        <span style="color: #d9d9d9; margin: 0 4px;">|</span>
+                        <button class="btn-link" onclick="configProject(${project.id})">配置</button>
+                        <span style="color: #d9d9d9; margin: 0 4px;">|</span>
+                        <button class="btn-link" onclick="deleteProject(${project.id}, '${escapeHtml(project.title)}')" style="color: #ff4d4f;">删除</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 更新分页信息
+        function updatePagination(pagination) {
+            document.getElementById('totalCount').textContent = pagination.total;
+            document.getElementById('currentPage').textContent = pagination.page;
+            document.getElementById('totalPages').textContent = pagination.pages;
+            totalPages = pagination.pages;
+
+            document.getElementById('pagination').style.display = pagination.total > 0 ? 'flex' : 'none';
+        }
+
+        // 上一页
+        function prevPage() {
+            if (currentPage > 1) {
+                loadProjects(currentPage - 1);
+            }
+        }
+
+        // 下一页
+        function nextPage() {
+            if (currentPage < totalPages) {
+                loadProjects(currentPage + 1);
+            }
+        }
+
+        // 重置筛选
+        function resetFilters() {
+            document.getElementById('categoryFilter').value = '';
+            document.getElementById('currencyFilter').value = '';
+            document.getElementById('statusFilter').value = '-1';
+            document.getElementById('keywordInput').value = '';
+            loadProjects(1);
+        }
+
+        // 编辑项目
+        function editProject(id) {
+            location.href = `project-edit.html?id=${id}`;
+        }
+
+        // 配置项目
+        function configProject(id) {
+            location.href = `project-config.html?id=${id}`;
+        }
+
+        // 显示错误
+        function showError(message) {
+            const tbody = document.getElementById('projectList');
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="11" class="empty">
+                        <div class="empty-icon">⚠️</div>
+                        <div>${escapeHtml(message)}</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // HTML转义
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 格式化金额
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('zh-CN', {
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // 清空所有数据
+        async function clearAllData() {
+            const confirmText = 'YES_CLEAR_ALL_DATA';
+            const userInput = prompt(
+                '⚠️ 警告：此操作将清空所有数据！\n\n' +
+                '将清空：\n' +
+                '- 所有投资订单\n' +
+                '- 所有充值记录\n' +
+                '- 所有提现记录\n' +
+                '- 所有钱包流水\n' +
+                '- 所有用户（保留G138688）\n' +
+                '- 所有项目\n' +
+                '- 签到、返利、KYC等记录\n\n' +
+                'G138688将被设置为创始人，推广码：G138688\n\n' +
+                '请输入 "' + confirmText + '" 确认：'
+            );
+
+            if (userInput !== confirmText) {
+                alert('操作已取消');
+                return;
+            }
+
+            if (!confirm('最后确认：确定要清空所有数据吗？\n\n此操作不可恢复！')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`../api/index.php/admin/clear-data`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ confirm: confirmText })
+                });
+
+                // 检查响应状态
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('HTTP错误:', response.status, text.substring(0, 200));
+                    alert('清空失败: HTTP ' + response.status);
+                    return;
+                }
+
+                // 检查响应类型
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('响应不是JSON:', text.substring(0, 200));
+                    alert('服务器返回了非JSON数据');
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    alert('✅ ' + (result.message || '数据清空成功！\n\nG138688已设置为创始人，推广码：G138688'));
+                    // 刷新页面
+                    location.reload();
+                } else {
+                    alert('❌ ' + (result.message || '清空失败'));
+                }
+            } catch (error) {
+                console.error('清空失败:', error);
+                alert('清空失败: ' + error.message);
+            }
+        }
+
+        // 删除项目
+        async function deleteProject(id, title) {
+            if (!confirm(`确定要删除项目"${title}"吗？\n\n此操作不可恢复！`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`../api/index.php/admin/project-delete`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ id: id })
+                });
+
+                // 检查响应状态
+                if (!response.ok) {
+                    const text = await response.text();
+                    console.error('HTTP错误:', response.status, text.substring(0, 200));
+                    alert('删除失败: HTTP ' + response.status);
+                    return;
+                }
+
+                // 检查响应类型
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    const text = await response.text();
+                    console.error('响应不是JSON:', text.substring(0, 200));
+                    alert('服务器返回了非JSON数据');
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    alert('✅ ' + (result.message || '删除成功'));
+                    loadProjects(currentPage); // 重新加载当前页
+                } else {
+                    alert('❌ ' + (result.message || '删除失败'));
+                }
+            } catch (error) {
+                console.error('删除失败:', error);
+                alert('删除失败: ' + error.message);
+            }
+        }
+    </script>
+</body>
+</html>

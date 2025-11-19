@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>积分兑换 - Frevix</title>
+    <link rel="stylesheet" href="css/ios-toast.css">
+    <style>
+        /* ========== FREVIX DESIGN TOKENS ========== */
+        :root {
+            /* 主色体系 */
+            --bg-dark: #0A1020;
+            --bg-card-blue: #1C2F4D;
+            --bg-card-blue-end: #102135;
+            
+            /* 金色体系 */
+            --gold-light: #F8E7C1;
+            --gold-normal: #E8C991;
+            --gold-deep: #D6B97A;
+            
+            /* 文字颜色 */
+            --text-main: #F2F5FF;
+            --text-sub: #9DA9BE;
+            --text-dark: #2F3847;
+            --text-muted: #7B8495;
+            
+            /* 白色操作区 */
+            --white-card: #FAF8F4;
+            --white-border: #EBE6DF;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', 'SF Pro Text', 'PingFang SC', 'Inter', -apple-system, sans-serif;
+            background: 
+                radial-gradient(circle at 30% 0%, rgba(33,55,88,.45), transparent 65%),
+                radial-gradient(circle at 100% 20%, rgba(28,42,70,.35), transparent 60%),
+                var(--bg-dark);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* 顶部导航 */
+        .header-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 56px;
+            background: rgba(10, 16, 32, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 16px;
+            z-index: 1000;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .back-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            flex: 1;
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .history-btn {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gold-normal);
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        /* 内容区 */
+        .app-container {
+            padding-top: 56px;
+            padding-bottom: 20px;
+        }
+
+        /* 蓝色余额卡片（Frevix 特效卡片）*/
+        .balance-blue-card {
+            margin: 14px;
+            padding: 24px 20px;
+            background: linear-gradient(145deg, var(--bg-card-blue), var(--bg-card-blue-end));
+            border-radius: 20px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 
+                0 15px 30px rgba(0,0,0,.55),
+                inset 0 1px 0 rgba(255,255,255,0.10);
+        }
+
+        /* 玻璃反光层 */
+        .balance-blue-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -20%;
+            width: 140%;
+            height: 100%;
+            background: linear-gradient(135deg, 
+                rgba(255,255,255,0.12) 0%, 
+                rgba(255,255,255,0.06) 50%, 
+                transparent 100%);
+            filter: blur(28px);
+            pointer-events: none;
+        }
+
+        /* 黄金细边 */
+        .balance-blue-card::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, 
+                transparent, 
+                var(--gold-normal), 
+                transparent);
+        }
+
+        .balance-label {
+            text-align: center;
+            color: var(--text-sub);
+            font-size: 13px;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .balance-amount {
+            text-align: center;
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(90deg, var(--gold-normal), #eed49b, var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+            position: relative;
+            z-index: 1;
+            letter-spacing: 1px;
+        }
+
+        .balance-stats {
+            display: flex;
+            justify-content: space-around;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255,255,255,0.10);
+            position: relative;
+            z-index: 1;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-label {
+            color: var(--text-sub);
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            color: var(--gold-normal);
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        /* 白色操作区 */
+        .white-content-card {
+            margin: 14px;
+            background: var(--white-card);
+            border-radius: 18px;
+            border: 1px solid var(--white-border);
+            box-shadow: 0 8px 18px rgba(0,0,0,.15);
+            padding: 20px;
+        }
+
+        .section-title {
+            display: flex;
+            align-items: center;
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 16px;
+        }
+
+        .section-icon {
+            font-size: 20px;
+            margin-right: 8px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-label {
+            color: var(--text-muted);
+            font-size: 13px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .amount-input {
+            width: 100%;
+            height: 54px;
+            background: #fff;
+            border: 1px solid var(--gold-normal);
+            border-radius: 16px;
+            padding: 0 60px 0 16px;
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-dark);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,.05);
+        }
+
+        .amount-input:focus {
+            outline: none;
+            border-color: var(--gold-deep);
+            box-shadow: 
+                inset 0 2px 4px rgba(0,0,0,.05),
+                0 0 0 3px rgba(232,201,145,0.15);
+        }
+
+        .amount-input::placeholder {
+            color: var(--text-muted);
+        }
+
+        .input-suffix {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gold-deep);
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        /* 快捷金额按钮 */
+        .quick-amounts {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .quick-btn {
+            height: 38px;
+            background: #fff;
+            border: 1px solid #E8E4DC;
+            border-radius: 10px;
+            color: var(--text-dark);
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .quick-btn:active {
+            transform: scale(0.96);
+        }
+
+        .quick-btn:hover {
+            background: rgba(232,201,145,0.15);
+            border-color: var(--gold-normal);
+            color: var(--gold-deep);
+        }
+
+        /* 兑换信息 */
+        .exchange-info {
+            background: rgba(232,201,145,0.08);
+            border-radius: 12px;
+            padding: 14px;
+            margin: 16px 0;
+            border: 1px solid rgba(232,201,145,0.2);
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .info-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .info-label {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .info-value {
+            color: var(--text-dark);
+            font-size: 15px;
+            font-weight: 600;
+        }
+
+        .info-value.highlight {
+            background: linear-gradient(90deg, var(--gold-normal), var(--gold-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 主按钮 */
+        .footer-dark-card {
+            margin: 14px;
+        }
+
+        .primary-btn {
+            width: 100%;
+            height: 52px;
+            background: linear-gradient(135deg, #F3D49A, #E2B76A);
+            border: none;
+            border-radius: 999px;
+            color: #2B1B05;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,.20);
+            transition: all 0.2s ease;
+        }
+
+        .primary-btn:active {
+            transform: scale(0.96);
+        }
+
+        .primary-btn:disabled {
+            background: #C9C4BC;
+            color: #7B7771;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 说明卡片 */
+        .tips-card {
+            margin: 14px;
+            background: rgba(28,47,77,0.6);
+            border-radius: 16px;
+            padding: 16px;
+            border: 1px solid rgba(232,201,145,0.15);
+        }
+
+        .tips-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .tips-icon {
+            font-size: 18px;
+            margin-right: 6px;
+        }
+
+        .tips-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--gold-normal);
+        }
+
+        .tips-list {
+            list-style: none;
+        }
+
+        .tips-item {
+            color: var(--text-sub);
+            font-size: 12px;
+            line-height: 1.7;
+            padding-left: 12px;
+            position: relative;
+            margin-bottom: 6px;
+        }
+
+        .tips-item:before {
+            content: '•';
+            position: absolute;
+            left: 0;
+            color: var(--gold-normal);
+        }
+
+        /* 底部弹窗（从底部升起，占屏幕 22-28%）*/
+        .bottom-popup {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,.55);
+            z-index: 9999;
+        }
+
+        .bottom-popup.active {
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .popup-content {
+            background: #fff;
+            border-radius: 20px 20px 0 0;
+            padding: 24px 20px 28px;
+            width: 100%;
+            max-height: 28vh;
+            animation: rise 0.3s ease;
+        }
+
+        @keyframes rise {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .popup-title {
+            font-size: 17px;
+            font-weight: 700;
+            color: var(--text-dark);
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        /* 密码输入 */
+        .password-input {
+            width: 100%;
+            padding: 14px;
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 4px;
+            text-align: center;
+            border: 2px solid #E5E7EB;
+            border-radius: 14px;
+            margin-bottom: 16px;
+            background: #FAFBFC;
+        }
+
+        .password-input:focus {
+            outline: none;
+            border-color: var(--gold-normal);
+            box-shadow: 0 0 0 3px rgba(232,201,145,0.15);
+        }
+
+        .password-input.error {
+            animation: shake 0.3s ease;
+            border-color: #C63D3D;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            50% { transform: translateX(4px); }
+            75% { transform: translateX(-4px); }
+        }
+
+        .popup-buttons {
+            display: flex;
+            gap: 12px;
+        }
+
+        .popup-btn {
+            flex: 1;
+            height: 46px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .popup-btn-cancel {
+            background: #F3F4F6;
+            color: var(--text-muted);
+        }
+
+        .popup-btn-confirm {
+            background: linear-gradient(135deg, #F3D49A, #E2B76A);
+            color: #2B1B05;
+        }
+
+        .popup-btn:active {
+            transform: scale(0.96);
+        }
+
+        /* Loading */
+        .loading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+
+        /* 响应式 */
+        @media (max-width: 360px) {
+            .balance-amount {
+                font-size: 36px;
+            }
+
+            .quick-amounts {
+                gap: 8px;
+            }
+
+            .popup-content {
+                max-height: 26vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 顶部导航 -->
+    <div class="header-bar">
+        <div class="back-btn" onclick="goBack()">←</div>
+        <div class="header-title">积分兑换</div>
+        <div class="history-btn" onclick="goHistory()">明细</div>
+    </div>
+
+    <!-- 主容器 -->
+    <div class="app-container">
+        <!-- 蓝色余额卡片 -->
+        <div class="balance-blue-card">
+            <div class="balance-label">当前积分</div>
+            <div class="balance-amount" id="pointsBalance">0</div>
+            <div class="balance-stats">
+                <div class="stat-item">
+                    <div class="stat-label">今日获得</div>
+                    <div class="stat-value" id="todayPoints">+0</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-label">累计兑换</div>
+                    <div class="stat-value" id="totalExchange">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 白色操作区 -->
+        <div class="white-content-card">
+            <div class="section-title">
+                <span class="section-icon">💰</span>
+                积分兑换人民币
+            </div>
+
+            <div class="input-group">
+                <label class="input-label">兑换金额</label>
+                <div class="input-wrapper">
+                    <input 
+                        type="number" 
+                        class="amount-input" 
+                        id="exchangeAmount"
+                        placeholder="请输入兑换金额"
+                        min="10"
+                        oninput="calculatePoints()"
+                    >
+                    <span class="input-suffix">CNY</span>
+                </div>
+                <div class="quick-amounts">
+                    <button class="quick-btn" onclick="setAmount(10)">¥10</button>
+                    <button class="quick-btn" onclick="setAmount(50)">¥50</button>
+                    <button class="quick-btn" onclick="setAmount(100)">¥100</button>
+                    <button class="quick-btn" onclick="setAmount(200)">¥200</button>
+                    <button class="quick-btn" onclick="setAmount(500)">¥500</button>
+                    <button class="quick-btn" onclick="setAmount(1000)">¥1000</button>
+                </div>
+            </div>
+
+            <div class="exchange-info">
+                <div class="info-row">
+                    <span class="info-label">兑换比例</span>
+                    <span class="info-value">1 积分 = ¥1</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">需要积分</span>
+                    <span class="info-value highlight" id="needPoints">0 分</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">最低兑换</span>
+                    <span class="info-value">¥10</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 按钮区 -->
+        <div class="footer-dark-card">
+            <button class="primary-btn" id="exchangeBtn" onclick="showPasswordModal()">
+                确认兑换
+            </button>
+        </div>
+
+        <!-- 说明卡片 -->
+        <div class="tips-card">
+            <div class="tips-header">
+                <span class="tips-icon">💡</span>
+                <span class="tips-title">兑换说明</span>
+            </div>
+            <ul class="tips-list">
+                <li class="tips-item">最低兑换金额 ¥10</li>
+                <li class="tips-item">兑换比例：1 积分 = ¥1</li>
+                <li class="tips-item">兑换需要输入支付密码</li>
+                <li class="tips-item">积分兑换后实时到账</li>
+                <li class="tips-item">积分可用于消费抵扣等</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- 底部弹窗 -->
+    <div class="bottom-popup" id="passwordModal">
+        <div class="popup-content" onclick="event.stopPropagation()">
+            <div class="popup-title">请输入支付密码</div>
+            <input 
+                type="tel" 
+                class="password-input" 
+                id="tradePassword"
+                placeholder="请输入6位支付密码"
+                maxlength="6"
+                inputmode="numeric"
+            >
+            <div class="popup-buttons">
+                <button class="popup-btn popup-btn-cancel" onclick="closePasswordModal()">
+                    取消
+                </button>
+                <button class="popup-btn popup-btn-confirm" onclick="confirmExchange()">
+                    确认兑换
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/ios-toast.js"></script>
+    <script src="config.js"></script>
+    <script>
+        const API = new APIClient();
+        let currentBalance = 0;
+
+        // 页面加载
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLogin();
+            loadPointsBalance();
+        });
+
+        // 检查登录
+        function checkLogin() {
+            const token = localStorage.getItem('token');
+            if (!token) {
+                showToast('请先登录');
+                setTimeout(() => {
+                    window.location.href = '/login.html';
+                }, 1500);
+            }
+        }
+
+        // 加载积分余额
+        async function loadPointsBalance() {
+            try {
+                const data = await API.get('/api/user/points-balance.php');
+                
+                if (data.code === 1) {
+                    currentBalance = parseFloat(data.data.points) || 0;
+                    document.getElementById('pointsBalance').textContent = currentBalance.toFixed(2);
+                    document.getElementById('todayPoints').textContent = '+' + (parseFloat(data.data.today_points) || 0).toFixed(2);
+                    document.getElementById('totalExchange').textContent = (parseFloat(data.data.total_exchange) || 0).toFixed(2);
+                } else {
+                    showToast(data.msg || '加载失败');
+                }
+            } catch (error) {
+                console.error('加载积分余额失败:', error);
+                showToast('加载失败，请刷新重试');
+            }
+        }
+
+        // 设置快捷金额
+        function setAmount(amount) {
+            document.getElementById('exchangeAmount').value = amount;
+            calculatePoints();
+        }
+
+        // 计算所需积分
+        function calculatePoints() {
+            const amount = parseFloat(document.getElementById('exchangeAmount').value) || 0;
+            const needPoints = amount;
+            document.getElementById('needPoints').textContent = needPoints.toFixed(2) + ' 分';
+            
+            const btn = document.getElementById('exchangeBtn');
+            if (amount < 10) {
+                btn.disabled = true;
+                btn.textContent = '最低兑换金额 ¥10';
+            } else if (needPoints > currentBalance) {
+                btn.disabled = true;
+                btn.textContent = '积分不足';
+            } else {
+                btn.disabled = false;
+                btn.textContent = '确认兑换';
+            }
+        }
+
+        // 显示密码弹窗
+        function showPasswordModal() {
+            const amount = parseFloat(document.getElementById('exchangeAmount').value) || 0;
+            
+            if (amount < 10) {
+                showToast('最低兑换金额 ¥10');
+                return;
+            }
+            
+            const needPoints = amount;
+            if (needPoints > currentBalance) {
+                showToast('积分不足');
+                return;
+            }
+            
+            document.getElementById('passwordModal').classList.add('active');
+            document.getElementById('tradePassword').value = '';
+            setTimeout(() => {
+                document.getElementById('tradePassword').focus();
+            }, 300);
+        }
+
+        // 关闭密码弹窗
+        function closePasswordModal() {
+            document.getElementById('passwordModal').classList.remove('active');
+        }
+
+        // 确认兑换
+        async function confirmExchange() {
+            const amount = parseFloat(document.getElementById('exchangeAmount').value) || 0;
+            const tradePassword = document.getElementById('tradePassword').value;
+            
+            if (!tradePassword || tradePassword.length !== 6) {
+                document.getElementById('tradePassword').classList.add('error');
+                showToast('请输入6位支付密码');
+                setTimeout(() => {
+                    document.getElementById('tradePassword').classList.remove('error');
+                }, 300);
+                return;
+            }
+            
+            const btn = document.querySelector('.popup-btn-confirm');
+            btn.classList.add('loading');
+            btn.textContent = '处理中...';
+            
+            try {
+                const data = await API.post('/api/user/points-exchange.php', {
+                    amount: amount,
+                    trade_password: tradePassword
+                });
+                
+                if (data.code === 1) {
+                    showToast('兑换成功！');
+                    closePasswordModal();
+                    
+                    document.getElementById('exchangeAmount').value = '';
+                    calculatePoints();
+                    
+                    setTimeout(() => {
+                        loadPointsBalance();
+                    }, 1000);
+                } else {
+                    document.getElementById('tradePassword').classList.add('error');
+                    showToast(data.msg || '兑换失败');
+                    setTimeout(() => {
+                        document.getElementById('tradePassword').classList.remove('error');
+                    }, 300);
+                }
+            } catch (error) {
+                console.error('兑换失败:', error);
+                showToast('兑换失败，请重试');
+            } finally {
+                btn.classList.remove('loading');
+                btn.textContent = '确认兑换';
+            }
+        }
+
+        // 返回
+        function goBack() {
+            window.history.back();
+        }
+
+        // 兑换明细
+        function goHistory() {
+            window.location.href = '/points-exchange-history.html';
+        }
+
+        // 点击遮罩关闭弹窗
+        document.getElementById('passwordModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closePasswordModal();
+            }
+        });
+
+        // 支持回车键确认
+        document.getElementById('tradePassword').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                confirmExchange();
+            }
+        });
+    </script>
+</body>
+</html>

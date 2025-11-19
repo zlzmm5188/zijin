@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+<title>投资项目 | PROVIDENCE EQUITY PARTNERS</title>
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" href="styles.css?v=202510222200">
+</head>
+<body class="page-other">
+<div id="app">
+    <!-- 顶部导航 -->
+    <header class="hero-simple">
+        <div class="hero-top">
+            <div class="logo-full">
+                <img src="img/logo.png" alt="PROVIDENCE" class="logo-img-small" onerror="this.style.display='none'"/>
+            </div>
+            <div class="brand">
+                <div class="brand-name">投资项目</div>
+            </div>
+        </div>
+    </header>
+
+    <main class="content-white">
+        <!-- 投资概览 -->
+        <div class="finance-overview">
+            <div class="overview-card">
+                <div class="overview-icon">💼</div>
+                <div class="overview-data">
+                    <span class="overview-label">在投产品</span>
+                    <span class="overview-value" id="activeCount">--</span>
+                </div>
+            </div>
+            <div class="overview-card">
+                <div class="overview-icon">💰</div>
+                <div class="overview-data">
+                    <span class="overview-label">累计收益</span>
+                    <span class="overview-value green" id="totalProfit">--</span>
+                </div>
+            </div>
+            <div class="overview-card">
+                <div class="overview-icon">📈</div>
+                <div class="overview-data">
+                    <span class="overview-label">年化收益率</span>
+                    <span class="overview-value gold" id="annualRate">--</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 筛选按钮 -->
+        <div class="filter-tabs">
+            <button class="filter-btn active" data-filter="all">全部</button>
+            <button class="filter-btn" data-filter="hot">热门</button>
+            <button class="filter-btn" data-filter="stable">稳健</button>
+        </div>
+
+        <!-- 项目列表 -->
+        <div class="product-section">
+            <h2>🔥 优选项目</h2>
+            <div id="projectsList">
+                <div class="loading-placeholder">
+                    <div class="loading-spinner"></div>
+                    <p>加载中...</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 投资建议 -->
+        <div class="recommend-section">
+            <h2>💡 投资建议</h2>
+            <div class="advice-cards">
+                <div class="advice-card low-risk">
+                    <div class="risk-badge">低风险</div>
+                    <p>建议配置国债+优质企业债，预期年化3.5-4.2%</p>
+                </div>
+                <div class="advice-card mid-risk">
+                    <div class="risk-badge">中风险</div>
+                    <p>可适当增加股票型基金，预期年化6-8%</p>
+                </div>
+                <div class="advice-card high-risk">
+                    <div class="risk-badge">高风险</div>
+                    <p>科创板IPO打新，预期年化10%+，需承受波动</p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 底部导航 -->
+    <nav class="tabbar" id="tabbar">
+        <a class="tab" data-tab="home" href="index.html">
+            <div class="ico ico-home"></div>
+            <div class="txt">首页</div>
+        </a>
+        <a class="tab" data-tab="market" href="market.html">
+            <div class="ico ico-finance"></div>
+            <div class="txt">数据</div>
+        </a>
+        <a class="tab active" data-tab="project" href="finance.html">
+            <div class="ico ico-market"></div>
+            <div class="txt">项目</div>
+        </a>
+        <a class="tab" data-tab="news" href="messages.html">
+            <div class="ico dot ico-message"></div>
+            <div class="txt">消息</div>
+        </a>
+        <a class="tab" data-tab="me" href="profile.html">
+            <div class="ico ico-me"></div>
+            <div class="txt">我的</div>
+        </a>
+    </nav>
+</div>
+
+<script src="config.js"></script>
+<script src="finance.js?v=202510222210"></script>
+</body>
+</html>

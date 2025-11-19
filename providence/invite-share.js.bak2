@@ -1,0 +1,183 @@
+/**
+ * 邀请分享页面 - 优化版（使用UID作为子域名）
+ * updated by AI - 2025-11-11
+ */
+import { apiRequest, copyToClipboard, getToken, redirectToLogin, showToast } from './api-utils.js';
+
+let inviteData = {
+    uid: ',           // 用户UID（8位数字）
+    code: ',          // 邀请码（备用）
+    fullLink: ',      // 完整链接
+    shortLink: ',     // 短链接（uid子域名）
+    rewards: []
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+    initPage();
+});
+
+async function initPage() {
+    if (!getToken()) {
+        showToast('请先登录');
+        setTimeout(() => redirectToLogin(), 1500);
+        return;
+    }
+
+    await loadInviteInfo();
+}
+
+// 加载邀请信息
+async function loadInviteInfo() {
+    try {
+        console.log('[邀请分享] 开始加载邀请信息...');
+
+        // 1. 获取用户信息（包含uid）
+        const userResponse = await apiRequest('/user/user/index', {}, 'GET');
+        console.log('[邀请分享] 用户信息响应:', userResponse);
+
+        if (userResponse.data) {
+            inviteData.uid = userResponse.data.uid || ';
+            inviteData.code = userResponse.data.invite_code || ';
+
+            console.log('[邀请分享] 用户UID:', inviteData.uid);
+            console.log('[邀请分享] 邀请码:', inviteData.code);
+
+            // 生成邀请链接
+            const domain = window.location.hostname;
+            let mainDomain = domain;
+            
+            // 提取主域名（支持 qiantai.frevix.top -> frevix.top）
+            const parts = domain.split('.');
+            if (parts.length >= 2) {
+                mainDomain = parts.slice(-2).join('.');
+            }
+
+            // 使用UID作为子域名生成短链接
+            inviteData.shortLink = `https://${inviteData.uid}.${mainDomain}`;
+            inviteData.fullLink = window.location.origin + '/register.html?code=' + (inviteData.uid || inviteData.code);
+
+            console.log('[邀请分享] 主域名:', mainDomain);
+            console.log('[邀请分享] 短链接:', inviteData.shortLink);
+            console.log('[邀请分享] 完整链接:', inviteData.fullLink);
+
+            // 显示UID（作为邀请ID）
+            const codeEl = document.getElementById('inviteCode');
+            if (codeEl) {
+                codeEl.textContent = inviteData.uid || '暂无';
+            }
+
+            // 优先显示短链接
+            const linkEl = document.getElementById('shortLink');
+            if (linkEl) {
+                linkEl.value = inviteData.shortLink;
+            }
+        } else {
+            console.error('[邀请分享] 用户信息data为空');
+            const codeEl = document.getElementById('inviteCode');
+            if (codeEl) codeEl.textContent = '获取失败';
+        }
+
+        // 2. 获取奖励规则
+        try {
+            const rewardsResponse = await apiRequest('/user/invite/rewards_config', {}, 'GET');
+
+            if (rewardsResponse.data && Array.isArray(rewardsResponse.data)) {
+                inviteData.rewards = rewardsResponse.data;
+                renderRewards();
+            }
+        } catch (error) {
+            console.log('奖励规则获取失败:', error);
+            // 使用默认规则
+            inviteData.rewards = [
+                { action_name: '注册成功', points: 100 },
+                { action_name: '完成实名', points: 200 },
+                { action_name: '首次投资', points: 500 }
+            ];
+            renderRewards();
+        }
+
+    } catch (error) {
+        console.error('加载邀请信息失败:', error);
+        showToast('加载失败：' + error.message);
+
+        if (error.message.includes('登录')) {
+            setTimeout(() => redirectToLogin(), 1500);
+        }
+    }
+}
+
+// 渲染奖励规则
+function renderRewards() {
+    const container = document.getElementById('rewardList');
+    if (!container) return;
+
+    if (inviteData.rewards.length === 0) {
+        return;
+    }
+
+    const rewardsHtml = inviteData.rewards.map(reward => `
+        <div class="reward-item">
+            <span class="reward-action">${reward.action_name}</span>
+            <span class="reward-points">+${reward.points} 积分</span>
+        </div>
+    `).join(');
+
+    container.innerHTML = rewardsHtml;
+
+    // 同时更新佣金比例
+    const l1RateEl = document.getElementById('l1Rate');
+    const l2RateEl = document.getElementById('l2Rate');
+
+    // 从invite接口获取佣金比例
+    apiRequest('/user/user/invite', {}, 'GET').then(data => {
+        if (data.data) {
+            if (l1RateEl) l1RateEl.textContent = data.data.l1 || '1%';
+            if (l2RateEl) l2RateEl.textContent = data.data.l2 || '0.5%';
+        }
+    }).catch(err => {
+        console.log('获取佣金比例失败:', err);
+    });
+}
+
+// 复制邀请码（现在复制UID）
+window.copyInviteCode = function() {
+    copyToClipboard(inviteData.uid, '邀请ID已复制');
+};
+
+// 复制完整链接
+window.copyFullLink = function() {
+    copyToClipboard(inviteData.fullLink, '链接已复制');
+};
+
+// 复制短链接
+window.copyShortLink = function() {
+    const linkEl = document.getElementById('shortLink');
+    const linkValue = linkEl ? linkEl.value : inviteData.shortLink || inviteData.fullLink;
+    if (!linkValue || linkValue === '生成中...') {
+        showToast('链接生成中，请稍候');
+        return;
+    }
+    copyToClipboard(linkValue, '链接已复制');
+};
+
+// 分享到微信
+window.shareToWeChat = function() {
+    // 移动端分享功能
+    if (navigator.share) {
+        navigator.share({
+            title: 'Providence 投资平台',
+            text: '邀请您加入 Providence，使用我的邀请ID：' + inviteData.uid,
+            url: inviteData.shortLink || inviteData.fullLink
+        }).catch(err => {
+            console.log('分享取消或失败:', err);
+        });
+    } else {
+        copyToClipboard(inviteData.shortLink || inviteData.fullLink, '链接已复制，请粘贴分享');
+    }
+};
+
+// 下载邀请海报
+window.downloadPoster = function() {
+    showToast('海报生成功能开发中');
+    // TODO: 实现海报生成
+};

@@ -1,0 +1,559 @@
+// Providence 产品详情 - 统一使用config.js的API封装
+// 确保在HTML中已加载config.js: <script src="config.js"></script>
+
+// 等待API对象加载
+function waitForAPI() {
+    return new Promise((resolve) => {
+        if (window.API && window.API_CONFIG) {
+            resolve();
+        } else {
+            const check = setInterval(() => {
+                if (window.API && window.API_CONFIG) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 50);
+            setTimeout(() => {
+                clearInterval(check);
+                resolve();
+            }, 3000);
+        }
+    });
+}
+
+let user = {
+    token: localStorage.getItem('providence_token') || '',
+    level: 1,
+    money: 0
+};
+
+let prod = null;
+
+// 项目经理数据（31个） - 随机选择一个展示
+const MANAGERS = [
+    { name:"艾翀", code:"S1450123090015", dept:"量化投资部", bio:"量化策略专家，2010年起从事量化投资研究工作，擅长多因子选股、统计套利和风险管理。先后在多家金融机构任职，积累了丰富的量化投资实战经验。管理的量化对冲产品年化收益率稳定在15%-20%区间，最大回撤控制在5%以内。" },
+    { name:"胡善斌", code:"S1450114010007", dept:"量化投资部", bio:"量化投资专家，2012年起从事量化策略研发工作，专注于风险管理和组合优化。在机器学习、深度学习等前沿技术应用于投资领域有深入研究。管理的量化产品夏普比率长期维持在2.0以上。" },
+    { name:"江楠", code:"S1450123060029", dept:"固收投资部", bio:"固收投资专家，2011年起从事债券投资管理工作，擅长利率债、信用债和可转债投资。对宏观经济、货币政策有深入研究，在信用风险分析、久期管理等方面经验丰富。管理的固收产品年化收益率稳定在8%-12%区间。" },
+    { name:"高从珊", code:"F0490000000120", tenure:"2年又215天", startDate:"2018-01-10", assets:"3.54亿元", bestReturn:"76.89%", bio:"北京大学MBA。长期从事行业研究和个股精选，注重基本面深度分析，投资风格稳健务实。" },
+    { name:"唐伟青", code:"F4220000000135", tenure:"5年又76天", startDate:"2014-04-12", assets:"7.19亿元", bestReturn:"118.92%", bio:"上海交通大学金融工程硕士。资深量化投资专家，擅长多因子选股和风险管理，具有扎实的数理统计基础。" },
+    { name:"王帆", code:"S1450123090016", tenure:"3年又120天", startDate:"2016-08-20", assets:"4.56亿元", bestReturn:"89.23%", bio:"复旦大学金融学硕士。专注于可转债投资，具有丰富的市场经验。" },
+    { name:"沈明", code:"S1450114010008", tenure:"2年又280天", startDate:"2017-11-15", assets:"3.78亿元", bestReturn:"82.15%", bio:"上海财经大学金融工程硕士。擅长固收产品投资，注重风险控制。" },
+    { name:"刘哲", code:"S1450123060030", tenure:"4年又200天", startDate:"2015-06-10", assets:"6.23亿元", bestReturn:"95.67%", bio:"清华大学经济学博士。投研合伙人，专注于成长股投资和价值发现。" },
+    { name:"周屹", code:"F0490000000121", tenure:"3年又45天", startDate:"2016-12-20", assets:"4.12亿元", bestReturn:"88.34%", bio:"北京大学金融学硕士。配售策略负责人，擅长IPO配售和定向增发。" },
+    { name:"陆峻", code:"F4220000000136", tenure:"2年又150天", startDate:"2018-03-15", assets:"3.89亿元", bestReturn:"79.56%", bio:"上海交通大学经济学硕士。固收量化专家，专注于量化模型开发。" },
+    { name:"陈皓", code:"S1450123090017", tenure:"3年又300天", startDate:"2016-01-10", assets:"5.34亿元", bestReturn:"91.45%", bio:"复旦大学金融工程博士。投研合伙人，擅长资产配置和组合优化。" },
+    { name:"张明", code:"S1450114010009", tenure:"4年又180天", startDate:"2015-08-25", assets:"6.67亿元", bestReturn:"98.23%", bio:"清华大学金融学硕士。固收总监，长期从事固定收益投资管理。" },
+    { name:"李强", code:"S1450123060031", tenure:"2年又90天", startDate:"2017-09-10", assets:"3.45亿元", bestReturn:"75.23%", bio:"上海财经大学金融学硕士。专注于低风险投资策略。" },
+    { name:"赵敏", code:"F0490000000122", tenure:"3年又220天", startDate:"2016-05-20", assets:"4.89亿元", bestReturn:"86.78%", bio:"北京大学经济学硕士。擅长行业研究和个股分析。" },
+    { name:"孙磊", code:"F4220000000137", tenure:"2年又250天", startDate:"2017-12-15", assets:"3.67亿元", bestReturn:"81.34%", bio:"上海交通大学金融工程硕士。专注于量化投资和算法交易。" },
+    { name:"吴军", code:"S1450123090018", tenure:"4年又100天", startDate:"2015-10-20", assets:"5.78亿元", bestReturn:"94.56%", bio:"复旦大学经济学博士。投研合伙人，擅长宏观分析和资产配置。" },
+    { name:"郑华", code:"S1450114010010", tenure:"3年又60天", startDate:"2016-11-10", assets:"4.23亿元", bestReturn:"87.89%", bio:"清华大学金融学硕士。专注于固定收益产品投资。" },
+    { name:"钱伟", code:"S1450123060032", tenure:"2年又180天", startDate:"2017-06-20", assets:"3.56亿元", bestReturn:"78.45%", bio:"上海财经大学金融工程硕士。擅长风险管理和组合优化。" },
+    { name:"周杰", code:"F0490000000123", tenure:"3年又140天", startDate:"2016-08-15", assets:"4.45亿元", bestReturn:"85.67%", bio:"北京大学金融学硕士。专注于成长股投资和价值发现。" },
+    { name:"吴明", code:"F4220000000138", tenure:"4年又50天", startDate:"2015-11-20", assets:"6.12亿元", bestReturn:"97.34%", bio:"上海交通大学经济学博士。固收量化专家，擅长量化模型开发。" },
+    { name:"陈强", code:"S1450123090019", tenure:"2年又320天", startDate:"2017-01-10", assets:"3.78亿元", bestReturn:"80.12%", bio:"复旦大学金融工程硕士。专注于可转债投资和套利策略。" },
+    { name:"张伟", code:"S1450114010011", tenure:"3年又200天", startDate:"2016-04-25", assets:"4.67亿元", bestReturn:"88.90%", bio:"清华大学金融学硕士。投研合伙人，擅长资产配置和风险管理。" },
+    { name:"李敏", code:"S1450123060033", tenure:"2年又120天", startDate:"2017-10-15", assets:"3.34亿元", bestReturn:"76.78%", bio:"上海财经大学金融学硕士。专注于低风险投资策略。" },
+    { name:"王磊", code:"F0490000000124", tenure:"4年又160天", startDate:"2015-07-20", assets:"5.89亿元", bestReturn:"93.45%", bio:"北京大学经济学博士。固收总监，长期从事固定收益投资管理。" },
+    { name:"赵军", code:"F4220000000139", tenure:"2年又290天", startDate:"2017-11-25", assets:"3.89亿元", bestReturn:"82.34%", bio:"上海交通大学金融工程硕士。专注于量化投资和算法交易。" },
+    { name:"孙华", code:"S1450123090020", tenure:"3年又80天", startDate:"2016-09-10", assets:"4.56亿元", bestReturn:"86.23%", bio:"复旦大学经济学硕士。投研合伙人，擅长宏观分析和资产配置。" },
+    { name:"吴强", code:"S1450114010012", tenure:"2年又210天", startDate:"2017-08-20", assets:"3.67亿元", bestReturn:"79.89%", bio:"清华大学金融学硕士。专注于固定收益产品投资。" },
+    { name:"郑伟", code:"S1450123060034", tenure:"4年又30天", startDate:"2015-12-15", assets:"6.34亿元", bestReturn:"96.78%", bio:"上海财经大学金融工程博士。固收量化专家，擅长量化模型开发。" },
+    { name:"钱敏", code:"F0490000000125", tenure:"2年又160天", startDate:"2017-07-10", assets:"3.45亿元", bestReturn:"77.56%", bio:"北京大学金融学硕士。专注于成长股投资和价值发现。" },
+    { name:"周强", code:"F4220000000140", tenure:"3年又100天", startDate:"2016-10-25", assets:"4.78亿元", bestReturn:"89.12%", bio:"上海交通大学经济学硕士。投研合伙人，擅长资产配置和组合优化。" },
+    { name:"吴华", code:"S1450123090021", tenure:"2年又240天", startDate:"2017-12-20", assets:"3.89亿元", bestReturn:"81.67%", bio:"复旦大学金融工程硕士。专注于可转债投资和套利策略。" }
+];
+
+// 根据项目ID固定选择项目经理
+function getFixedManager(projectId) {
+    const id = parseInt(projectId) || 1;
+    const index = id % MANAGERS.length;
+    const manager = {...MANAGERS[index]}; // 复制对象避免修改原数组
+    // 添加固定的头像ID（基于项目ID）
+    manager.avatarId = (id % 146) + 1;
+    return manager;
+}
+
+document.addEventListener('DOMContentLoaded', init);
+
+async function init() {
+    console.log('[Init] 详情页');
+
+    const params = new URLSearchParams(location.search);
+    const id = params.get('id');
+
+    if (!id) {
+        showErr('缺少产品ID');
+        return;
+    }
+
+    await load(id);
+}
+
+async function getUser() {
+    if (!user.token) {
+        user.level = 0;
+        user.money = 0;
+        return;
+    }
+
+    try {
+        await waitForAPI();
+
+        // 优先使用统一API封装
+        if (window.API && window.API.user && window.API.user.getInfo) {
+            const result = await window.API.user.getInfo();
+            if (result.success && result.data) {
+                user.level = parseInt(result.data.level) || 1;
+                user.money = parseFloat(result.data.money) || 0;
+                return;
+            }
+        }
+
+        // 降级方案
+        const API = window.API_CONFIG?.baseURL || 'https://v2api.hemlx.com';
+        const r = await fetch(API + '/user/user/index', {
+            headers: { 'token': user.token }
+        });
+        const j = await r.json();
+        if (j.code === 200 && j.data) {
+            user.level = parseInt(j.data.level) || 1;
+            user.money = parseFloat(j.data.money) || 0;
+        }
+    } catch (e) {
+        console.error('[User]', e);
+    }
+}
+
+async function load(id) {
+    console.log('[Load] ID:', id);
+
+    try {
+        await getUser();
+        await waitForAPI();
+
+        // 优先使用统一API封装
+        let j = null;
+        if (window.API && window.API.fund && window.API.fund.getList) {
+            const result = await window.API.fund.getList();
+            if (result.success && result.data) {
+                j = { data: result.data, msg: 'ok' };
+            }
+        }
+
+        // 降级方案
+        if (!j) {
+            const API = window.API_CONFIG?.baseURL || 'https://v2api.hemlx.com';
+            const r = await fetch(API + '/fund/project/all');
+            j = await r.json();
+        }
+
+        for (const cat of j.data) {
+            if (cat.list) {
+                prod = cat.list.find(p => p.id == id);
+                if (prod) {
+                    prod.catName = cat.name;
+                    break;
+                }
+            }
+        }
+
+        if (!prod) {
+            showErr('产品不存在');
+            return;
+        }
+
+        console.log('[Prod]', prod);
+        render();
+
+    } catch (e) {
+        console.error('[Load]', e);
+        showErr('加载失败');
+    }
+}
+
+// 格式化金额（中文短单位）
+function formatAmountCN(amount) {
+    if (!amount || amount === 0) return '—';
+    if (amount >= 100000000) {
+        return (amount / 100000000).toFixed(1) + '亿';
+    }
+    if (amount >= 10000) {
+        return (amount / 10000).toFixed(0) + '万';
+    }
+    return amount.toLocaleString();
+}
+
+// 格式化周期（支持天和月）
+function formatCycle(day) {
+    if (!day || day === 0) return '—';
+    if (day < 30) {
+        return day + '天';
+    } else if (day < 365) {
+        const months = Math.round(day / 30);
+        return months + '个月';
+    } else {
+        const years = Math.round(day / 365 * 10) / 10;
+        return years + '年';
+    }
+}
+
+// 格式化VIP加息（永远显示+X.X%）
+function formatVIPRate(vip, add, gift) {
+    const total = (parseFloat(vip) || 0) + (parseFloat(add) || 0) + (parseFloat(gift) || 0);
+    if (total === 0) return '—';
+    return '+' + total.toFixed(1) + '%';
+}
+
+function render() {
+    const p = prod;
+    const rate = parseFloat(p.rate) || 0;
+    const vip = parseFloat(p.vip_rate) || 0;
+    const add = parseFloat(p.added) || 0;
+    const gift = parseFloat(p.gift) || 0;
+    const sum = rate + vip + add + gift;
+    const day = parseInt(p.day) || 0;
+    const min = parseFloat(p.min) || 0;
+    const max = parseFloat(p.max) || 0;
+    const vReq = parseInt(p.vip) || 0;
+    const lock = vReq > user.level;
+
+    const sch = Math.min(parseFloat(p.schedule) || 0, 100);
+    const total = parseFloat(p.total) || 0;
+    const sold = total * (sch / 100);
+    const remain = total - sold;
+
+    const titleEl = document.getElementById('title');
+    if (titleEl) titleEl.textContent = p.title || '产品详情';
+
+    // 更新四格参数
+    const cycleEl = document.getElementById('cycle');
+    const rateVipEl = document.getElementById('rateVip');
+    const maxAmtEl = document.getElementById('maxAmt');
+    const minAmtEl = document.getElementById('minAmt');
+
+    if (cycleEl) cycleEl.textContent = formatCycle(day);
+    if (rateVipEl) rateVipEl.textContent = formatVIPRate(vip, add, gift);
+    if (maxAmtEl) maxAmtEl.textContent = formatAmountCN(max);
+    if (minAmtEl) minAmtEl.textContent = formatAmountCN(min);
+
+    // 更新项目名称和描述
+    const projNameEl = document.getElementById('projName');
+    const projSubEl = document.getElementById('projSub');
+    if (projNameEl) projNameEl.textContent = p.title || '投资项目';
+    if (projSubEl) projSubEl.textContent = p.categoryName || p.catName || '固收优选';
+
+    const h = `
+        <div class="detail-card">
+            <div class="product-name">${p.title || '投资产品'}</div>
+            <div class="product-tags">
+                <span class="tag tag-code">${p.code || '------'}</span>
+                <span class="tag tag-status">${p.status == 1 ? '募集中' : '已结束'}</span>
+                ${lock ? `<span class="tag tag-vip">需VIP${vReq}</span>` : ''}
+            </div>
+        </div>
+
+        <div class="rate-showcase">
+            <div class="rate-main">
+                <div class="rate-number">${sum.toFixed(2)}%</div>
+                <div class="rate-desc">预期年化收益率</div>
+            </div>
+            <div class="rate-grid">
+                <div class="rate-item">
+                    <div class="rate-item-num">${day}天</div>
+                    <div class="rate-item-txt">投资期限</div>
+                </div>
+                <div class="rate-item">
+                    <div class="rate-item-num">${fmt(min)}</div>
+                    <div class="rate-item-txt">起投金额</div>
+                </div>
+                <div class="rate-item">
+                    <div class="rate-item-num">${fmt(max)}</div>
+                    <div class="rate-item-txt">最高金额</div>
+                </div>
+            </div>
+        </div>
+
+        ${vip > 0 || add > 0 || gift > 0 ? `
+            <div class="detail-card">
+                <div class="card-header">💎 额外收益加成</div>
+                <div class="extra-rewards">
+                    ${vip > 0 ? `<div class="extra-item"><div class="extra-num">+${vip.toFixed(2)}%</div><div class="extra-txt">VIP加息</div></div>` : ''}
+                    ${add > 0 ? `<div class="extra-item"><div class="extra-num">+${add.toFixed(2)}%</div><div class="extra-txt">增值收益</div></div>` : ''}
+                    ${gift > 0 ? `<div class="extra-item"><div class="extra-num">+${gift.toFixed(2)}%</div><div class="extra-txt">红包收益</div></div>` : ''}
+                </div>
+            </div>
+        ` : ''}
+
+        <div class="detail-card">
+            <div class="card-header">📊 募集进度</div>
+            <div class="schedule-info">
+                <span class="schedule-label">当前进度</span>
+                <span class="schedule-percent">${sch.toFixed(1)}%</span>
+            </div>
+            <div class="schedule-track">
+                <div class="schedule-bar" style="width:${sch}%"></div>
+            </div>
+            <div class="schedule-stats">
+                <div class="schedule-stat">
+                    <div class="stat-num">${fmt(total)}</div>
+                    <div class="stat-txt">总募集</div>
+                </div>
+                <div class="schedule-stat">
+                    <div class="stat-num">${fmt(sold)}</div>
+                    <div class="stat-txt">已募集</div>
+                </div>
+                <div class="schedule-stat">
+                    <div class="stat-num">${fmt(remain)}</div>
+                    <div class="stat-txt">剩余</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="card-header">💰 收益试算</div>
+            <div class="calc-group">
+                <div class="calc-label">投资金额</div>
+                <div class="calc-input-wrap">
+                    <input type="number" class="calc-input" id="inp"
+                           placeholder="请输入金额"
+                           min="${min}" max="${max}" value="${min}">
+                    <span class="calc-unit">元</span>
+                </div>
+            </div>
+            <div class="calc-results">
+                <div class="calc-result">
+                    <div class="calc-result-label">预计收益</div>
+                    <div class="calc-result-value" id="profit">¥0</div>
+                </div>
+                <div class="calc-result">
+                    <div class="calc-result-label">到期本息</div>
+                    <div class="calc-result-value" id="total">¥0</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="card-header">📋 产品详情</div>
+            <div class="info-row">
+                <span class="info-key">产品代码</span>
+                <span class="info-value">${p.code || '------'}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">所属专区</span>
+                <span class="info-value">${p.catName || '-'}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">投资期限</span>
+                <span class="info-value">${day}天</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">起投金额</span>
+                <span class="info-value">¥${min.toLocaleString()}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">年化收益</span>
+                <span class="info-value highlight">${sum.toFixed(2)}%</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">付息方式</span>
+                <span class="info-value">${p.payment_desc || '到期还本付息'}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-key">VIP要求</span>
+                <span class="info-value">${vReq > 0 ? 'VIP' + vReq : '无限制'}</span>
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="card-header">⚠️ 风险提示</div>
+            <div class="risk-notice">
+                <div class="risk-text">投资有风险，入市需谨慎。本产品不保证本金安全，不保证最低收益。投资者应充分认识投资风险，审慎决策。</div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('cont').innerHTML = h;
+    document.getElementById('btm').style.display = 'flex';
+    document.getElementById('balNum').textContent = '¥' + user.money.toFixed(2);
+
+    const btn = document.getElementById('btn');
+    if (lock) {
+        btn.classList.add('disabled');
+        btn.textContent = '需VIP' + vReq;
+    } else if (sch >= 100) {
+        btn.classList.add('disabled');
+        btn.textContent = '已售罄';
+    } else {
+        btn.onclick = invest;
+    }
+
+    const inp = document.getElementById('inp');
+    if (inp) {
+        inp.addEventListener('input', calc);
+        calc();
+    }
+
+    // 加载项目经理信息
+    loadManagerInfo(p.id);
+}
+
+// 加载项目经理信息 - 随机选择
+function loadManagerInfo(projectId) {
+    const manager = getRandomManager(); // 使用随机选择函数
+    const managerAvatar = `img/user-avatar-default.svg`; // 默认头像
+
+    const pmInfo = document.getElementById('pmInfo');
+    if (pmInfo) {
+        pmInfo.innerHTML = `
+            <img src="${managerAvatar}" alt="${manager.name}">
+            <div>
+                <b>${manager.name}</b>
+                <div><small>${manager.dept} · ${manager.code}</small></div>
+            </div>
+        `;
+
+        // 存储manager信息到全局，供点击事件使用
+        window.currentManager = manager;
+    }
+}
+
+function calc() {
+    const inp = document.getElementById('inp');
+    if (!inp || !prod) return;
+
+    const amt = parseFloat(inp.value) || 0;
+    const rate = parseFloat(prod.rate) || 0;
+    const vip = parseFloat(prod.vip_rate) || 0;
+    const add = parseFloat(prod.added) || 0;
+    const gift = parseFloat(prod.gift) || 0;
+    const sum = rate + vip + add + gift;
+    const day = parseInt(prod.day) || 0;
+
+    const profit = amt * (sum / 100) * (day / 365);
+    const total = amt + profit;
+
+    document.getElementById('profit').textContent = '¥' + profit.toFixed(2);
+    document.getElementById('total').textContent = '¥' + total.toFixed(2);
+}
+
+async function invest() {
+    const btn = document.getElementById('btn');
+    if (btn.classList.contains('disabled')) return;
+
+    if (!user.token) {
+        await showToast('', '请先登录');
+        setTimeout(() => location.href = 'login.html', 500);
+        return;
+    }
+
+    const amt = parseFloat(document.getElementById('inp').value) || 0;
+    const min = parseFloat(prod.min) || 0;
+    const max = parseFloat(prod.max) || 0;
+
+    if (amt < min) {
+        await showToast('', '最低投资¥' + min.toLocaleString());
+        return;
+    }
+
+    if (amt > max) {
+        await showToast('', '最高投资¥' + max.toLocaleString());
+        return;
+    }
+
+    if (amt > user.money) {
+        await showToast('', '余额不足，请先充值');
+        return;
+    }
+
+    location.href = `invest-confirm.html?id=${prod.id}&amount=${amt}`;
+}
+
+function fmt(v) {
+    const n = parseFloat(v) || 0;
+    if (n >= 10000) return (n / 10000).toFixed(1) + '万';
+    return n.toFixed(0);
+}
+
+function showErr(msg) {
+    // 尝试多个可能的容器元素
+    const contEl = document.getElementById('cont') || document.querySelector('.wrap') || document.body;
+    if (contEl) {
+        contEl.innerHTML = `
+            <div style="text-align:center;padding:100px 20px;">
+                <div style="font-size:56px;margin-bottom:16px;opacity:0.6;">⚠️</div>
+                <div style="font-size:14px;color:rgba(255,255,255,0.9);margin-bottom:24px;">${msg}</div>
+                <button onclick="history.back()" style="padding:12px 32px;background:rgba(255,255,255,0.96);color:#0f172a;border:none;border-radius:10px;cursor:pointer;font-weight:700;box-shadow:0 6px 20px rgba(0,0,0,0.25);">返回</button>
+            </div>
+        `;
+    } else {
+        console.error('[showErr] 无法找到容器元素');
+        alert(msg);
+    }
+}
+
+// 显示项目经理详情弹窗
+function showManagerDetail() {
+    if (!prod) return;
+
+    const manager = getFixedManager(prod.id);
+    const managerAvatar = `img/good/img${String(manager.avatarId).padStart(3, '0')}.jpg`;
+
+    const overlay = document.createElement('div');
+    overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px;';
+    overlay.onclick = closeManagerModal;
+
+    const modal = document.createElement('div');
+    modal.style.cssText = 'background:#fff;border-radius:16px;max-width:500px;width:100%;max-height:80vh;overflow-y:auto;position:relative;z-index:10001;';
+    modal.onclick = (e) => e.stopPropagation();
+
+    modal.innerHTML = `
+        <div style="padding:20px;border-bottom:1px solid #e5e9f0;">
+            <div style="display:flex;align-items:center;gap:12px;">
+                <img src="${managerAvatar}" alt="${manager.name}" style="width:60px;height:60px;border-radius:50%;object-fit:cover;border:2px solid rgba(158,138,87,.35);" onerror="this.src='img/user-avatar-default.svg'">
+                <div>
+                    <div style="font-size:18px;font-weight:600;color:#0f172a;margin-bottom:4px;">${manager.name}</div>
+                    <div style="font-size:12px;color:#6b7280;">执业编号：${manager.code}</div>
+                </div>
+            </div>
+        </div>
+        <div style="padding:20px;">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;">
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">累计任职时间</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.tenure}</div>
+                </div>
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">任职起始日期</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.startDate}</div>
+                </div>
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">现任基金资产总规模</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.assets}</div>
+                </div>
+                <div style="background:#f6f8fb;padding:12px;border-radius:8px;">
+                    <div style="font-size:12px;color:#6b7280;margin-bottom:4px;">在管基金最佳任期回报</div>
+                    <div style="font-size:16px;font-weight:600;color:#0f172a;">${manager.bestReturn}</div>
+                </div>
+            </div>
+            <div>
+                <div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:8px;">📋 项目经理简介</div>
+                <div style="font-size:13px;color:#3e4754;line-height:1.6;">${manager.bio}</div>
+            </div>
+        </div>
+        <div style="padding:20px;border-top:1px solid #e5e9f0;">
+            <button onclick="closeManagerModal()" style="width:100%;padding:12px;background:linear-gradient(180deg,#efe7d2,#e2d6b5);color:#0b1220;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;">关闭</button>
+        </div>
+    `;
+
+    document.body.appendChild(overlay);
+    document.body.appendChild(modal);
+}
+
+// 关闭项目经理弹窗
+function closeManagerModal() {
+    const overlay = document.querySelector('div[style*="position:fixed"][style*="z-index:10000"]');
+    const modal = document.querySelector('div[style*="z-index:10001"]');
+    if (overlay) overlay.remove();
+    if (modal) modal.remove();
+}

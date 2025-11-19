@@ -1,0 +1,322 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>API配置检测 - Providence</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "PingFang SC", sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .container {
+        background: white;
+        border-radius: 16px;
+        padding: 40px;
+        max-width: 700px;
+        width: 100%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      }
+      h1 {
+        color: #333;
+        margin-bottom: 24px;
+        font-size: 28px;
+      }
+      .test-item {
+        background: #f8f9fa;
+        padding: 16px;
+        margin: 12px 0;
+        border-radius: 8px;
+        border-left: 4px solid #ccc;
+      }
+      .test-item.success {
+        border-left-color: #10b981;
+        background: #f0fdf4;
+      }
+      .test-item.error {
+        border-left-color: #ef4444;
+        background: #fef2f2;
+      }
+      .test-item.warning {
+        border-left-color: #f59e0b;
+        background: #fffbeb;
+      }
+      .label {
+        font-weight: 600;
+        color: #374151;
+        margin-bottom: 8px;
+      }
+      .value {
+        font-family: "Courier New", monospace;
+        background: white;
+        padding: 8px 12px;
+        border-radius: 4px;
+        margin-top: 8px;
+        word-break: break-all;
+      }
+      .btn {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        padding: 14px 28px;
+        border-radius: 8px;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        width: 100%;
+        margin-top: 20px;
+        transition: transform 0.2s;
+      }
+      .btn:hover {
+        transform: translateY(-2px);
+      }
+      .btn-test {
+        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        margin-top: 12px;
+      }
+      .btn-clear {
+        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>🔍 API配置检测工具</h1>
+
+      <div id="configCheck" class="test-item">
+        <div class="label">⏳ 正在检测配置...</div>
+      </div>
+
+      <div id="apiCheck" class="test-item" style="display: none">
+        <div class="label">API地址检测</div>
+        <div class="value" id="apiUrl">检测中...</div>
+      </div>
+
+      <div id="tokenCheck" class="test-item" style="display: none">
+        <div class="label">Token状态</div>
+        <div class="value" id="tokenValue">检测中...</div>
+      </div>
+
+      <div id="cacheCheck" class="test-item" style="display: none">
+        <div class="label">缓存状态</div>
+        <div class="value" id="cacheInfo">检测中...</div>
+      </div>
+
+      <button
+        class="btn btn-test"
+        onclick="testAPI()"
+        id="testBtn"
+        style="display: none"
+      >
+        🧪 测试API连接
+      </button>
+      <button class="btn btn-clear" onclick="clearAllAndReload()">
+        🗑️ 清除缓存并刷新
+      </button>
+      <button class="btn" onclick="goToLogin()">➡️ 返回登录页面</button>
+    </div>
+
+    <script src="config.js?v=1763365517"></script>
+    <script>
+      // 等待config.js加载
+      setTimeout(() => {
+        checkConfig();
+      }, 500);
+
+      function checkConfig() {
+        const configCheck = document.getElementById("configCheck");
+        const apiCheck = document.getElementById("apiCheck");
+        const tokenCheck = document.getElementById("tokenCheck");
+        const cacheCheck = document.getElementById("cacheCheck");
+        const testBtn = document.getElementById("testBtn");
+
+        // 检查API_CONFIG
+        if (window.API_CONFIG) {
+          const baseURL = window.API_CONFIG.baseURL;
+          const isCorrect = baseURL.includes("copla.top");
+
+          if (isCorrect) {
+            configCheck.className = "test-item success";
+            configCheck.innerHTML = `
+                        <div class="label">✅ API配置正确</div>
+                        <div class="value">${baseURL}</div>
+                    `;
+          } else {
+            configCheck.className = "test-item error";
+            configCheck.innerHTML = `
+                        <div class="label">❌ API配置错误（仍使用旧地址）</div>
+                        <div class="value">当前: ${baseURL}</div>
+                        <div class="value" style="margin-top:8px;">应该: https://apis.copla.top/div>
+                        <div style="margin-top:12px; color:#dc2626; font-weight:600;">
+                            ⚠️ 需要清除缓存！点击下方按钮清除。
+                        </div>
+                    `;
+          }
+
+          // 显示API地址
+          apiCheck.style.display = "block";
+          apiCheck.className = isCorrect
+            ? "test-item success"
+            : "test-item error";
+          document.getElementById("apiUrl").textContent = baseURL;
+
+          if (isCorrect) {
+            testBtn.style.display = "block";
+          }
+        } else {
+          configCheck.className = "test-item error";
+          configCheck.innerHTML = `
+                    <div class="label">❌ API_CONFIG未加载</div>
+                    <div>请刷新页面重试</div>
+                `;
+        }
+
+        // 检查Token
+        const token =
+          localStorage.getItem("providence_token") ||
+          localStorage.getItem("token");
+        tokenCheck.style.display = "block";
+        if (token) {
+          tokenCheck.className = "test-item success";
+          document.getElementById("tokenValue").textContent =
+            `已登录 (Token长度: ${token.length})`;
+        } else {
+          tokenCheck.className = "test-item warning";
+          document.getElementById("tokenValue").textContent = "未登录";
+        }
+
+        // 检查缓存
+        cacheCheck.style.display = "block";
+        checkCacheStatus();
+      }
+
+      async function checkCacheStatus() {
+        const cacheInfo = document.getElementById("cacheInfo");
+        const cacheCheck = document.getElementById("cacheCheck");
+        let info = [];
+
+        if ("caches" in window) {
+          const names = await caches.keys();
+          if (names.length > 0) {
+            info.push(`Cache Storage: ${names.length} 个缓存`);
+            cacheCheck.className = "test-item warning";
+          } else {
+            info.push(`Cache Storage: 无缓存`);
+          }
+        }
+
+        if ("serviceWorker" in navigator) {
+          const registrations =
+            await navigator.serviceWorker.getRegistrations();
+          if (registrations.length > 0) {
+            info.push(`Service Worker: ${registrations.length} 个`);
+            cacheCheck.className = "test-item warning";
+          } else {
+            info.push(`Service Worker: 无`);
+          }
+        }
+
+        cacheInfo.textContent = info.join("\n");
+      }
+
+      async function testAPI() {
+        const testBtn = document.getElementById("testBtn");
+        testBtn.disabled = true;
+        testBtn.textContent = "🔄 测试中...";
+
+        try {
+          const API_BASE =
+            window.API_CONFIG?.baseURL || "https://apis.copla.top;
+
+          console.log("🧪 测试API连接...");
+          console.log("📍 API地址:", API_BASE);
+
+          const response = await fetch(
+            API_BASE + "/index.php/fund/project/all",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            }
+          );
+
+          console.log("📡 响应状态:", response.status);
+
+          const data = await response.json();
+          console.log("📥 响应数据:", data);
+
+          if (data.code === 1 || data.code === 200) {
+            alert(
+              "✅ API连接成功！\n\n响应数据:\n" +
+                JSON.stringify(data, null, 2).substring(0, 200)
+            );
+          } else {
+            alert("⚠️ API返回错误:\n" + (data.message || data.msg));
+          }
+        } catch (error) {
+          console.error("❌ API测试失败:", error);
+          alert(
+            "❌ API连接失败:\n" +
+              error.message +
+              "\n\n请检查:\n1. API站点是否配置\n2. DNS是否解析\n3. CORS是否配置"
+          );
+        } finally {
+          testBtn.disabled = false;
+          testBtn.textContent = "🧪 测试API连接";
+        }
+      }
+
+      async function clearAllAndReload() {
+        if (!confirm("确定要清除所有缓存吗？")) return;
+
+        try {
+          console.log("🗑️ 清除缓存中...");
+
+          // 清除所有缓存
+          if ("caches" in window) {
+            const names = await caches.keys();
+            for (let name of names) {
+              await caches.delete(name);
+            }
+          }
+
+          if ("serviceWorker" in navigator) {
+            const registrations =
+              await navigator.serviceWorker.getRegistrations();
+            for (let registration of registrations) {
+              await registration.unregister();
+            }
+          }
+
+          localStorage.clear();
+          sessionStorage.clear();
+
+          alert("✅ 缓存已清除！\n页面将在3秒后刷新...");
+
+          setTimeout(() => {
+            location.href = "login.html?t=" + Date.now();
+          }, 3000);
+        } catch (error) {
+          console.error("清除缓存失败:", error);
+          alert("清除缓存失败: " + error.message);
+        }
+      }
+
+      function goToLogin() {
+        location.href = "login.html?t=" + Date.now();
+      }
+    </script>
+  </body>
+</html>

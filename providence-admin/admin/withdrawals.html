@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提现审核管理</title>
+    <link rel="stylesheet" href="../css/admin.css?v=1762820000">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'PingFang SC', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #f5f7fa;
+            padding: 20px;
+        }
+
+        .page-header {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 16px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 8px;
+            color: #fff;
+        }
+
+        .stat-card.warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .stat-card.success {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .filter-bar {
+            background: #fff;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 150px;
+        }
+
+        .filter-btn {
+            padding: 8px 20px;
+            background: #007AFF;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .filter-btn:hover {
+            background: #0051D5;
+        }
+
+        .withdrawal-list {
+            background: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .withdrawal-item {
+            padding: 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: grid;
+            grid-template-columns: 1fr 2fr 1fr;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .withdrawal-item:last-child {
+            border-bottom: none;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .username {
+            font-size: 16px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .user-meta {
+            font-size: 13px;
+            color: #86868b;
+        }
+
+        .withdrawal-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .detail-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-size: 12px;
+            color: #86868b;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #1d1d1f;
+        }
+
+        .detail-value.amount {
+            font-size: 18px;
+            color: #f5576c;
+        }
+
+        .actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: #34C759;
+            color: #fff;
+        }
+
+        .btn-approve:hover {
+            background: #28A745;
+        }
+
+        .btn-reject {
+            background: #FF3B30;
+            color: #fff;
+        }
+
+        .btn-reject:hover {
+            background: #D32F2F;
+        }
+
+        .btn-detail {
+            background: #007AFF;
+            color: #fff;
+        }
+
+        .btn-detail:hover {
+            background: #0051D5;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-approved {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-rejected {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-paid {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #86868b;
+        }
+
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            background: #fff;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .page-btn {
+            padding: 8px 16px;
+            border: 1px solid #e0e0e0;
+            background: #fff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .page-btn.active {
+            background: #007AFF;
+            color: #fff;
+            border-color: #007AFF;
+        }
+
+        .page-btn:hover:not(.active) {
+            background: #f5f5f5;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #fff;
+            border-radius: 12px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+        }
+
+        .modal-body {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #1d1d1f;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+
+        .btn-cancel {
+            background: #f5f5f5;
+            color: #1d1d1f;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-header">
+        <h1 class="page-title">提现审核管理</h1>
+        <div class="stats-row">
+            <div class="stat-card warning">
+                <div class="stat-label">待审核</div>
+                <div class="stat-value" id="pendingCount">0</div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-label">今日通过</div>
+                <div class="stat-value" id="approvedCount">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">今日金额</div>
+                <div class="stat-value" id="totalAmount">¥0</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="filter-bar">
+        <select class="filter-select" id="statusFilter">
+            <option value="">全部状态</option>
+            <option value="0" selected>待审核</option>
+            <option value="1">已通过</option>
+            <option value="2">已拒绝</option>
+            <option value="3">已打款</option>
+        </select>
+        <select class="filter-select" id="currencyFilter">
+            <option value="">全部币种</option>
+            <option value="CNY">CNY</option>
+            <option value="USDT">USDT</option>
+        </select>
+        <input type="text" class="filter-input" id="keywordInput" placeholder="搜索用户名/手机号/订单号">
+        <button class="filter-btn" onclick="loadWithdrawals(1)">搜索</button>
+    </div>
+
+    <div class="withdrawal-list" id="withdrawalList">
+        <div class="empty-state">加载中...</div>
+    </div>
+
+    <div class="pagination" id="pagination"></div>
+
+    <!-- 审核Modal -->
+    <div class="modal" id="approveModal">
+        <div class="modal-content">
+            <div class="modal-header">审核通过</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">实际打款金额</label>
+                    <input type="number" class="form-input" id="actualAmount" step="0.01">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">备注（选填）</label>
+                    <textarea class="form-input" id="approveRemark" rows="3"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeModal('approveModal')">取消</button>
+                <button class="btn btn-approve" onclick="confirmApprove()">确认通过</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 拒绝Modal -->
+    <div class="modal" id="rejectModal">
+        <div class="modal-content">
+            <div class="modal-header">审核拒绝</div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">拒绝原因</label>
+                    <textarea class="form-input" id="rejectReason" rows="4" placeholder="请输入拒绝原因..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-cancel" onclick="closeModal('rejectModal')">取消</button>
+                <button class="btn btn-reject" onclick="confirmReject()">确认拒绝</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentWithdrawalId = null;
+        let currentPage = 1;
+
+        async function loadWithdrawals(page = 1) {
+            currentPage = page;
+            const status = document.getElementById('statusFilter').value;
+            const currency = document.getElementById('currencyFilter').value;
+            const keyword = document.getElementById('keywordInput').value;
+
+            try {
+                const params = new URLSearchParams();
+                params.append('page', page);
+                params.append('limit', 20);
+                if (status) params.append('status', status);
+                if (currency) params.append('currency', currency);
+                if (keyword) params.append('keyword', keyword);
+
+                const response = await fetch(`../api/index.php/admin/withdrawals?${params.toString()}`);
+                const data = await response.json();
+
+                if (data.code === 1 && data.data) {
+                    renderWithdrawals(data.data.list);
+                    renderPagination(data.data.pagination);
+                    updateStats(data.data.stats);
+                } else {
+                    document.getElementById('withdrawalList').innerHTML =
+                        '<div class="empty-state">加载失败: ' + (data.message || '未知错误') + '</div>';
+                }
+            } catch (error) {
+                console.error('加载提现记录失败:', error);
+                document.getElementById('withdrawalList').innerHTML =
+                    '<div class="empty-state">网络请求失败</div>';
+            }
+        }
+
+        function renderWithdrawals(list) {
+            const container = document.getElementById('withdrawalList');
+
+            if (!list || list.length === 0) {
+                container.innerHTML = '<div class="empty-state">暂无提现记录</div>';
+                return;
+            }
+
+            container.innerHTML = list.map(item => `
+                <div class="withdrawal-item">
+                    <div class="user-info">
+                        <div class="username">${item.username || item.phone}</div>
+                        <div class="user-meta">ID: ${item.user_id}</div>
+                        <div class="user-meta">${item.phone || '未绑定手机'}</div>
+                        <span class="status-badge status-${getStatusClass(item.status)}">${getStatusText(item.status)}</span>
+                    </div>
+                    <div class="withdrawal-details">
+                        <div class="detail-item">
+                            <span class="detail-label">提现金额</span>
+                            <span class="detail-value amount">¥${parseFloat(item.amount).toFixed(2)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">手续费</span>
+                            <span class="detail-value">¥${parseFloat(item.fee || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">实际到账</span>
+                            <span class="detail-value">¥${parseFloat(item.actual_amount || item.amount).toFixed(2)}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">币种</span>
+                            <span class="detail-value">${item.currency}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">订单号</span>
+                            <span class="detail-value">${item.order_no}</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">申请时间</span>
+                            <span class="detail-value">${item.created_at}</span>
+                        </div>
+                    </div>
+                    <div class="actions">
+                        ${item.status == 0 ? `
+                            <button class="btn btn-approve" onclick="openApprove(${item.id}, ${item.amount})">通过</button>
+                            <button class="btn btn-reject" onclick="openReject(${item.id})">拒绝</button>
+                        ` : ''}
+                        <button class="btn btn-detail" onclick="viewDetail(${item.id})">详情</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderPagination(pagination) {
+            if (!pagination) return;
+
+            const container = document.getElementById('pagination');
+            let html = '';
+
+            if (pagination.current_page > 1) {
+                html += `<button class="page-btn" onclick="loadWithdrawals(${pagination.current_page - 1})">上一页</button>`;
+            }
+
+            for (let i = 1; i <= pagination.total_pages; i++) {
+                if (i === pagination.current_page) {
+                    html += `<button class="page-btn active">${i}</button>`;
+                } else if (i === 1 || i === pagination.total_pages || Math.abs(i - pagination.current_page) <= 2) {
+                    html += `<button class="page-btn" onclick="loadWithdrawals(${i})">${i}</button>`;
+                } else if (i === pagination.current_page - 3 || i === pagination.current_page + 3) {
+                    html += `<button class="page-btn" disabled>...</button>`;
+                }
+            }
+
+            if (pagination.current_page < pagination.total_pages) {
+                html += `<button class="page-btn" onclick="loadWithdrawals(${pagination.current_page + 1})">下一页</button>`;
+            }
+
+            container.innerHTML = html;
+        }
+
+        function updateStats(stats) {
+            if (!stats) return;
+            document.getElementById('pendingCount').textContent = stats.pending || 0;
+            document.getElementById('approvedCount').textContent = stats.approved_today || 0;
+            document.getElementById('totalAmount').textContent = '¥' + (stats.total_amount_today || 0);
+        }
+
+        function getStatusClass(status) {
+            const map = { 0: 'pending', 1: 'approved', 2: 'rejected', 3: 'paid' };
+            return map[status] || 'pending';
+        }
+
+        function getStatusText(status) {
+            const map = { 0: '待审核', 1: '已通过', 2: '已拒绝', 3: '已打款' };
+            return map[status] || '未知';
+        }
+
+        function openApprove(id, amount) {
+            currentWithdrawalId = id;
+            document.getElementById('actualAmount').value = amount;
+            document.getElementById('approveModal').classList.add('show');
+        }
+
+        function openReject(id) {
+            currentWithdrawalId = id;
+            document.getElementById('rejectReason').value = '';
+            document.getElementById('rejectModal').classList.add('show');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).classList.remove('show');
+        }
+
+        async function confirmApprove() {
+            const actualAmount = document.getElementById('actualAmount').value;
+            const remark = document.getElementById('approveRemark').value;
+
+            if (!actualAmount || parseFloat(actualAmount) <= 0) {
+                alert('请输入有效的打款金额');
+                return;
+            }
+
+            try {
+                const response = await fetch('../api/index.php/admin/withdraw-approve', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: currentWithdrawalId,
+                        actual_amount: actualAmount,
+                        remark: remark
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.code === 1) {
+                    alert('审核通过成功');
+                    closeModal('approveModal');
+                    loadWithdrawals(currentPage);
+                } else {
+                    alert('操作失败: ' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('审核失败:', error);
+                alert('网络请求失败');
+            }
+        }
+
+        async function confirmReject() {
+            const reason = document.getElementById('rejectReason').value.trim();
+
+            if (!reason) {
+                alert('请输入拒绝原因');
+                return;
+            }
+
+            try {
+                const response = await fetch('../api/index.php/admin/withdraw-reject', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: currentWithdrawalId,
+                        reason: reason
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.code === 1) {
+                    alert('已拒绝提现申请');
+                    closeModal('rejectModal');
+                    loadWithdrawals(currentPage);
+                } else {
+                    alert('操作失败: ' + (data.message || '未知错误'));
+                }
+            } catch (error) {
+                console.error('拒绝失败:', error);
+                alert('网络请求失败');
+            }
+        }
+
+        function viewDetail(id) {
+            // TODO: 打开详情页面或Modal
+            console.log('查看详情:', id);
+        }
+
+        // 初始化加载
+        loadWithdrawals(1);
+
+        // 自动刷新（每30秒）
+        setInterval(() => {
+            loadWithdrawals(currentPage);
+        }, 30000);
+    </script>
+</body>
+
+</html>

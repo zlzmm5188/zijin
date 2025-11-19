@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+    <title>我的 | PROVIDENCE EQUITY PARTNERS</title>
+    <link rel="icon" href="../favicon.ico">
+    <link rel="stylesheet" href="styles.css?v=20251025092513_PROFILE_COMPACT">
+</head>
+<body class="page-profile">
+<div id="app">
+    <header class="hero-simple" style="background: linear-gradient(180deg, #0e2b44, #091c2e);">
+        <div class="hero-top">
+            <div class="logo-full">
+                <img src="img/logo.png" alt="PROVIDENCE" class="logo-img-small" onerror="this.style.display='none'"/>
+            </div>
+            <div class="brand"><span class="b1">个人中心</span></div>
+            <div class="settings-icon">⚙️</div>
+        </div>
+    </header>
+
+    <main class="content-profile">
+        <!-- VIP名片 -->
+        <div class="profile-vip-section">
+            <div class="profile-header profile-header-vip" data-vip-level="3">
+                <div class="profile-info-left">
+                    <div class="profile-name">Providence</div>
+                    <div class="profile-id">ID: 10847392</div>
+                </div>
+            </div>
+
+            <!-- 升级进度卡片（部分遮盖VIP卡） -->
+            <div class="upgrade-card-overlay">
+                <div class="upgrade-card-inner">
+                    <div class="upgrade-header">
+                        <span class="upgrade-label">距离升级 <strong id="nextLevelName">VIP 4</strong></span>
+                        <span class="upgrade-percent" id="upgradePercent">31.25%</span>
+                    </div>
+                    <div class="upgrade-progress-bar">
+                        <div class="upgrade-progress-fill" id="upgradeProgressBar" style="width: 31.25%"></div>
+                    </div>
+                    <div class="upgrade-footer">
+                        <span class="current-invest" id="currentInvest">250,000元</span>
+                        <span class="need-invest">还需 <strong id="needInvest">550,000元</strong></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 资产概览 -->
+        <div class="asset-overview-grid">
+            <div class="asset-card">
+                <div class="asset-icon">💰</div>
+                <div class="asset-label">总资产</div>
+                <div class="asset-amount">2,847,392.00</div>
+            </div>
+            <div class="asset-card">
+                <div class="asset-icon">📈</div>
+                <div class="asset-label">总收益</div>
+                <div class="asset-amount green">+184,293.50</div>
+            </div>
+            <div class="asset-card">
+                <div class="asset-icon">💎</div>
+                <div class="asset-label">持有产品</div>
+                <div class="asset-amount">12个</div>
+            </div>
+        </div>
+
+        <!-- 快捷操作 -->
+        <div class="quick-actions">
+            <div class="action-grid">
+                <a href="deposit.html" class="action-item">
+                    <div class="action-icon deposit">💳</div>
+                    <div class="action-text">充值</div>
+                </a>
+                <a href="withdraw.html" class="action-item">
+                    <div class="action-icon withdraw">💸</div>
+                    <div class="action-text">提现</div>
+                </a>
+                <a href="profit-calendar.html" class="action-item">
+                    <div class="action-icon record">📊</div>
+                    <div class="action-text">收益明细</div>
+                </a>
+                <a href="daily-checkin.html" class="action-item">
+                    <div class="action-icon team">✅</div>
+                    <div class="action-text">每日签到</div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 菜单区域 -->
+        <div class="menu-section">
+            <div class="menu-group">
+                <div class="menu-title">账户管理</div>
+                <a href="bank-cards.html" class="menu-item">
+                    <span class="menu-icon">🏦</span>
+                    <span class="menu-label">银行卡管理</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <div class="menu-item">
+                    <span class="menu-icon">✅</span>
+                    <span class="menu-label">实名认证</span>
+                    <span class="menu-badge verified">已认证</span>
+                    <span class="menu-arrow">›</span>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-icon">🔐</span>
+                    <span class="menu-label">支付密码</span>
+                    <span class="menu-arrow">›</span>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-icon">🔑</span>
+                    <span class="menu-label">登录密码</span>
+                    <span class="menu-arrow">›</span>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <div class="menu-title">投资管理</div>
+                <a href="my-investments.html" class="menu-item">
+                    <span class="menu-icon">💼</span>
+                    <span class="menu-label">我的投资</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="ribao.html" class="menu-item">
+                    <span class="menu-icon">💰</span>
+                    <span class="menu-label">日利宝</span>
+                    <span class="menu-badge hot">理财</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="shop.html" class="menu-item">
+                    <span class="menu-icon">🎁</span>
+                    <span class="menu-label">积分兑换</span>
+                    <span class="menu-badge hot">NEW</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="profit-calendar.html" class="menu-item">
+                    <span class="menu-icon">📊</span>
+                    <span class="menu-label">收益明细</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+                <a href="vip-level.html" class="menu-item">
+                    <span class="menu-icon">🏆</span>
+                    <span class="menu-label">会员等级</span>
+                    <span class="menu-arrow">›</span>
+                </a>
+            </div>
+
+            <div class="menu-group">
+                <div class="menu-title">其他功能</div>
+                <div class="menu-item">
+                    <span class="menu-icon">🌐</span>
+                    <span class="menu-label">选择语言</span>
+                    <span class="menu-text">简体中文</span>
+                    <span class="menu-arrow">›</span>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-icon">📞</span>
+                    <span class="menu-label">联系客服</span>
+                    <span class="menu-arrow">›</span>
+                </div>
+                <div class="menu-item">
+                    <span class="menu-icon">ℹ️</span>
+                    <span class="menu-label">关于我们</span>
+                    <span class="menu-arrow">›</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="logout-section">
+            <button class="btn-logout">退出登录</button>
+        </div>
+    </main>
+
+    <nav class="tabbar" id="tabbar">
+        <a class="tab" data-tab="home" href="index.html">
+            <div class="ico ico-home"></div>
+            <div class="txt">首页</div>
+        </a>
+        <a class="tab" data-tab="market">
+            <div class="ico ico-finance"></div>
+            <div class="txt">数据</div>
+        </a>
+        <a class="tab" data-tab="project">
+            <div class="ico ico-market"></div>
+            <div class="txt">项目</div>
+        </a>
+        <a class="tab" data-tab="news" href="messages.html">
+            <div class="ico dot ico-message"></div>
+            <div class="txt">消息</div>
+        </a>
+        <a class="tab active" data-tab="me" href="profile.html">
+            <div class="ico ico-me"></div>
+            <div class="txt">我的</div>
+        </a>
+    </nav>
+</div>
+<script src="app.js?v=20251024213456"></script>
+<script src="profile.js?v=20251025085845_9605"></script>
+</body>
+</html>

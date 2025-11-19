@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>日利宝明细 - Providence</title>
+<link rel="stylesheet" href="styles.css?v=1762817100">
+<style>
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden}
+
+/* 黑金配色背景 */
+body{
+    background:linear-gradient(180deg, #1a1a1a 0%, #000 100%);
+    position:relative;
+}
+
+/* iOS导航栏 - 黑金主题 */
+.navbar{
+    background:rgba(0,0,0,0.95);
+    backdrop-filter:blur(20px);
+    padding:env(safe-area-inset-top) 0 0;
+    border-bottom:0.5px solid rgba(212,175,55,0.2);
+    position:sticky;
+    top:0;
+    z-index:100;
+}
+.nav-content{
+    height:44px;
+    display:flex;
+    align-items:center;
+    padding:0 16px;
+}
+.nav-back{
+    font-size:17px;
+    color:#d4af37;
+    display:flex;
+    align-items:center;
+    gap:4px;
+    cursor:pointer;
+}
+.nav-title{
+    flex:1;
+    text-align:center;
+    font-size:17px;
+    font-weight:600;
+    color:#d4af37;
+    letter-spacing:0.5px;
+}
+
+/* 内容区 */
+.content{
+    padding:16px 16px calc(env(safe-area-inset-bottom) + 70px);
+    height:calc(100vh - 44px - env(safe-area-inset-top));
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+}
+
+/* 记录列表 */
+.record-list{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+}
+
+/* 日期分组 */
+.date-group{
+    margin-bottom:8px;
+}
+.date-header{
+    font-size:13px;
+    color:rgba(212,175,55,0.7);
+    padding:8px 12px;
+    letter-spacing:0.5px;
+}
+
+/* 记录卡片 */
+.record-card{
+    background:linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+    border-radius:12px;
+    padding:16px;
+    border:1px solid rgba(212,175,55,0.2);
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    box-shadow:0 4px 12px rgba(0,0,0,0.3);
+}
+
+.record-left{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.record-icon{
+    font-size:24px;
+    width:40px;
+    height:40px;
+    background:rgba(212,175,55,0.1);
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:1px solid rgba(212,175,55,0.2);
+}
+
+.record-info{
+    display:flex;
+    flex-direction:column;
+    gap:4px;
+}
+
+.record-type{
+    font-size:15px;
+    color:#fff;
+    font-weight:600;
+}
+
+.record-time{
+    font-size:12px;
+    color:rgba(255,255,255,0.5);
+}
+
+.record-amount{
+    font-size:18px;
+    font-weight:700;
+    letter-spacing:-0.5px;
+}
+
+.record-amount.in{
+    color:#d4af37;
+}
+
+.record-amount.out{
+    color:rgba(255,255,255,0.7);
+}
+
+/* 空状态 */
+.empty{
+    text-align:center;
+    padding:80px 20px;
+    color:rgba(255,255,255,0.5);
+}
+
+.empty-icon{
+    font-size:64px;
+    margin-bottom:16px;
+    opacity:0.5;
+}
+
+.empty-text{
+    font-size:14px;
+}
+
+/* iOS Tabbar */
+.tabbar{
+    position:fixed;
+    bottom:0;
+    left:0;
+    right:0;
+    background:rgba(0,0,0,0.95);
+    backdrop-filter:blur(20px);
+    border-top:0.5px solid rgba(212,175,55,0.2);
+    padding:8px 0 calc(env(safe-area-inset-bottom) + 8px);
+    display:flex;
+    z-index:100;
+}
+.tab{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:4px;
+    text-decoration:none;
+    color:rgba(255,255,255,0.5);
+}
+.tab-icon{font-size:24px}
+.tab-label{font-size:10px}
+.tab.active{color:#d4af37}
+</style>
+</head>
+<body>
+
+<!-- iOS导航栏 -->
+<div class="navbar">
+    <div class="nav-content">
+        <div class="nav-back" onclick="history.back()">
+            <span>‹</span>
+            <span>返回</span>
+        </div>
+        <div class="nav-title">日利宝明细</div>
+    </div>
+</div>
+
+<!-- 内容区 -->
+<div class="content">
+    <div class="record-list" id="recordList">
+        <!-- 模拟数据 -->
+        <div class="date-group">
+            <div class="date-header">2025年11月10日</div>
+            <div class="record-card">
+                <div class="record-left">
+                    <div class="record-icon">💰</div>
+                    <div class="record-info">
+                        <div class="record-type">收益结算</div>
+                        <div class="record-time">09:00:00</div>
+                    </div>
+                </div>
+                <div class="record-amount in">+15.00</div>
+            </div>
+        </div>
+
+        <div class="date-group">
+            <div class="date-header">2025年11月09日</div>
+            <div class="record-card">
+                <div class="record-left">
+                    <div class="record-icon">📥</div>
+                    <div class="record-info">
+                        <div class="record-type">转入日利宝</div>
+                        <div class="record-time">14:30:25</div>
+                    </div>
+                </div>
+                <div class="record-amount in">+10,000.00</div>
+            </div>
+            <div class="record-card">
+                <div class="record-left">
+                    <div class="record-icon">💰</div>
+                    <div class="record-info">
+                        <div class="record-type">收益结算</div>
+                        <div class="record-time">09:00:00</div>
+                    </div>
+                </div>
+                <div class="record-amount in">+15.00</div>
+            </div>
+        </div>
+
+        <div class="date-group">
+            <div class="date-header">2025年11月08日</div>
+            <div class="record-card">
+                <div class="record-left">
+                    <div class="record-icon">📤</div>
+                    <div class="record-info">
+                        <div class="record-type">转出日利宝</div>
+                        <div class="record-time">16:45:12</div>
+                    </div>
+                </div>
+                <div class="record-amount out">-5,000.00</div>
+            </div>
+            <div class="record-card">
+                <div class="record-left">
+                    <div class="record-icon">💰</div>
+                    <div class="record-info">
+                        <div class="record-type">收益结算</div>
+                        <div class="record-time">09:00:00</div>
+                    </div>
+                </div>
+                <div class="record-amount in">+22.50</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- iOS Tabbar -->
+<div class="tabbar">
+    <a class="tab" href="index.html">
+        <div class="tab-icon">🏠</div>
+        <div class="tab-label">首页</div>
+    </a>
+    <a class="tab" href="market.html">
+        <div class="tab-icon">📊</div>
+        <div class="tab-label">数据</div>
+    </a>
+    <a class="tab" href="projects.html">
+        <div class="tab-icon">💼</div>
+        <div class="tab-label">项目</div>
+    </a>
+    <a class="tab" href="messages.html">
+        <div class="tab-icon">💬</div>
+        <div class="tab-label">消息</div>
+    </a>
+    <a class="tab" href="profile.html">
+        <div class="tab-icon">👤</div>
+        <div class="tab-label">我的</div>
+    </a>
+</div>
+
+<script>
+// ==========================================
+// 页面2: ribao-history.html - 日利宝明细
+// ==========================================
+
+console.log('📜 日利宝明细页初始化');
+
+function waitForAPI() {
+    return new Promise((resolve) => {
+        if (window.API_CONFIG) resolve();
+        else {
+            const check = setInterval(() => {
+                if (window.API_CONFIG) {
+                    clearInterval(check);
+                    resolve();
+                }
+            }, 50);
+            setTimeout(() => { clearInterval(check); resolve(); }, 3000);
+        }
+    });
+}
+
+async function loadRecords() {
+    try {
+        await waitForAPI();
+        
+        const token = localStorage.getItem('providence_token');
+        if (!token) {
+            console.warn('⚠️ 未登录');
+            showEmptyState();
+            return;
+        }
+        
+        const API_BASE = window.API_CONFIG?.baseURL || 'https://api.frevix.top';
+        const url = `${API_BASE}/user/ribao/records`;
+        
+        console.log('📡 请求日利宝记录:', url);
+        
+        const res = await fetch(url, {
+            headers: { 'token': token }
+        });
+        const data = await res.json();
+        
+        console.log('📦 日利宝记录响应:', data);
+        
+        if ((data.code === 1 || data.code === 200) && data.data) {
+            renderRecords(data.data);
+        } else {
+            console.error('❌ API错误:', data.message);
+            showEmptyState();
+        }
+    } catch (error) {
+        console.error('❌ 加载记录失败:', error);
+        showEmptyState();
+    }
+}
+
+function renderRecords(records) {
+    const container = document.getElementById('recordList');
+    if (!container) {
+        console.error('❌ 未找到记录容器');
+        return;
+    }
+    
+    if (!records || records.length === 0) {
+        showEmptyState();
+        return;
+    }
+    
+    container.innerHTML = '';
+    
+    records.forEach(record => {
+        const item = document.createElement('div');
+        item.className = 'record-item';
+        
+        const type = record.type === 'in' ? '转入' : '转出';
+        const typeClass = record.type === 'in' ? 'type-in' : 'type-out';
+        const amountPrefix = record.type === 'in' ? '+' : '-';
+        
+        const header = document.createElement('div');
+        header.className = 'record-header';
+        header.innerHTML = '<span class="record-type ' + typeClass + '">' + type + '</span><span class="record-time">' + formatDate(record.created_at) + '</span>';
+        
+        const body = document.createElement('div');
+        body.className = 'record-body';
+        body.innerHTML = '<span class="record-amount">' + amountPrefix + '¥' + parseFloat(record.amount || 0).toFixed(2) + '</span><span class="record-status">' + getStatusText(record.status) + '</span>';
+        
+        item.appendChild(header);
+        item.appendChild(body);
+        container.appendChild(item);
+    });
+    
+    console.log('✅ 已渲染', records.length, '条记录');
+}
+
+function showEmptyState() {
+    const container = document.getElementById('recordList');
+    if (container) {
+        const emptyDiv = document.createElement('div');
+        emptyDiv.style.cssText = 'padding:60px 20px;text-align:center;color:#94a3b8;';
+        emptyDiv.innerHTML = '<div style="font-size:48px;margin-bottom:16px;">📝</div><div style="font-size:16px;">暂无记录</div>';
+        container.innerHTML = '';
+        container.appendChild(emptyDiv);
+    }
+}
+
+function formatDate(dateStr) {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diff = now - date;
+    const hours = diff / (1000 * 60 * 60);
+    
+    if (hours < 24) {
+        return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+    } else {
+        return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' });
+    }
+}
+
+function getStatusText(status) {
+    const statusMap = {
+        '0': '处理中',
+        '1': '成功',
+        '-1': '失败'
+    };
+    return statusMap[status] || '未知';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadRecords();
+});
+
+console.log('✅ 日利宝明细页脚本加载完成');
+
+</script></body></html>

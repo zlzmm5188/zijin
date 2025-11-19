@@ -1,0 +1,23 @@
+{
+  "name": "PROVIDENCE",
+  "short_name": "PROVIDENCE",
+  "description": "PROVIDENCE Equity Partners",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0e2b44",
+  "theme_color": "#0e2b44",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "img/logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "img/logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
+

@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订单管理 - Providence</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #f5f7fa;
+            padding: 24px;
+        }
+
+        .page-header {
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .page-subtitle {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2c3e50;
+        }
+
+        .stat-value.primary {
+            color: #3498db;
+        }
+
+        .stat-value.success {
+            color: #27ae60;
+        }
+
+        .stat-value.warning {
+            color: #f39c12;
+        }
+
+        /* 筛选区域 */
+        .filter-bar {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 24px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .filter-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .filter-label {
+            font-size: 13px;
+            color: #7f8c8d;
+            font-weight: 500;
+        }
+
+        .filter-select,
+        .filter-input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            min-width: 120px;
+        }
+
+        .filter-input {
+            min-width: 200px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2980b9;
+        }
+
+        /* 表格 */
+        .table-container {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th,
+        .table td {
+            padding: 14px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e8e8e8;
+        }
+
+        .table th {
+            background: #1e293b;
+            font-weight: 700;
+            font-size: 16px;
+            color: #ffffff;
+            white-space: nowrap;
+            padding: 18px 14px;
+            letter-spacing: 0.5px;
+            border-bottom: 3px solid #334155;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .table td {
+            font-size: 14px;
+            color: #2c3e50;
+        }
+
+        .table tr:hover {
+            background: #f9fafb;
+        }
+
+        /* 徽章 */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-warning {
+            background: #fff3cd;
+            color: #f39c12;
+        }
+
+        .badge-primary {
+            background: #d1ecf1;
+            color: #3498db;
+        }
+
+        .badge-success {
+            background: #d4edda;
+            color: #27ae60;
+        }
+
+        .badge-danger {
+            background: #f8d7da;
+            color: #e74c3c;
+        }
+
+        .badge-secondary {
+            background: #e2e3e5;
+            color: #6c757d;
+        }
+
+        /* 按钮链接 */
+        .btn-link {
+            color: #3498db;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            background: none;
+            border: none;
+            padding: 0;
+        }
+
+        .btn-link:hover {
+            text-decoration: underline;
+        }
+
+        /* 分页 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e8e8e8;
+        }
+
+        .pagination button {
+            padding: 6px 12px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .pagination button:hover:not(:disabled) {
+            background: #f5f7fa;
+            border-color: #3498db;
+            color: #3498db;
+        }
+
+        .pagination button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .pagination .page-info {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin: 0 12px;
+        }
+
+        /* 加载状态 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #7f8c8d;
+        }
+
+        .empty {
+            text-align: center;
+            padding: 60px 20px;
+            color: #7f8c8d;
+        }
+
+        .empty-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.3;
+        }
+
+        /* 进度条 */
+        .progress-bar {
+            height: 6px;
+            background: #e8e8e8;
+            border-radius: 3px;
+            overflow: hidden;
+            margin-top: 4px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #27ae60;
+            transition: width 0.3s;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="page-header">
+        <h1 class="page-title">📦 订单管理</h1>
+        <p class="page-subtitle">查看和管理所有投资订单</p>
+    </div>
+
+    <!-- 统计卡片 -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">总投资额</div>
+            <div class="stat-value primary" id="totalInvest">¥0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">总收益</div>
+            <div class="stat-value success" id="totalProfit">¥0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">进行中订单</div>
+            <div class="stat-value" id="runningCount">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">已完成订单</div>
+            <div class="stat-value warning" id="finishedCount">0</div>
+        </div>
+    </div>
+
+    <!-- 筛选区域 -->
+    <div class="filter-bar">
+        <div class="filter-row">
+            <div class="filter-item">
+                <label class="filter-label">状态</label>
+                <select class="filter-select" id="statusFilter">
+                    <option value="-1">全部状态</option>
+                    <option value="1">进行中</option>
+                    <option value="2">已完成</option>
+                    <option value="3">已取消</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label class="filter-label">币种</label>
+                <select class="filter-select" id="currencyFilter">
+                    <option value="">全部币种</option>
+                    <option value="CNY">CNY</option>
+                    <option value="USDT">USDT</option>
+                </select>
+            </div>
+            <div class="filter-item">
+                <label class="filter-label">开始日期</label>
+                <input type="date" class="filter-input" id="startDateInput" style="min-width: 150px;">
+            </div>
+            <div class="filter-item">
+                <label class="filter-label">结束日期</label>
+                <input type="date" class="filter-input" id="endDateInput" style="min-width: 150px;">
+            </div>
+            <div class="filter-item">
+                <label class="filter-label">搜索</label>
+                <input type="text" class="filter-input" id="keywordInput" placeholder="用户名/UID/项目名">
+            </div>
+            <div class="filter-item" style="margin-top: 22px;">
+                <button class="btn btn-primary" onclick="searchOrders()">🔍 搜索</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 订单列表 -->
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>订单号</th>
+                    <th>用户</th>
+                    <th>项目</th>
+                    <th>投资金额</th>
+                    <th>周期</th>
+                    <th>收益率</th>
+                    <th>预期收益</th>
+                    <th>已收益</th>
+                    <th>进度</th>
+                    <th>状态</th>
+                    <th>投资时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="orderList">
+                <tr>
+                    <td colspan="12" class="loading">加载中...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <!-- 分页 -->
+        <div class="pagination" id="pagination" style="display: none;">
+            <button onclick="prevPage()" id="prevBtn">上一页</button>
+            <span class="page-info" id="pageInfo">第 1 页 / 共 1 页</span>
+            <button onclick="nextPage()" id="nextBtn">下一页</button>
+        </div>
+    </div>
+
+    <script>
+        let currentPage = 1;
+        let totalPages = 1;
+
+        // 页面加载时获取订单列表
+        window.onload = function () {
+            loadOrders();
+        };
+
+        // 加载订单列表
+        async function loadOrders(page = 1) {
+            const status = document.getElementById('statusFilter').value;
+            const currency = document.getElementById('currencyFilter').value;
+            const keyword = document.getElementById('keywordInput').value.trim();
+            const startDate = document.getElementById('startDateInput').value;
+            const endDate = document.getElementById('endDateInput').value;
+
+            const params = new URLSearchParams();
+            params.append('page', page);
+            params.append('limit', 20);
+            if (status !== '-1') params.append('status', status);
+            if (currency) params.append('currency', currency);
+            if (keyword) params.append('keyword', keyword);
+            if (startDate) params.append('start_date', startDate);
+            if (endDate) params.append('end_date', endDate);
+
+            try {
+                const response = await fetch(`../api/admin/orders?${params.toString()}`);
+
+                // 检查响应是否为JSON
+                const contentType = response.headers.get("content-type");
+                if (!contentType || !contentType.includes("application/json")) {
+                    const text = await response.text();
+                    console.error('API返回非JSON响应:', text);
+                    document.getElementById('orderList').innerHTML = '<tr><td colspan="12" class="empty">API返回错误，请检查控制台</td></tr>';
+                    return;
+                }
+
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    renderOrders(result.data.list);
+                    renderPagination(result.data.pagination);
+                    renderStats(result.data.stats);
+                } else {
+                    alert('加载失败：' + result.message);
+                    document.getElementById('orderList').innerHTML = '<tr><td colspan="12" class="empty">' + result.message + '</td></tr>';
+                }
+            } catch (error) {
+                console.error('加载订单失败:', error);
+                document.getElementById('orderList').innerHTML = '<tr><td colspan="12" class="empty">网络请求失败，请检查API路径和权限</td></tr>';
+            }
+        }
+
+        // 渲染订单列表
+        function renderOrders(orders) {
+            const tbody = document.getElementById('orderList');
+
+            if (orders.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="12" class="empty">
+                            <div class="empty-icon">📦</div>
+                            <div>暂无订单数据</div>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+
+            tbody.innerHTML = orders.map(order => `
+                <tr>
+                    <td><small>${order.order_no}</small></td>
+                    <td>
+                        <div>${order.username}</div>
+                        <small style="color: #7f8c8d;">${order.uid}</small>
+                    </td>
+                    <td>
+                        <div>${order.project_title || '未知项目'}</div>
+                        <small style="color: #7f8c8d;">${order.project_category || ''}</small>
+                    </td>
+                    <td><strong style="color: #3498db;">${order.currency} ${formatMoney(order.invest_amount)}</strong></td>
+                    <td>${order.cycle_days}天</td>
+                    <td><span style="color: #27ae60;">${order.total_rate}%</span></td>
+                    <td style="color: #27ae60;">${order.currency} ${formatMoney(order.expected_profit)}</td>
+                    <td style="color: #f39c12;">${order.currency} ${formatMoney(order.profit)}</td>
+                    <td style="min-width: 100px;">
+                        <div>${order.progress}%</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${order.progress}%"></div>
+                        </div>
+                    </td>
+                    <td><span class="badge badge-${order.status_color}">${order.status_text}</span></td>
+                    <td><small>${formatDateTime(order.created_at)}</small></td>
+                    <td>
+                        <button class="btn-link" onclick="viewDetail(${order.id})">详情</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // 渲染分页
+        function renderPagination(pagination) {
+            currentPage = pagination.page;
+            totalPages = pagination.pages;
+
+            document.getElementById('pageInfo').textContent = `第 ${pagination.page} 页 / 共 ${pagination.pages} 页 (共 ${pagination.total} 条)`;
+            document.getElementById('prevBtn').disabled = pagination.page <= 1;
+            document.getElementById('nextBtn').disabled = pagination.page >= pagination.pages;
+            document.getElementById('pagination').style.display = 'flex';
+        }
+
+        // 渲染统计
+        function renderStats(stats) {
+            document.getElementById('totalInvest').textContent = '¥' + formatMoney(stats.total_invest);
+            document.getElementById('totalProfit').textContent = '¥' + formatMoney(stats.total_profit);
+            document.getElementById('runningCount').textContent = stats.running_count;
+            document.getElementById('finishedCount').textContent = stats.finished_count;
+        }
+
+        // 搜索订单
+        function searchOrders() {
+            currentPage = 1;
+            loadOrders(1);
+        }
+
+        // 上一页
+        function prevPage() {
+            if (currentPage > 1) {
+                loadOrders(currentPage - 1);
+            }
+        }
+
+        // 下一页
+        function nextPage() {
+            if (currentPage < totalPages) {
+                loadOrders(currentPage + 1);
+            }
+        }
+
+        // 查看详情
+        function viewDetail(orderId) {
+            window.location.href = `order-detail.html?id=${orderId}`;
+        }
+
+        // 格式化金额
+        function formatMoney(amount) {
+            return parseFloat(amount).toLocaleString('zh-CN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // 格式化日期时间
+        function formatDateTime(dateTime) {
+            if (!dateTime) return '';
+            const date = new Date(dateTime);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            }).replace(/\//g, '-');
+        }
+
+        // 回车搜索
+        document.getElementById('keywordInput').addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') {
+                searchOrders();
+            }
+        });
+    </script>
+</body>
+
+</html>

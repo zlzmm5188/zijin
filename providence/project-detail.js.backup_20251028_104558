@@ -1,0 +1,607 @@
+// 项目详情页面 - 大戶豐IPO风格 - updated by AI - providence integration 2025-10
+const API_BASE = 'https://v2.abcmall.one/index.php';
+let userData = {
+    token: localStorage.getItem('providence_token') || '',
+    balance: 0,
+    vipLevel: 1
+};
+
+let projectData = null;
+const urlParams = new URLSearchParams(window.location.search);
+const projectId = urlParams.get('id');
+
+document.addEventListener('DOMContentLoaded', function() {
+    initPage();
+});
+
+async function initPage() {
+    if (!projectId) {
+        await customAlert('项目ID缺失');
+        window.location.href = 'projects.html';
+        return;
+    }
+
+    // 先加载项目详情（不需要登录）
+    await loadProjectDetail();
+    // 再加载用户信息（可能需要登录）
+    await loadUserInfo();
+    bindEvents();
+}
+
+async function loadUserInfo() {
+    try {
+        // 尝试多个可能的用户信息接口
+        let response;
+        try {
+            response = await fetch(API_BASE + '/user/user/index', {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': userData.token
+                }
+            });
+        } catch (e) {
+            console.warn('[用户信息] 主接口失败，尝试备用接口');
+            response = await fetch(API_BASE + '/user/index', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'token': userData.token
+                },
+                body: JSON.stringify({})
+            });
+        }
+        const data = await response.json();
+
+        console.log('[用户信息] API响应:', data);
+
+        if (data.code === 200 && data.data) {
+            userData.balance = parseFloat(data.data.money) || 0;
+            userData.vipLevel = parseInt(data.data.level) || 1;
+
+            const balanceEl = document.getElementById('balance');
+            if (balanceEl) {
+                balanceEl.textContent = `¥${formatMoney(userData.balance)}`;
+                console.log('[用户信息] ✓ 余额已更新:', userData.balance);
+            } else {
+                console.warn('[用户信息] ⚠️ 找不到balance元素');
+            }
+        } else {
+            console.warn('[用户信息] ⚠️ API返回异常:', data);
+            console.warn('[用户信息] 未登录，设置默认余额为0');
+            userData.balance = 0;
+            userData.vipLevel = 0;
+
+            const balanceEl = document.getElementById('balance');
+            if (balanceEl) {
+                balanceEl.textContent = `¥0.00`;
+            }
+        }
+    } catch (error) {
+        console.error('[用户信息] ✗ 加载失败:', error);
+        console.error('[用户信息] 错误详情:', error.message, error.stack);
+        console.warn('[用户信息] 设置默认余额');
+        userData.balance = 0;
+        userData.vipLevel = 0;
+        const balanceEl = document.getElementById('balance');
+        if (balanceEl) {
+            balanceEl.textContent = `¥0.00`;
+        }
+    }
+}
+
+async function loadProjectDetail() {
+    try {
+        console.log('[项目详情] 开始加载项目ID:', projectId);
+
+        // 调用项目列表API
+        const response = await fetch(API_BASE + '/fund/project/all', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+
+        console.log('[项目详情] HTTP状态:', response.status, response.statusText);
+
+        if (!response.ok) {
+            throw new Error(`HTTP错误: ${response.status}`);
+        }
+
+        const data = await response.json();
+        console.log('[项目详情] API响应:', data);
+
+        // 检查API返回格式
+        if (!data || !data.data) {
+            throw new Error('API返回数据格式错误');
+        }
+
+        // 后端返回的是分类数据，需要展开所有项目
+        let allProjects = [];
+
+        // 兼容多种API返回格式
+        if (data.data && Array.isArray(data.data)) {
+            data.data.forEach(category => {
+                if (category.list && Array.isArray(category.list)) {
+                    allProjects = allProjects.concat(category.list);
+                } else if (category.id) {
+                    // 如果直接是项目数组
+                    allProjects.push(category);
+                }
+            });
+        } else if (data.list && Array.isArray(data.list)) {
+            allProjects = data.list;
+        }
+
+        console.log('[项目详情] 所有项目:', allProjects);
+        console.log('[项目详情] 项目数量:', allProjects.length);
+        console.log('[项目详情] 查找ID:', projectId, '类型:', typeof projectId);
+
+        // 查找项目（不过滤status，允许显示所有状态的项目）
+        projectData = allProjects.find(p => {
+            console.log('[项目详情] 比较:', p.id, '===', projectId, '?', p.id == projectId, 'status:', p.status);
+            return p.id == projectId;
+        });
+
+        if (projectData) {
+            console.log('[项目详情] ✓ 找到项目:', projectData);
+            renderProjectDetail();
+        } else {
+            console.error('[项目详情] ✗ 项目不存在, ID:', projectId);
+            console.error('[项目详情] 可用的项目IDs:', allProjects.map(p => p.id));
+
+            // 项目不存在，提示并跳转
+            await customAlert(`项目 #${projectId} 不存在或已下架\n\n可用项目ID: ${allProjects.map(p => p.id).join(', ')}`);
+
+            setTimeout(() => {
+                window.location.href = 'projects.html';
+            }, 1000);
+        }
+    } catch (error) {
+        console.error('[项目详情] ✗ 加载失败:', error);
+        console.error('[项目详情] 错误详情:', error.message, error.stack);
+
+        await customAlert('项目加载失败\n\n可能原因：\n• 网络连接问题\n• 项目已下架\n• 服务器暂时不可用\n\n请稍后重试');
+
+        setTimeout(() => {
+            window.location.href = 'projects.html';
+        }, 1500);
+    }
+}
+
+function renderProjectDetail() {
+    console.log('[渲染] 开始渲染项目详情:', projectData);
+
+    // ✅ 添加数据完整性检查
+    if (!projectData) {
+        console.error('[渲染] ✗ projectData为空');
+        return;
+    }
+
+    // 标题
+    const titleEl = document.getElementById('projectTitle');
+    if (titleEl) {
+        titleEl.textContent = projectData.title || '投资项目';
+    }
+
+    // 完整标题卡片
+    const titleCard = document.getElementById('titleCard');
+    const fullTitle = document.getElementById('fullTitle');
+    const projectMeta = document.getElementById('projectMeta');
+
+    if (fullTitle && projectMeta && titleCard) {
+        fullTitle.textContent = projectData.title || '投资项目';
+
+        let metaHtml = '';
+        if (projectData.tag) {
+            metaHtml += `<span class="meta-tag type">${projectData.tag}</span>`;
+        }
+        if (projectData.code) {
+            metaHtml += `<span class="meta-tag code">代码: ${projectData.code}</span>`;
+        }
+        if (projectData.company_id) {
+            metaHtml += `<span class="meta-tag company">公司ID: ${projectData.company_id}</span>`;
+        }
+
+        projectMeta.innerHTML = metaHtml;
+        titleCard.style.display = 'block';
+    }
+
+    // 主收益率
+    const baseRate = parseFloat(projectData.rate) || 0;
+    const addedRate = parseFloat(projectData.added) || 0; // VIP加息
+    const totalRate = baseRate + addedRate;
+
+    const mainRateEl = document.getElementById('mainRate');
+    if (mainRateEl) {
+        mainRateEl.textContent = totalRate.toFixed(2) + '%';
+    }
+
+    // VIP加息提示
+    const vipBonusEl = document.getElementById('vipBonus');
+    if (addedRate > 0 && vipBonusEl) {
+        vipBonusEl.innerHTML = `含VIP加息 +${addedRate.toFixed(2)}%`;
+    }
+
+    // 额外收益展示（红包和VIP加息）
+    const giftValue = parseFloat(projectData.gift) || 0;
+    const bonusSection = document.getElementById('bonusSection');
+    const giftValueEl = document.getElementById('giftValue');
+    const addedValueEl = document.getElementById('addedValue');
+
+    if ((giftValue > 0 || addedRate > 0) && bonusSection) {
+        if (giftValueEl) giftValueEl.textContent = giftValue > 0 ? `+${giftValue.toFixed(2)}%` : '--';
+        if (addedValueEl) addedValueEl.textContent = addedRate > 0 ? `+${addedRate.toFixed(2)}%` : '--';
+        bonusSection.style.display = 'flex';
+    }
+
+    // 期限、起投、封顶
+    const periodEl = document.getElementById('period');
+    if (periodEl) {
+        periodEl.textContent = (projectData.day || 0) + '天';
+    }
+
+    const minAmountEl = document.getElementById('minAmount');
+    if (minAmountEl) {
+        minAmountEl.textContent = formatMoney(projectData.min || 1000) + '元';
+    }
+
+    // 显示购买限制信息
+    const restrictionsHtml = generateRestrictionsHtml();
+    if (restrictionsHtml) {
+        const restrictionsDiv = document.getElementById('projectRestrictions');
+        if (restrictionsDiv) {
+            restrictionsDiv.innerHTML = restrictionsHtml;
+            restrictionsDiv.style.display = 'block';
+        }
+    }
+
+    // 状态
+    const status = parseInt(projectData.status);
+    const statusBadge = document.getElementById('statusBadge');
+    if (statusBadge) {
+        statusBadge.textContent = getStatusText(status);
+        statusBadge.className = 'card-badge ' + getStatusClass(status);
+    }
+
+    // 进度
+    const totalAmount = parseFloat(projectData.total_money || projectData.total) || 0;
+    const soldAmount = parseFloat(projectData.sold_money || projectData.total * parseFloat(projectData.schedule || 0) / 100) || 0;
+    const remaining = Math.max(0, totalAmount - soldAmount);
+    const progress = totalAmount > 0 ? (soldAmount / totalAmount * 100) : 0;
+
+    const progressFillEl = document.getElementById('progressFill');
+    const investedEl = document.getElementById('invested');
+    const totalAmountEl = document.getElementById('totalAmount');
+    const remainingEl = document.getElementById('remaining');
+
+    if (progressFillEl) progressFillEl.style.width = progress + '%';
+    if (investedEl) investedEl.textContent = formatMoney(soldAmount);
+    if (totalAmountEl) totalAmountEl.textContent = formatMoney(totalAmount);
+    if (remainingEl) remainingEl.textContent = formatMoney(remaining);
+
+    // 项目信息 - 完善数据展示
+    let infoHtml = `
+        <div class="info-row">
+            <span class="info-label">项目编号</span>
+            <span class="info-value">#${projectData.id}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">项目代码</span>
+            <span class="info-value">${projectData.code || '--'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">项目类型</span>
+            <span class="info-value">${projectData.tag || '投资产品'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">VIP要求</span>
+            <span class="info-value ${projectData.vip > userData.vipLevel ? 'error' : 'success'}">
+                ${projectData.vip ? 'VIP' + projectData.vip + '及以上' : '无要求'}
+            </span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">起投金额</span>
+            <span class="info-value">${formatMoney(projectData.min || projectData.min_money || 1000)}元</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">封顶金额</span>
+            <span class="info-value">${projectData.max > 0 ? formatMoney(projectData.max) + '元' : '无限制'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">募集总额</span>
+            <span class="info-value">${formatMoney(totalAmount)}元</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">投资期限</span>
+            <span class="info-value">${projectData.day || 0}天</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">基础收益率</span>
+            <span class="info-value">${baseRate.toFixed(2)}%</span>
+        </div>`;
+
+    if (addedRate > 0) {
+        infoHtml += `
+        <div class="info-row">
+            <span class="info-label">VIP加息</span>
+            <span class="info-value success">+${addedRate.toFixed(2)}%</span>
+        </div>`;
+    }
+
+    if (giftValue > 0) {
+        infoHtml += `
+        <div class="info-row">
+            <span class="info-label">红包奖励</span>
+            <span class="info-value success">+${giftValue.toFixed(2)}%</span>
+        </div>`;
+    }
+
+    infoHtml += `
+        <div class="info-row">
+            <span class="info-label">总收益率</span>
+            <span class="info-value error">${totalRate.toFixed(2)}%</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">计息方式</span>
+            <span class="info-value">${projectData.payment_desc || '到期还本付息'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">收益类型</span>
+            <span class="info-value">固定收益</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">限购次数</span>
+            <span class="info-value">${projectData.mcount > 0 ? projectData.mcount + '次' : '不限'}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">赠送积分</span>
+            <span class="info-value success">${projectData.integral || 0} 积分</span>
+        </div>
+    `;
+
+    const projectInfoEl = document.getElementById('projectInfo');
+    if (projectInfoEl) {
+        projectInfoEl.innerHTML = infoHtml;
+    }
+
+    // 投资说明
+    const exampleAmount = 100000;
+    const exampleProfit = exampleAmount * (totalRate / 100) * (projectData.day / 365);
+
+    const descriptionEl = document.getElementById('description');
+    if (descriptionEl) {
+        descriptionEl.innerHTML = `
+        <div class="desc-section">
+            <h4 class="desc-subtitle">收益计算</h4>
+            <p class="desc-text">收益 = 投资金额 × 年化收益率 × (投资天数 / 365)</p>
+        </div>
+        <div class="desc-section">
+            <h4 class="desc-subtitle">举例说明</h4>
+            <p class="desc-text">投资${formatMoney(exampleAmount)}元，期限${projectData.day}天：</p>
+            <p class="desc-text">预期收益 = ${formatMoney(exampleAmount)} × ${totalRate.toFixed(2)}% × (${projectData.day}/365)</p>
+            <p class="desc-text highlight-text">≈ ${exampleProfit.toFixed(2)}元</p>
+        </div>
+        ${vipRate > 0 ? `
+        <div class="desc-section">
+            <h4 class="desc-subtitle">VIP专享</h4>
+            <p class="desc-text">当前VIP${userData.vipLevel}用户可享受额外+${vipRate.toFixed(2)}%加息收益</p>
+        </div>
+        ` : ''}
+        <div class="desc-section">
+            <h4 class="desc-subtitle">还款方式</h4>
+            <p class="desc-text">到期一次性还本付息，资金自动返回账户余额</p>
+        </div>
+    `;
+    }
+
+    // 初始化计算器
+    try {
+        updateCalculator();
+    } catch (error) {
+        console.error('[渲染] 计算器初始化失败:', error);
+    }
+
+    console.log('[渲染] ✓ 渲染完成');
+}
+
+function bindEvents() {
+    // 投资按钮
+    const btnInvest = document.getElementById('btnInvest');
+    if (btnInvest) {
+        btnInvest.addEventListener('click', handleInvest);
+    }
+
+    // 收益计算器
+    const calcAmount = document.getElementById('calcAmount');
+    if (calcAmount) {
+        calcAmount.addEventListener('input', updateCalculator);
+    }
+}
+
+function updateCalculator() {
+    if (!projectData) return;
+
+    const calcAmountEl = document.getElementById('calcAmount');
+    if (!calcAmountEl) return;
+
+    const amount = parseFloat(calcAmountEl.value) || 0;
+    const baseRate = parseFloat(projectData.rate) || 0;
+    const vipRate = parseFloat(projectData.vip_rate) || 0;
+    const totalRate = baseRate + vipRate;
+    const days = parseInt(projectData.day) || 0;
+
+    const profit = amount * (totalRate / 100) * (days / 365);
+    const total = amount + profit;
+
+    const calcProfitEl = document.getElementById('calcProfit');
+    const calcTotalEl = document.getElementById('calcTotal');
+
+    if (calcProfitEl) calcProfitEl.textContent = profit.toFixed(2) + ' 元';
+    if (calcTotalEl) calcTotalEl.textContent = total.toFixed(2) + ' 元';
+}
+
+async function handleInvest() {
+    if (!projectData) return;
+
+    // 检查VIP要求
+    if (projectData.vip > userData.vipLevel) {
+        await customAlert(`此项目要求VIP${projectData.vip}及以上才能投资`);
+        return;
+    }
+
+    // 检查状态
+    if (projectData.status != 0) {
+        customAlert('该项目暂不可投资');
+        return;
+    }
+
+    const amount = prompt('请输入投资金额（元）', projectData.min_money || '1000');
+    if (!amount) return;
+
+    const investAmount = parseFloat(amount);
+    if (isNaN(investAmount) || investAmount < (projectData.min_money || 0)) {
+        await customAlert(`最小投资金额为${formatMoney(projectData.min_money)}元`);
+        return;
+    }
+
+    if (investAmount > userData.balance) {
+        customAlert('余额不足，请先充值');
+        return;
+    }
+
+    try {
+        const response = await fetch(API_BASE + '/fund/project/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'token': userData.token
+            },
+            body: JSON.stringify({
+                pid: projectData.id,
+                money: investAmount
+            })
+        });
+        const data = await response.json();
+
+        if (data.code === 200) {
+            customAlert('✅ 申购成功！');
+            window.location.href = 'my-investments.html';
+        } else {
+            customAlert('申购失败：' + (data.msg || '请稍后重试'));
+        }
+    } catch (error) {
+        console.error('申购失败:', error);
+        customAlert('网络错误，请稍后重试');
+    }
+}
+
+function getStatusClass(status) {
+    switch(parseInt(status)) {
+        case 0: return 'status-active';
+        case 1: return 'status-paused';
+        case 2: return 'status-sold';
+        default: return '';
+    }
+}
+
+function getStatusText(status) {
+    switch(parseInt(status)) {
+        case 0: return '募集中';
+        case 1: return '已暂停';
+        case 2: return '已售罄';
+        default: return '未知';
+    }
+}
+
+function formatMoney(value) {
+    const num = parseFloat(value) || 0;
+    return num.toLocaleString('zh-CN', {minimumFractionDigits: 0, maximumFractionDigits: 0});
+}
+
+// 生成购买限制提示HTML
+function generateRestrictionsHtml() {
+    const restrictions = [];
+
+    // 支付方式限制
+    if (projectData.payment_type == 1) {
+        restrictions.push({
+            icon: '💳',
+            text: '仅支持USDT支付',
+            type: 'payment'
+        });
+    } else if (projectData.payment_type == 2) {
+        restrictions.push({
+            icon: '💰',
+            text: '仅支持人民币支付',
+            type: 'payment'
+        });
+    }
+
+    // VIP等级要求
+    if (projectData.vip_min && projectData.vip_min > 0) {
+        restrictions.push({
+            icon: '👑',
+            text: `需要VIP${projectData.vip_min}及以上`,
+            type: userData.vipLevel >= projectData.vip_min ? 'success' : 'warning'
+        });
+    }
+
+    // 推荐人要求
+    if (projectData.need_referral == 1) {
+        restrictions.push({
+            icon: '👥',
+            text: '需要有推荐人',
+            type: 'requirement'
+        });
+    }
+
+    // 团队人数要求
+    if (projectData.team_member_required && projectData.team_member_required > 0) {
+        restrictions.push({
+            icon: '🌟',
+            text: `需要${projectData.team_member_required}名团队成员`,
+            type: 'requirement'
+        });
+    }
+
+    // 最大投资额
+    if (projectData.max && projectData.max > 0) {
+        restrictions.push({
+            icon: '📊',
+            text: `封顶${formatMoney(projectData.max)}元`,
+            type: 'info'
+        });
+    }
+
+    // 限制购买次数
+    if (projectData.mcount && projectData.mcount > 0) {
+        restrictions.push({
+            icon: '🔢',
+            text: `限购${projectData.mcount}次`,
+            type: 'info'
+        });
+    }
+
+    if (restrictions.length === 0) {
+        return '';
+    }
+
+    let html = '<div class="project-restrictions-section">';
+    html += '<div class="restrictions-title">📋 购买限制</div>';
+    html += '<div class="restrictions-list">';
+
+    restrictions.forEach(item => {
+        const colorClass = item.type === 'warning' ? 'restriction-warning' :
+                          item.type === 'success' ? 'restriction-success' :
+                          'restriction-info';
+        html += `<div class="restriction-item ${colorClass}">`;
+        html += `<span class="restriction-icon">${item.icon}</span>`;
+        html += `<span class="restriction-text">${item.text}</span>`;
+        html += '</div>';
+    });
+
+    html += '</div></div>';
+
+    return html;
+}

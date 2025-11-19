@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>PROVIDENCE 管理后台登录</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body {
+            background: linear-gradient(180deg, #0e2b44, #091c2e);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            animation: slideUp 0.5s ease-out;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .login-logo {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--primary);
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .login-subtitle {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .form-input-wrapper {
+            position: relative;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            padding-left: 44px;
+            border: 1px solid #e5e7eb;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(11,59,94,.1);
+        }
+
+        .input-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 18px;
+            color: var(--muted);
+        }
+
+        .btn-login {
+            width: 100%;
+            height: 48px;
+            background: linear-gradient(90deg, var(--primary-600), var(--primary));
+            color: #fff;
+            border: none;
+            border-radius: var(--radius-md);
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(14,74,120,.3);
+            transition: all 0.2s;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(14,74,120,.4);
+        }
+
+        .btn-login:active {
+            transform: scale(0.98);
+        }
+
+        .login-tips {
+            text-align: center;
+            margin-top: 24px;
+            font-size: 12px;
+            color: var(--muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <div class="login-logo">PROVIDENCE</div>
+                <div class="login-subtitle">管理后台系统</div>
+            </div>
+
+            <form id="loginForm">
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <div class="form-input-wrapper">
+                        <span class="input-icon">👤</span>
+                        <input type="text" name="username" class="form-input" placeholder="请输入用户名" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <div class="form-input-wrapper">
+                        <span class="input-icon">🔒</span>
+                        <input type="password" name="password" class="form-input" placeholder="请输入密码" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-login">登 录</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    document.getElementById('loginForm').addEventListener('submit', function(e){
+        e.preventDefault();
+
+        const formData = new FormData(e.target);
+        const username = formData.get('username');
+        const password = formData.get('password');
+
+        if(username === 'admin' && password === 'admin123'){
+            localStorage.setItem('admin_token', 'token_' + Date.now());
+            localStorage.setItem('admin_user', username);
+            alert('登录成功！');
+            location.href = 'index.html';
+        } else {
+            alert('用户名或密码错误！');
+        }
+    });
+    </script>
+</body>
+</html>

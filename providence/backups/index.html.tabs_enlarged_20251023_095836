@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+<title>PROVIDENCE | EQUITY PARTNERS</title>
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" href="styles.css?v=202510222110">
+</head>
+<body>
+<div id="app">
+<header class="hero">
+<div class="hero-top">
+<div class="logo-full">
+<img src="img/logo.png" alt="PROVIDENCE" class="logo-img" onerror="this.style.display='none'"/>
+</div>
+<div class="brand">
+<div class="brand-name">
+<span style="--i:0">P</span><span style="--i:1">R</span><span style="--i:2">O</span><span style="--i:3">V</span><span style="--i:4">I</span><span style="--i:5">D</span><span style="--i:6">E</span><span style="--i:7">N</span><span style="--i:8">C</span><span style="--i:9">E</span>
+</div>
+<div class="brand-subtitle-animated">
+<span style="--i:10">E</span><span style="--i:11">Q</span><span style="--i:12">U</span><span style="--i:13">I</span><span style="--i:14">T</span><span style="--i:15">Y</span><span style="--i:16"> </span><span style="--i:17">P</span><span style="--i:18">A</span><span style="--i:19">R</span><span style="--i:20">T</span><span style="--i:21">N</span><span style="--i:22">E</span><span style="--i:23">R</span><span style="--i:24">S</span>
+</div>
+</div>
+</div>
+<div class="assets">
+<div class="asset">
+<div class="label">总资产(元) <span class="eye-toggle" onclick="toggleAsset()">👁</span></div>
+<div class="value" id="totalAsset">$0.00</div>
+</div>
+<div class="asset">
+<div class="label">总收益(元)</div>
+<div class="value green" id="totalIncome">0.00</div>
+</div>
+<div class="award-badge">
+<svg viewBox="0 0 200 280" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<linearGradient id="badge-bg" x1="0%" y1="0%" x2="0%" y2="100%">
+<stop offset="0%" stop-color="#f8f9fa"/>
+<stop offset="100%" stop-color="#e9ecef"/>
+</linearGradient>
+<filter id="shadow">
+<feDropShadow dx="0" dy="2" stdDeviation="3" flood-opacity="0.2"/>
+</filter>
+</defs>
+<g filter="url(#shadow)">
+<path d="M 40 0 L 70 60 L 100 0 L 130 60 L 160 0 L 100 70 Z" fill="#dee2e6" opacity="0.95"/>
+<circle cx="100" cy="170" r="89" fill="none" stroke="#c0c0c0" stroke-width="1.5" opacity="0.6" class="badge-border"/>
+<circle cx="100" cy="170" r="84" fill="url(#badge-bg)" stroke="#adb5bd" stroke-width="3"/>
+<circle cx="100" cy="170" r="78" fill="none" stroke="#adb5bd" stroke-width="1.5" stroke-dasharray="4,4" opacity="0.6"/>
+<text x="100" y="144" font-size="20" fill="#495057" text-anchor="middle" font-weight="700" font-family="Arial, sans-serif">G/C</text>
+<text x="100" y="164" font-size="11" fill="#6c757d" text-anchor="middle" font-weight="500" font-family="Arial, sans-serif">GROWTHCAP</text>
+<text x="100" y="184" font-size="14" fill="#212529" text-anchor="middle" font-weight="700" font-family="Arial, sans-serif">TOP</text>
+<text x="100" y="200" font-size="11" fill="#495057" text-anchor="middle" font-weight="600" font-family="Arial, sans-serif">PRIVATE EQUITY</text>
+<text x="100" y="216" font-size="11" fill="#495057" text-anchor="middle" font-weight="600" font-family="Arial, sans-serif">FIRMS</text>
+<text x="100" y="238" font-size="18" fill="#212529" text-anchor="middle" font-weight="700" font-family="Arial, sans-serif">2025</text>
+</g>
+</svg>
+</div>
+</div>
+</header>
+<main class="content">
+<section class="vipcard" data-vip-level="6"></section>
+<div class="grid-container">
+<div class="grid-tabs-top">
+<button class="grid-tab active" data-grid="market">市场</button>
+<button class="grid-tab" data-grid="service">服务</button>
+</div>
+<div class="grid-wrap">
+<section class="grid" id="market-grid">
+<a class="grid-item" href="news-flash.html">
+<div class="icon"><img src="img/photo_2025-10-15_19-36-30.jpg" alt="快讯" onerror="this.style.display='none'"/></div>
+<div class="text">快讯</div>
+</a>
+<a class="grid-item" href="calendar.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-07-02.jpg" alt="日历" onerror="this.style.display='none'"/></div>
+<div class="text">日历</div>
+</a>
+<a class="grid-item" href="education.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-34.jpg" alt="课堂" onerror="this.style.display='none'"/></div>
+<div class="text">课堂</div>
+</a>
+<a class="grid-item" href="daily-checkin.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-55.jpg" alt="签到" onerror="this.style.display='none'"/></div>
+<div class="text">签到</div>
+</a>
+<a class="grid-item" href="finance.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-59.jpg" alt="理财" onerror="this.style.display='none'"/></div>
+<div class="text">理财</div>
+</a>
+<a class="grid-item" href="my-investments.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-48.jpg" alt="我的投资" onerror="this.style.display='none'"/></div>
+<div class="text">我的投资</div>
+</a>
+<a class="grid-item" href="market.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-52.jpg" alt="市场" onerror="this.style.display='none'"/></div>
+<div class="text">市场</div>
+</a>
+<a class="grid-item" href="lawyer-team.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-106-37.jpg" alt="法律" onerror="this.style.display='none'"/></div>
+<div class="text">法律</div>
+</a>
+</section>
+</div>
+<div class="grid-wrap" style="display:none;">
+<section class="grid grid-left-align" id="service-grid">
+<a class="grid-item" href="daily-checkin.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-55.jpg" alt="每日签到" onerror="this.style.display='none'"/></div>
+<div class="text">每日签到</div>
+</a>
+<a class="grid-item" href="lawyer-team.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-106-37.jpg" alt="法律咨询" onerror="this.style.display='none'"/></div>
+<div class="text">法律咨询</div>
+</a>
+<a class="grid-item" href="education.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-34.jpg" alt="投资课堂" onerror="this.style.display='none'"/></div>
+<div class="text">投资课堂</div>
+</a>
+<a class="grid-item" href="messages.html">
+<div class="icon"><img src="img/photo_2025-10-16_00-06-59.jpg" alt="在线客服" onerror="this.style.display='none'"/></div>
+<div class="text">在线客服</div>
+</a>
+</section>
+</div>
+<section class="news-flash">
+<div class="news-marquee">
+<div class="news-list" id="newsList">
+<div class="news-item">
+<span class="news-time">--:--</span>
+<span class="news-content">正在加载最新资讯...</span>
+</div>
+</div>
+</div>
+</section>
+<section class="market-overview">
+<div class="market-indices" id="marketIndices">
+<div class="market-index-item">
+<div class="index-name">上证指数</div>
+<div class="index-value" data-index="sh">--</div>
+<div class="index-change" data-change="sh">
+<span class="change-value">--</span>
+<span class="change-percent">--</span>
+</div>
+</div>
+<div class="market-index-item">
+<div class="index-name">深证成指</div>
+<div class="index-value" data-index="sz">--</div>
+<div class="index-change" data-change="sz">
+<span class="change-value">--</span>
+<span class="change-percent">--</span>
+</div>
+</div>
+<div class="market-index-item">
+<div class="index-name">恒生指数</div>
+<div class="index-value" data-index="hk">--</div>
+<div class="index-change" data-change="hk">
+<span class="change-value">--</span>
+<span class="change-percent">--</span>
+</div>
+</div>
+<div class="market-index-item">
+<div class="index-name">纳斯达克</div>
+<div class="index-value" data-index="nasdaq">--</div>
+<div class="index-change" data-change="nasdaq">
+<span class="change-value">--</span>
+<span class="change-percent">--</span>
+</div>
+</div>
+</div>
+</section>
+<section class="expert-team">
+<div class="section-header">
+<h2 class="section-title">👔 专家团队</h2>
+<a href="javascript:void(0)" class="section-more">查看全部 ›</a>
+</div>
+<div class="expert-scroll">
+<div class="expert-list" id="expertList">
+<div class="expert-card">
+<div class="expert-avatar">👨‍💼</div>
+<div class="expert-info">
+<div class="expert-name">张明华</div>
+<div class="expert-title">高级投资顾问</div>
+<div class="expert-exp">20年经验</div>
+</div>
+</div>
+<div class="expert-card">
+<div class="expert-avatar">👩‍💼</div>
+<div class="expert-info">
+<div class="expert-name">李雪梅</div>
+<div class="expert-title">首席财务分析师</div>
+<div class="expert-exp">15年经验</div>
+</div>
+</div>
+<div class="expert-card">
+<div class="expert-avatar">👨‍⚖️</div>
+<div class="expert-info">
+<div class="expert-name">王建国</div>
+<div class="expert-title">法律顾问</div>
+<div class="expert-exp">18年经验</div>
+</div>
+</div>
+<div class="expert-card">
+<div class="expert-avatar">👩‍💻</div>
+<div class="expert-info">
+<div class="expert-name">陈晓丽</div>
+<div class="expert-title">风险管理专家</div>
+<div class="expert-exp">12年经验</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<section class="company-news">
+<div class="section-header">
+<h2 class="section-title">📢 公司动态</h2>
+</div>
+<div class="news-cards" id="companyNews">
+<a href="javascript:void(0)" class="news-card">
+<div class="news-card-header">
+<span class="news-card-badge">公告</span>
+<span class="news-card-date">2025-10-17</span>
+</div>
+<div class="news-card-title">PROVIDENCE集团荣获"2025年度最佳私募股权公司"称号</div>
+<div class="news-card-desc">在全球金融评选中脱颖而出，展现卓越投资实力</div>
+</a>
+<a href="javascript:void(0)" class="news-card">
+<div class="news-card-header">
+<span class="news-card-badge success">喜讯</span>
+<span class="news-card-date">2025-10-15</span>
+</div>
+<div class="news-card-title">公司管理资产规模突破500亿美元里程碑</div>
+<div class="news-card-desc">客户信任与专业服务的双重见证</div>
+</a>
+<a href="javascript:void(0)" class="news-card">
+<div class="news-card-header">
+<span class="news-card-badge info">新闻</span>
+<span class="news-card-date">2025-10-12</span>
+</div>
+<div class="news-card-title">全新AI智能投顾系统正式上线</div>
+<div class="news-card-desc">为客户提供更精准的投资建议和风险评估</div>
+</a>
+</div>
+</section>
+</main>
+<nav class="tabbar" id="tabbar">
+<a class="tab active" data-tab="home" href="index.html">
+<div class="ico ico-home"></div>
+<div class="txt">首页</div>
+</a>
+<a class="tab" data-tab="market" href="market.html">
+<div class="ico ico-finance"></div>
+<div class="txt">数据</div>
+</a>
+<a class="tab" data-tab="project" href="finance.html">
+<div class="ico ico-market"></div>
+<div class="txt">项目</div>
+</a>
+<a class="tab" data-tab="news" href="messages.html">
+<div class="ico dot ico-message"></div>
+<div class="txt">消息</div>
+</a>
+<a class="tab" data-tab="me" href="profile.html">
+<div class="ico ico-me"></div>
+<div class="txt">我的</div>
+</a>
+</nav>
+</div>
+<script src="config.js?v=20251021"></script>
+<script src="app.js?v=202510221950"></script>
+<script>
+// 九宫格标签切换功能
+document.addEventListener('DOMContentLoaded', function() {
+    const gridTabs = document.querySelectorAll('.grid-tab');
+    const marketGrid = document.querySelector('#market-grid').parentElement;
+    const serviceGrid = document.querySelector('#service-grid').parentElement;
+
+    gridTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const gridType = this.getAttribute('data-grid');
+
+            // 切换激活状态
+            gridTabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+
+            // 切换显示内容
+            if (gridType === 'market') {
+                marketGrid.style.display = 'block';
+                serviceGrid.style.display = 'none';
+            } else if (gridType === 'service') {
+                marketGrid.style.display = 'none';
+                serviceGrid.style.display = 'block';
+            }
+        });
+    });
+});
+</script>
+</body>
+</html>

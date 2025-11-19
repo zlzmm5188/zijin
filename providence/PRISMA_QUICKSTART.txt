@@ -1,0 +1,78 @@
+================================================
+Prisma 数据库管理 - 快速开始
+================================================
+
+📁 文件位置
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+/www/wwwroot/f.abcmall.one/providence/prisma/
+  ├── schema.prisma        # 数据库Schema定义
+  ├── package.json         # 依赖配置
+  ├── .env.example         # 环境变量示例
+  ├── README.md            # 完整文档
+  └── migrations/          # 迁移文件（执行后生成）
+
+🚀 快速开始（5步）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1️⃣  进入prisma目录
+   cd /www/wwwroot/f.abcmall.one/providence/prisma
+
+2️⃣  配置环境变量
+   cp .env.example .env
+   # 编辑.env文件，设置DATABASE_URL
+
+3️⃣  安装依赖
+   npm install
+
+4️⃣  生成Prisma Client
+   npx prisma generate
+
+5️⃣  创建迁移（开发环境）
+   npx prisma migrate dev --name init_providence
+   
+   或使用快捷脚本：
+   cd /www/wwwroot/f.abcmall.one/providence
+   ./generate-migration.sh
+
+📊 数据模型（10个表）
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. User (fa_user) - 用户表
+2. VipLevel (fa_vip_config) - VIP配置
+3. Product (fa_fund_project) - 投资产品
+4. Order (fa_fund_order) - 认购订单
+5. InviteLog (fa_invite_log) - 邀请记录
+6. TeamBonusLog (fa_team_bonus_log) - 团队奖金
+7. DailySignLog (fa_daily_sign_log) - 签到记录
+8. KycRecord (fa_user_kyc) - 实名认证
+9. TrialMoney (fa_trial_money) - 体验金
+10. UserTeam (fa_user_team) - 团队关系
+
+🔧 常用命令
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# 查看数据库（可视化界面）
+npx prisma studio
+
+# 查看迁移状态
+npx prisma migrate status
+
+# 从现有数据库生成schema
+npx prisma db pull
+
+# 重置数据库（开发环境）
+npx prisma migrate reset
+
+# 生产环境部署迁移
+npx prisma migrate deploy
+
+⚠️  注意事项
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. 生产环境迁移前必须备份数据库
+2. 先使用--create-only生成迁移文件
+3. 审查生成的SQL后再应用
+4. 使用migrate deploy部署到生产
+
+📖 详细文档
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+查看: prisma/README.md
+
+================================================

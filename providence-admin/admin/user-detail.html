@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用户详情 - Providence</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: #f5f7fa;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .page-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1d29;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .stat-title {
+            font-size: 14px;
+            color: #6b7280;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1d29;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1d29;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .info-item {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid #f3f4f6;
+        }
+
+        .info-label {
+            font-weight: 500;
+            color: #6b7280;
+            width: 120px;
+            flex-shrink: 0;
+        }
+
+        .info-value {
+            color: #1a1d29;
+            flex: 1;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 12px;
+            font-weight: 500;
+            border-radius: 4px;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-danger {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+
+        .badge-gray {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .badge-primary {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .edit-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .form-input:focus,
+        .form-select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(24, 144, 255, 0.1);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #6b7280;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h1 class="page-title" id="pageTitle">用户详情</h1>
+        <div>
+            <a href="user-team-view.html?id=" id="teamViewBtn" class="btn btn-success" style="display: none;">查看团队</a>
+            <a href="users.html" class="btn btn-secondary">返回列表</a>
+        </div>
+    </div>
+
+    <div id="content"></div>
+
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        let userId = urlParams.get('id');
+
+        // 如果URL中没有ID，尝试从localStorage获取
+        if (!userId) {
+            userId = localStorage.getItem('current_user_detail_id');
+        }
+
+        // 如果还是没有ID，跳转回列表
+        if (!userId) {
+            alert('用户ID缺失');
+            window.location.href = 'users.html';
+        } else {
+            // 保存当前ID到localStorage
+            localStorage.setItem('current_user_detail_id', userId);
+        }
+
+        // 加载用户详情
+        async function loadUserDetail() {
+            try {
+                const response = await fetch(`../api/admin/user-detail.php?id=${userId}`);
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    renderUserDetail(result.data);
+                } else {
+                    showError(result.message);
+                }
+            } catch (error) {
+                console.error('加载失败:', error);
+                showError('网络请求失败');
+            }
+        }
+
+        // 渲染用户详情
+        function renderUserDetail(user) {
+            document.getElementById('pageTitle').textContent = `用户详情 - ${user.username}`;
+
+            // 显示团队查看按钮
+            const teamViewBtn = document.getElementById('teamViewBtn');
+            teamViewBtn.href = `user-team-view.html?id=${userId}`;
+            teamViewBtn.style.display = 'inline-block';
+
+            const html = `
+                <!-- 统计数据 -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-title">直推人数</div>
+                        <div class="stat-value">${user.children_count}人</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">团队总人数</div>
+                        <div class="stat-value">${user.team_count}人</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">累计投资</div>
+                        <div class="stat-value">¥${formatMoney(user.total_invest)}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-title">投资订单</div>
+                        <div class="stat-value">${user.invest_stats.order_count}笔</div>
+                    </div>
+                </div>
+
+                <!-- 基本信息 -->
+                <div class="info-card">
+                    <h2 class="card-title">基本信息</h2>
+                    <div class="info-grid">
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">用户ID:</div>
+                                <div class="info-value">${user.id}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">UID:</div>
+                                <div class="info-value">${user.uid}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">用户名:</div>
+                                <div class="info-value">${user.username}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">手机号:</div>
+                                <div class="info-value">${user.phone || '-'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">邮箱:</div>
+                                <div class="info-value">${user.email || '-'}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">VIP等级:</div>
+                                <div class="info-value"><span class="badge badge-primary">VIP${user.vip_level}</span></div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">实名状态:</div>
+                                <div class="info-value">${getRealnameStatusBadge(user.realname_status)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">账户状态:</div>
+                                <div class="info-value">${user.status === 1 ? '<span class="badge badge-success">正常</span>' : '<span class="badge badge-danger">冻结</span>'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">内部用户:</div>
+                                <div class="info-value">${user.is_internal === 1 ? '<span class="badge badge-primary">是</span>' : '<span class="badge badge-gray">否</span>'}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">上级用户:</div>
+                                <div class="info-value">${user.parent_info ? `${user.parent_info.username} (${user.parent_info.uid})` : '无（根节点）'}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 钱包信息 -->
+                <div class="info-card">
+                    <h2 class="card-title">钱包信息</h2>
+                    <div class="info-grid">
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">CNY余额:</div>
+                                <div class="info-value">¥${formatMoney(user.wallets.CNY?.balance || 0)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">CNY冻结:</div>
+                                <div class="info-value">¥${formatMoney(user.wallets.CNY?.frozen || 0)}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">USDT余额:</div>
+                                <div class="info-value">$${formatMoney(user.wallets.USDT?.balance || 0)}</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">USDT冻结:</div>
+                                <div class="info-value">$${formatMoney(user.wallets.USDT?.frozen || 0)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 统计信息 -->
+                <div class="info-card">
+                    <h2 class="card-title">统计信息</h2>
+                    <div class="info-grid">
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">充值次数:</div>
+                                <div class="info-value">${user.recharge_stats.count}次</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">充值总额:</div>
+                                <div class="info-value">¥${formatMoney(user.recharge_stats.total)}</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="info-item">
+                                <div class="info-label">提现次数:</div>
+                                <div class="info-value">${user.withdraw_stats.count}次</div>
+                            </div>
+                            <div class="info-item">
+                                <div class="info-label">提现总额:</div>
+                                <div class="info-value">¥${formatMoney(user.withdraw_stats.total)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 编辑表单 -->
+                <div class="info-card">
+                    <h2 class="card-title">编辑用户</h2>
+                    <form class="edit-form" onsubmit="return updateUser(event)">
+                        <div class="form-group">
+                            <label class="form-label">手机号</label>
+                            <input type="text" class="form-input" id="phone" name="phone" value="${user.phone || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">邮箱</label>
+                            <input type="email" class="form-input" id="email" name="email" value="${user.email || ''}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">VIP等级</label>
+                            <select class="form-select" id="vip_level" name="vip_level">
+                                ${[0,1,2,3,4,5,6,7,8].map(level =>
+                                    `<option value="${level}" ${user.vip_level === level ? 'selected' : ''}>VIP${level}</option>`
+                                ).join('')}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">实名状态</label>
+                            <select class="form-select" id="realname_status" name="realname_status">
+                                <option value="0" ${user.realname_status === 0 ? 'selected' : ''}>未认证</option>
+                                <option value="1" ${user.realname_status === 1 ? 'selected' : ''}>已认证</option>
+                                <option value="2" ${user.realname_status === 2 ? 'selected' : ''}>已拒绝</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">账户状态</label>
+                            <select class="form-select" id="status" name="status">
+                                <option value="1" ${user.status === 1 ? 'selected' : ''}>正常</option>
+                                <option value="0" ${user.status === 0 ? 'selected' : ''}>冻结</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">内部用户</label>
+                            <select class="form-select" id="is_internal" name="is_internal">
+                                <option value="0" ${user.is_internal === 0 ? 'selected' : ''}>否</option>
+                                <option value="1" ${user.is_internal === 1 ? 'selected' : ''}>是</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="grid-column: 1 / -1;">
+                            <button type="submit" class="btn btn-primary">保存修改</button>
+                        </div>
+                    </form>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // 更新用户
+        async function updateUser(event) {
+            event.preventDefault();
+
+            const formData = new FormData(event.target);
+            formData.append('id', userId);
+
+            try {
+                const response = await fetch('../api/admin/user-update', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.code === 1) {
+                    alert(result.message);
+                    loadUserDetail();
+                } else {
+                    alert('更新失败: ' + result.message);
+                }
+            } catch (error) {
+                console.error('更新失败:', error);
+                alert('网络请求失败');
+            }
+
+            return false;
+        }
+
+        // 实名状态徽章
+        function getRealnameStatusBadge(status) {
+            switch(status) {
+                case 1:
+                    return '<span class="badge badge-success">已认证</span>';
+                case 2:
+                    return '<span class="badge badge-danger">已拒绝</span>';
+                default:
+                    return '<span class="badge badge-gray">未认证</span>';
+            }
+        }
+
+        // 显示错误
+        function showError(message) {
+            document.getElementById('content').innerHTML = `
+                <div class="loading">
+                    <div style="font-size: 48px; margin-bottom: 12px;">⚠️</div>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+
+        // 格式化金额
+        function formatMoney(amount) {
+            return Number(amount).toLocaleString('zh-CN', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        // 页面加载
+        window.addEventListener('DOMContentLoaded', () => {
+            loadUserDetail();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>充值审核</title>
+<style>
+:root{--primary:#0b3b5e;--success:#25d0a6;--warning:#f59e0b;--danger:#ef4444;--surface:#fff}
+body{padding:20px;background:#f7f8fa;font-family:-apple-system,sans-serif}
+.table{width:100%;background:var(--surface);border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(5,15,30,.08)}
+.table th{background:var(--primary);color:#fff;padding:14px;text-align:left}
+.table td{padding:12px;border-bottom:1px solid #f3f4f6}
+.badge{padding:4px 10px;border-radius:12px;font-size:12px;font-weight:600}
+.badge-warning{background:var(--warning);color:#fff}
+.badge-success{background:var(--success);color:#fff}
+.badge-danger{background:var(--danger);color:#fff}
+.btn{padding:6px 12px;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;margin:0 2px}
+.btn-success{background:var(--success);color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-primary{background:var(--primary);color:#fff}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:9999}
+.modal.active{display:flex;justify-content:center;align-items:center}
+.modal-content{background:var(--surface);padding:30px;border-radius:12px;max-width:800px}
+.cert-img{max-width:100%;border-radius:8px;margin:10px 0;cursor:pointer}
+</style>
+</head>
+<body>
+<div style="display:flex;justify-content:space-between;margin-bottom:20px">
+<h2>💰 充值审核</h2>
+<button class="btn btn-primary" onclick="load()">🔄 刷新</button>
+</div>
+
+<table class="table">
+<thead><tr><th>订单号</th><th>用户</th><th>金额</th><th>方式</th><th>凭证</th><th>状态</th><th>时间</th><th>操作</th></tr></thead>
+<tbody id="list"><tr><td colspan="8" style="text-align:center;padding:40px">加载中...</td></tr></tbody>
+</table>
+
+<div class="modal" id="m">
+<div class="modal-content">
+<span onclick="closeM()" style="float:right;font-size:28px;cursor:pointer;color:#999">&times;</span>
+<h3>充值审核</h3>
+<div id="body">
+<div><strong>订单号：</strong><span id="o"></span></div>
+<div><strong>用户：</strong><span id="u"></span></div>
+<div><strong>金额：</strong><span id="a" style="color:#ef4444;font-size:20px;font-weight:700"></span></div>
+<div><strong>方式：</strong><span id="p"></span></div>
+<div style="margin:20px 0"><strong>凭证图片：</strong><div id="imgs"></div></div>
+<div><label><strong>备注：</strong></label><textarea id="r" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e5e7eb;margin:10px 0" rows="3"></textarea></div>
+<div style="margin-top:15px">
+<button class="btn btn-success" style="padding:10px 30px" onclick="approve()">✅ 通过</button>
+<button class="btn btn-danger" style="padding:10px 30px" onclick="reject()">❌ 拒绝</button>
+<button class="btn" style="padding:10px 20px" onclick="closeM()">取消</button>
+</div>
+</div>
+</div>
+</div>
+
+<script>
+let cur=null;
+
+async function load(){
+document.getElementById('list').innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px">加载中...</td></tr>';
+
+try{
+const token=localStorage.getItem('admin_token');
+if(!token){
+alert('❌ 请先登录');
+window.location.href='login.html';
+return;
+}
+
+const response=await fetch('../api/index.php/admin/recharges?limit=100',{
+headers:{
+'Authorization':token,
+'Content-Type':'application/json'
+}
+});
+
+// 检查响应状态
+if(!response.ok){
+const text=await response.text();
+console.error('HTTP错误:',response.status,text.substring(0,200));
+document.getElementById('list').innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px">加载失败: HTTP '+response.status+'</td></tr>';
+return;
+}
+
+// 检查响应类型
+const contentType=response.headers.get('content-type');
+if(!contentType||!contentType.includes('application/json')){
+const text=await response.text();
+console.error('响应不是JSON:',text.substring(0,200));
+document.getElementById('list').innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px">服务器返回了非JSON数据，请检查接口配置</td></tr>';
+return;
+}
+
+const data=await response.json();
+
+if(data.code===1&&data.data&&data.data.list){
+const d=data.data.list;
+const h=d.map(i=>{
+const s={0:'待审核',1:'已通过',2:'已拒绝'}[i.status]||'未知';
+const c={0:'badge-warning',1:'badge-success',2:'badge-danger'}[i.status]||'badge-warning';
+const certImages=i.certificate_images||i.certificate_image||'';
+const imgs=typeof certImages==='string'?certImages.split(',').filter(x=>x):(Array.isArray(certImages)?certImages:[]);
+const n=imgs.length;
+const amount=parseFloat(i.amount||0);
+const currency=i.currency||'CNY';
+const amountText=currency==='USDT'?`$${amount.toFixed(2)}`:`¥${amount.toFixed(2)}`;
+const paymentMethod=i.payment_method||i.pay_method||'未知';
+const createdAt=i.created_at||i.create_time||'-';
+
+return`<tr>
+<td>${i.order_no||'-'}</td>
+<td>${i.username||i.phone||'未知'}</td>
+<td style="font-weight:600">${amountText}</td>
+<td>${paymentMethod}</td>
+<td>${n>0?`<span style="color:var(--primary);cursor:pointer" onclick='review(${JSON.stringify(i).replace(/'/g,"&apos;")})'>${n}张图片 🖼️</span>`:'无凭证'}</td>
+<td><span class="badge ${c}">${s}</span></td>
+<td>${createdAt}</td>
+<td>${i.status==0?`<button class="btn btn-primary" onclick='review(${JSON.stringify(i).replace(/'/g,"&apos;")})'>审核</button>`:'已处理'}</td>
+</tr>`;
+}).join('');
+
+document.getElementById('list').innerHTML=h||'<tr><td colspan="8" style="text-align:center;padding:40px">暂无数据</td></tr>';
+}else{
+document.getElementById('list').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:40px">加载失败: ${data.message||'未知错误'}</td></tr>`;
+}
+}catch(error){
+console.error('加载充值记录失败:',error);
+document.getElementById('list').innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px">网络请求失败，请刷新重试</td></tr>';
+}
+}
+
+function review(i){
+cur=i;
+document.getElementById('o').textContent=i.order_no||'-';
+document.getElementById('u').textContent=i.username||i.phone||'未知';
+const amount=parseFloat(i.amount||0);
+const currency=i.currency||'CNY';
+const amountText=currency==='USDT'?`$${amount.toFixed(2)}`:`¥${amount.toFixed(2)}`;
+document.getElementById('a').textContent=amountText;
+document.getElementById('p').textContent=i.payment_method||i.pay_method||'未知';
+
+const certImages=i.certificate_images||i.certificate_image||'';
+const imgs=typeof certImages==='string'?certImages.split(',').filter(x=>x):(Array.isArray(certImages)?certImages:[]);
+document.getElementById('imgs').innerHTML=imgs.length>0?imgs.map(x=>{
+const imgUrl=x.startsWith('http')?x:`../${x.replace(/^\//,'')}`;
+return`<img src="${imgUrl}" class="cert-img" onclick="view('${imgUrl}')" onerror="this.alt='图片加载失败';this.style.display='none'">`;
+}).join(''):'<div style="color:#999;padding:20px;text-align:center">暂无凭证图片</div>';
+document.getElementById('r').value='';
+document.getElementById('m').classList.add('active');
+}
+
+function view(s){alert('查看大图：'+s);}
+
+function closeM(){
+document.getElementById('m').classList.remove('active');
+cur=null;
+}
+
+async function approve(){
+if(!cur)return;
+const amount=parseFloat(cur.amount||0);
+const currency=cur.currency||'CNY';
+const amountText=currency==='USDT'?`$${amount.toFixed(2)}`:`¥${amount.toFixed(2)}`;
+if(confirm(`确认通过？\n订单：${cur.order_no}\n金额：${amountText}`)){
+try{
+const token=localStorage.getItem('admin_token');
+const response=await fetch('../api/index.php/admin/recharge-approve',{
+method:'POST',
+headers:{
+'Authorization':token,
+'Content-Type':'application/json'
+},
+body:JSON.stringify({id:cur.id})
+});
+
+// 检查响应状态
+if(!response.ok){
+const text=await response.text();
+console.error('HTTP错误:',response.status,text.substring(0,200));
+alert('请求失败: HTTP '+response.status);
+return;
+}
+
+// 检查响应类型
+const contentType=response.headers.get('content-type');
+if(!contentType||!contentType.includes('application/json')){
+const text=await response.text();
+console.error('响应不是JSON:',text.substring(0,200));
+alert('服务器返回了非JSON数据，请检查接口配置');
+return;
+}
+
+const d=await response.json();
+alert(d.code===1?'✅ '+d.message:'❌ '+d.message);
+if(d.code===1){closeM();load();}
+}catch(e){
+console.error('审核失败:',e);
+alert('请求失败: '+e.message);
+}
+}
+}
+
+async function reject(){
+if(!cur)return;
+const reason=document.getElementById('r').value;
+if(!reason){alert('❌ 拒绝时必须填写原因！');return;}
+if(confirm(`确认拒绝？\n原因：${reason}`)){
+try{
+const token=localStorage.getItem('admin_token');
+const response=await fetch('../api/index.php/admin/recharge-reject',{
+method:'POST',
+headers:{
+'Authorization':token,
+'Content-Type':'application/json'
+},
+body:JSON.stringify({id:cur.id,reason})
+});
+
+// 检查响应状态
+if(!response.ok){
+const text=await response.text();
+console.error('HTTP错误:',response.status,text.substring(0,200));
+alert('请求失败: HTTP '+response.status);
+return;
+}
+
+// 检查响应类型
+const contentType=response.headers.get('content-type');
+if(!contentType||!contentType.includes('application/json')){
+const text=await response.text();
+console.error('响应不是JSON:',text.substring(0,200));
+alert('服务器返回了非JSON数据，请检查接口配置');
+return;
+}
+
+const d=await response.json();
+alert(d.code===1?'✅ '+d.message:'❌ '+d.message);
+if(d.code===1){closeM();load();}
+}catch(e){
+console.error('拒绝失败:',e);
+alert('请求失败: '+e.message);
+}
+}
+}
+
+load();
+</script>
+</body>
+</html>

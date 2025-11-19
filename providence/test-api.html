@@ -1,0 +1,113 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>API测试 - 绕过缓存</title>
+    <style>
+      body {
+        font-family: -apple-system, sans-serif;
+        padding: 40px;
+        background: #f7f8fa;
+      }
+      .box {
+        background: #fff;
+        padding: 30px;
+        border-radius: 12px;
+        max-
+        
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      }
+      input,
+      button {
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        
+        margin: 10px 0;
+        font-size: 14px;
+      }
+      button {
+        background: #0b3b5e;
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      button:hover {
+        background: #0e4a78;
+      }
+      pre {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        overflow-x: auto;
+        font-size: 12px;
+      }
+          .brand { display: flex; flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; justify-content: flex-start; }
+          .page-title, .brand h1 { margin: 0; display: inline-block; white-space: nowrap; flex: 0 1 auto; }
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <h2>Providence API 测试（绕过缓存版本）</h2>
+      <p style="color: #666">此页面直接调用API，不使用缓存的JS</p>
+
+      <input type="text" id="u" placeholder="用户名" value="testuser" />
+      <input type="password" id="p" placeholder="密码" value="123456" />
+      <button onclick="test()">测试登录API</button>
+
+      <h3>结果:</h3>
+      <pre id="result">点击按钮测试...</pre>
+
+      <h3>API配置:</h3>
+      <pre>
+baseURL: https://copla.top
+方法: POST
+路径: /index.php/login/account</pre
+      >
+    </div>
+
+    <script>
+      async function test() {
+        const u = document.getElementById("u").value;
+        const p = document.getElementById("p").value;
+
+        document.getElementById("result").textContent = "请求中...";
+
+        try {
+          const API_BASE =
+            window.API_CONFIG?.baseURL || "https://apis.copla.top";
+          const res = await fetch(API_BASE + "/index.php/login/account", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: u, password: p }),
+          });
+
+          const data = await res.json();
+          document.getElementById("result").textContent = JSON.stringify(
+            data,
+            null,
+            2
+          );
+
+          if (data.code === 1) {
+            alert(
+              "✅ API正常！登录成功！\nToken: " +
+                (data.data?.token || "获取成功")
+            );
+          } else {
+            alert(
+              "ℹ️ API正常工作！\n" +
+                data.message +
+                "\n\n（用户不存在是正常的，说明API没问题）"
+            );
+          }
+        } catch (err) {
+          document.getElementById("result").textContent =
+            "❌ 错误: " + err.message;
+          alert("❌ CORS或网络错误: " + err.message);
+        }
+      }
+    </script>
+  </body>
+</html>

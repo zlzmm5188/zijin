@@ -1,0 +1,67 @@
+╔════════════════════════════════════════════════════════════════╗
+║                                                                ║
+║           后台API访问配置说明                                   ║
+║                                                                ║
+╚════════════════════════════════════════════════════════════════╝
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+问题：访问 https://houtai.frevix.top/api/admin/stats.php 返回404
+
+原因：后台站点根目录在 /admin/ 下，访问 /api 需要配置
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 解决方案1：已修复（使用相对路径）
+
+dashboard.html已改为使用:
+../api/admin/stats.php
+
+刷新页面即可生效！
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 解决方案2：配置nginx（可选，推荐）
+
+在宝塔面板 → houtai.frevix.top → 配置文件
+
+添加以下location:
+
+location ^~ /api {
+    alias /www/wwwroot/providence-admin/api;
+    index index.php;
+    
+    location ~ \.php$ {
+        fastcgi_pass unix:/tmp/php-cgi-82.sock;
+        fastcgi_param SCRIPT_FILENAME $request_filename;
+        include fastcgi_params;
+    }
+}
+
+保存并重启nginx
+
+配置后可以直接访问:
+https://houtai.frevix.top/api/admin/stats.php
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✅ 解决方案3：配置独立API站点（最佳，未来）
+
+宝塔面板 → 添加站点
+域名: api.frevix.top
+目录: /www/wwwroot/providence-admin/api
+
+这样前台也可以统一使用:
+https://api.frevix.top
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 当前状态
+
+✓ dashboard.html已更新（使用相对路径）
+✓ 刷新后台即可看到实时数据
+✓ 如需更好的性能，建议配置nginx或独立API站点
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+© 2024 PROVIDENCE

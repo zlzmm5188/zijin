@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>项目经理管理</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h2>项目经理管理</h2>
+        <button class="layui-btn" id="addBtn">添加经理</button>
+        <table class="layui-table">
+            <thead>
+                <tr><th>ID</th><th>姓名</th><th>职位</th><th>邮箱</th><th>状态</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>张明</td><td>首席投资官</td><td>zhang@example.com</td><td><span class="layui-badge layui-bg-green">正常</span></td><td><button class="layui-btn layui-btn-xs">编辑</button></td></tr>
+                <tr><td>2</td><td>李华</td><td>高级基金经理</td><td>li@example.com</td><td><span class="layui-badge layui-bg-green">正常</span></td><td><button class="layui-btn layui-btn-xs">编辑</button></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    layui.use('layer', function(){
+        var layer = layui.layer;
+        document.getElementById('addBtn').onclick = function(){
+            layer.msg('添加功能开发中...');
+        };
+    });
+    </script>
+</body>
+</html>

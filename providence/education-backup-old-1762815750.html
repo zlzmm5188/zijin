@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+    <title>知识学堂 - PROVIDENCE</title>
+    <link rel="icon" href="favicon.ico">
+    <link rel="stylesheet" href="styles.css?v=1763343791">
+    <style>
+        /* Spotlight 滚动效果 */
+        .course-card {
+            transform: scale(0.94) translateZ(0);
+            opacity: 0.6;
+            transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            will-change: transform, opacity;
+        }
+
+        .course-level-badge {
+            opacity: 0.6;
+            transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+.brand { display: flex; flex-direction: row; align-items: center; gap: 8px; white-space: nowrap; justify-content: flex-start; }      .brand .back-btn { flex: 0 0 auto; margin-right: 8px; }      .brand .page-title, .brand h1 { margin: 0; display: inline-block; white-space: nowrap; flex: 0 1 auto; }
+    </style>
+</head>
+
+<body class="page-other">
+    <div id="app">
+        <header class="hero-simple">
+            <div class="hero-top">
+                <a href="index.html" class="back-btn">←</a>
+                <div class="brand"><span class="b1">📚 知识学堂</span></div>
+            </div>
+        </header>
+
+        <main class="content-other">
+            <!-- 课程说明 -->
+            <section class="learning-path">
+                <div class="path-intro">
+                    全面学习基金、IPO、债券投资知识，构建稳健投资组合
+                </div>
+            </section>
+
+            <!-- 课程分类 -->
+            <section class="edu-categories">
+                <div class="cat-tabs" id="categoryTabs">
+                    <button class="cat-tab active" data-category="fund">基金投资</button>
+                    <button class="cat-tab" data-category="ipo">IPO新股</button>
+                    <button class="cat-tab" data-category="bond">债券投资</button>
+                </div>
+            </section>
+
+            <!-- 课程列表 -->
+            <section class="edu-courses" id="eduCourses">
+                <div class="loading-indicator">
+                    <div class="loading-spinner"></div>
+                    <div>加载课程中...</div>
+                </div>
+            </section>
+        </main>
+
+        <nav class="tabbar" id="tabbar">
+            <a class="tab active" data-tab="home" href="index.html">
+                <div class="ico ico-home"></div>
+                <div class="txt">首页</div>
+            </a>
+            <a class="tab" data-tab="project">
+                <div class="ico ico-market"></div>
+                <div class="txt">项目</div>
+            </a>
+            <a class="tab" data-tab="market">
+                <div class="ico ico-finance"></div>
+                <div class="txt">数据</div>
+            </a>
+            <a class="tab" data-tab="news" href="messages.html">
+                <div class="ico dot ico-message"></div>
+                <div class="txt">消息</div>
+            </a>
+            <a class="tab" data-tab="me" href="profile.html">
+                <div class="ico ico-me"></div>
+                <div class="txt">我的</div>
+            </a>
+        </nav>
+    </div>
+
+    <script src="ios-toast.js?v=17630668562427b227"></script>
+    <script src="education.js?v=1762815000"></script>
+</body>
+
+</html>

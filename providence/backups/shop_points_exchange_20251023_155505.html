@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="zh-cmn-Hans">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=0">
+<title>积分兑换 | PROVIDENCE</title>
+<link rel="icon" href="favicon.ico">
+<link rel="stylesheet" href="styles.css?v=20250117003">
+<style>
+/* 黑金主题积分兑换页面 */
+.points-page{
+    background:linear-gradient(180deg,#1a1a1a,#0a0a0a);
+    min-height:100vh;
+    padding-bottom:80px;
+}
+
+/* 积分卡片 */
+.points-header{
+    background:linear-gradient(135deg,#2a2a2a,#1a1a1a);
+    padding:60px 20px 30px;
+    position:relative;
+    overflow:hidden;
+}
+
+.points-header::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at top left,rgba(212,175,55,0.2),transparent 60%),
+               radial-gradient(circle at bottom right,rgba(212,175,55,0.15),transparent 60%);
+    pointer-events:none;
+}
+
+.points-card{
+    position:relative;
+    z-index:1;
+    background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.08));
+    border:2px solid rgba(212,175,55,0.3);
+    border-radius:20px;
+    padding:24px;
+    backdrop-filter:blur(10px);
+}
+
+.points-label{
+    font-size:14px;
+    color:rgba(255,255,255,0.6);
+    margin-bottom:8px;
+}
+
+.points-value{
+    font-size:48px;
+    font-weight:700;
+    color:#f5d771;
+    font-family:-apple-system,sans-serif;
+    text-shadow:0 2px 10px rgba(212,175,55,0.3);
+}
+
+.points-rate{
+    margin-top:12px;
+    padding:8px 16px;
+    background:rgba(0,0,0,0.3);
+    border-radius:12px;
+    text-align:center;
+    font-size:13px;
+    color:rgba(255,255,255,0.8);
+}
+
+.points-rate strong{
+    color:#f5d771;
+    font-size:16px;
+}
+
+/* 兑换选项卡 */
+.exchange-tabs{
+    display:flex;
+    gap:0;
+    padding:20px 20px 0;
+    background:rgba(255,255,255,0.02);
+}
+
+.exchange-tab{
+    flex:1;
+    padding:12px;
+    border:none;
+    background:transparent;
+    color:rgba(255,255,255,0.5);
+    font-size:15px;
+    font-weight:500;
+    cursor:pointer;
+    transition:all 0.3s;
+    border-bottom:2px solid transparent;
+}
+
+.exchange-tab.active{
+    color:#f5d771;
+    font-weight:600;
+    border-bottom-color:#d4af37;
+}
+
+/* 兑换项目列表 */
+.exchange-list{
+    padding:16px;
+}
+
+.exchange-item{
+    background:linear-gradient(135deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02));
+    border:1px solid rgba(212,175,55,0.15);
+    border-radius:16px;
+    padding:20px;
+    margin-bottom:16px;
+    position:relative;
+    overflow:hidden;
+}
+
+.exchange-item::before{
+    content:"";
+    position:absolute;
+    top:0;
+    right:0;
+    width:100px;
+    height:100px;
+    background:radial-gradient(circle,rgba(212,175,55,0.1),transparent);
+    pointer-events:none;
+}
+
+.exchange-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:16px;
+}
+
+.exchange-icon{
+    font-size:40px;
+    filter:drop-shadow(0 2px 8px rgba(212,175,55,0.3));
+}
+
+.exchange-badge{
+    padding:4px 12px;
+    background:linear-gradient(90deg,#d4af37,#f5d77d);
+    color:#1a1a1a;
+    border-radius:12px;
+    font-size:11px;
+    font-weight:600;
+}
+
+.exchange-title{
+    font-size:18px;
+    font-weight:700;
+    color:#fff;
+    margin:0 0 8px;
+}
+
+.exchange-desc{
+    font-size:13px;
+    color:rgba(255,255,255,0.6);
+    line-height:1.6;
+    margin-bottom:16px;
+}
+
+.exchange-price{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:16px;
+    background:rgba(0,0,0,0.3);
+    border-radius:12px;
+    margin-bottom:12px;
+}
+
+.price-label{
+    font-size:13px;
+    color:rgba(255,255,255,0.6);
+}
+
+.price-value{
+    font-size:24px;
+    font-weight:700;
+    color:#f5d771;
+}
+
+.price-points{
+    font-size:14px;
+    color:rgba(255,255,255,0.8);
+}
+
+.btn-exchange{
+    width:100%;
+    padding:14px;
+    background:linear-gradient(135deg,#d4af37,#c99b2b);
+    color:#1a1a1a;
+    border:none;
+    border-radius:12px;
+    font-size:16px;
+    font-weight:700;
+    cursor:pointer;
+    box-shadow:0 4px 16px rgba(212,175,55,0.4);
+    transition:all 0.3s;
+}
+
+.btn-exchange:active{
+    transform:scale(0.98);
+    box-shadow:0 2px 8px rgba(212,175,55,0.5);
+}
+
+.btn-exchange:disabled{
+    background:#555;
+    color:#999;
+    box-shadow:none;
+    cursor:not-allowed;
+}
+
+/* 兑换记录 */
+.record-item{
+    display:flex;
+    justify-content:space-between;
+    padding:16px;
+    background:rgba(255,255,255,0.03);
+    border-radius:12px;
+    margin-bottom:12px;
+    border:1px solid rgba(255,255,255,0.05);
+}
+
+.record-left{
+    flex:1;
+}
+
+.record-title{
+    font-size:15px;
+    font-weight:600;
+    color:#fff;
+    margin-bottom:4px;
+}
+
+.record-time{
+    font-size:12px;
+    color:rgba(255,255,255,0.5);
+}
+
+.record-right{
+    text-align:right;
+}
+
+.record-points{
+    font-size:18px;
+    font-weight:700;
+    color:#f5d771;
+    margin-bottom:4px;
+}
+
+.record-status{
+    font-size:12px;
+    color:#52c41a;
+}
+</style>
+</head>
+<body>
+<div id="app" class="points-page">
+    <!-- 顶部积分卡片 -->
+    <div class="points-header">
+        <div class="points-card">
+            <div class="points-label">我的积分</div>
+            <div class="points-value" id="userPoints">0</div>
+            <div class="points-rate">
+                兑换比例：<strong id="exchangeRate">1000</strong> 积分 = 1 元
+            </div>
+        </div>
+    </div>
+
+    <!-- 兑换类型标签 -->
+    <div class="exchange-tabs">
+        <button class="exchange-tab active" data-type="cash">兑换现金</button>
+        <button class="exchange-tab" data-type="gift">兑换礼品</button>
+        <button class="exchange-tab" data-type="record">兑换记录</button>
+    </div>
+
+    <!-- 兑换现金 -->
+    <div class="exchange-list" id="cashSection">
+        <div class="exchange-item">
+            <div class="exchange-header">
+                <div class="exchange-icon">💰</div>
+                <div class="exchange-badge">推荐</div>
+            </div>
+            <h3 class="exchange-title">兑换现金</h3>
+            <p class="exchange-desc">积分直接兑换现金，实时到账，无手续费</p>
+            <div class="exchange-price">
+                <div>
+                    <div class="price-label">兑换金额</div>
+                    <div class="price-value" id="cashAmount">0</div>
+                </div>
+                <div style="text-align:right;">
+                    <div class="price-label">消耗积分</div>
+                    <div class="price-points" id="cashPoints">0</div>
+                </div>
+            </div>
+            <input type="number" placeholder="请输入兑换金额" id="cashInput" 
+                style="width:100%;padding:12px;background:rgba(255,255,255,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:8px;color:#fff;margin-bottom:12px;font-size:16px;"
+                oninput="calculateCash()">
+            <button class="btn-exchange" onclick="exchangeCash()">立即兑换</button>
+        </div>
+    </div>
+
+    <!-- 兑换礼品 -->
+    <div class="exchange-list" id="giftSection" style="display:none;">
+        <div class="exchange-item">
+            <div class="exchange-header">
+                <div class="exchange-icon">🎁</div>
+                <div class="exchange-badge">热门</div>
+            </div>
+            <h3 class="exchange-title">iPhone 15 Pro Max</h3>
+            <p class="exchange-desc">256GB 原色钛金属，全新未拆封</p>
+            <div class="exchange-price">
+                <div class="price-label">所需积分</div>
+                <div class="price-value">900,000</div>
+            </div>
+            <button class="btn-exchange" onclick="exchangeGift(1)">立即兑换</button>
+        </div>
+        <div class="exchange-item">
+            <div class="exchange-header">
+                <div class="exchange-icon">💻</div>
+            </div>
+            <h3 class="exchange-title">MacBook Pro 14"</h3>
+            <p class="exchange-desc">M3 Pro芯片，18GB内存，512GB存储</p>
+            <div class="exchange-price">
+                <div class="price-label">所需积分</div>
+                <div class="price-value">1,200,000</div>
+            </div>
+            <button class="btn-exchange" onclick="exchangeGift(2)">立即兑换</button>
+        </div>
+    </div>
+
+    <!-- 兑换记录 -->
+    <div class="exchange-list" id="recordSection" style="display:none;">
+        <div id="recordList">
+            <div class="record-item">
+                <div class="record-left">
+                    <div class="record-title">兑换现金</div>
+                    <div class="record-time">2025-10-23 12:30</div>
+                </div>
+                <div class="record-right">
+                    <div class="record-points">-10,000</div>
+                    <div class="record-status">已完成</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部导航 -->
+    <nav class="tabbar">
+        <a class="tab" href="index.html">
+            <div class="ico ico-home"></div>
+            <div class="txt">首页</div>
+        </a>
+        <a class="tab" href="market.html">
+            <div class="ico ico-finance"></div>
+            <div class="txt">数据</div>
+        </a>
+        <a class="tab" href="finance.html">
+            <div class="ico ico-market"></div>
+            <div class="txt">项目</div>
+        </a>
+        <a class="tab" href="messages.html">
+            <div class="ico dot ico-message"></div>
+            <div class="txt">消息</div>
+        </a>
+        <a class="tab active" href="profile.html">
+            <div class="ico ico-me"></div>
+            <div class="txt">我的</div>
+        </a>
+    </nav>
+</div>
+
+<script src="config.js"></script>
+<script>
+let userPoints = 0;
+let exchangeRate = 1000; // 1000积分=1元（从后台获取）
+
+// 页面加载
+document.addEventListener('DOMContentLoaded', async function() {
+    await loadUserPoints();
+    await loadExchangeRate();
+    initTabs();
+});
+
+// 获取用户积分
+async function loadUserPoints() {
+    try {
+        const result = await API.user.getInfo();
+        if (result.success && result.data) {
+            userPoints = parseInt(result.data.integral || 0);
+            document.getElementById('userPoints').textContent = formatNumber(userPoints);
+        }
+    } catch (error) {
+        console.error('获取积分失败:', error);
+        userPoints = 0;
+        document.getElementById('userPoints').textContent = '0';
+    }
+}
+
+// 获取兑换比例（从后台）
+async function loadExchangeRate() {
+    try {
+        // TODO: 从后台获取兑换比例
+        // const result = await API.get('/config/exchange_rate');
+        // exchangeRate = result.data.rate || 1000;
+        
+        exchangeRate = 1000; // 默认1000积分=1元
+        document.getElementById('exchangeRate').textContent = formatNumber(exchangeRate);
+    } catch (error) {
+        exchangeRate = 1000;
+    }
+}
+
+// 标签切换
+function initTabs() {
+    const tabs = document.querySelectorAll('.exchange-tab');
+    const sections = {
+        'cash': document.getElementById('cashSection'),
+        'gift': document.getElementById('giftSection'),
+        'record': document.getElementById('recordSection')
+    };
+    
+    tabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            tabs.forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            const type = this.dataset.type;
+            Object.values(sections).forEach(s => s.style.display = 'none');
+            if (sections[type]) sections[type].style.display = 'block';
+        });
+    });
+}
+
+// 计算现金兑换
+function calculateCash() {
+    const amount = parseFloat(document.getElementById('cashInput').value) || 0;
+    const points = Math.ceil(amount * exchangeRate);
+    
+    document.getElementById('cashAmount').textContent = amount.toFixed(2) + ' 元';
+    document.getElementById('cashPoints').textContent = formatNumber(points) + ' 积分';
+}
+
+// 兑换现金
+async function exchangeCash() {
+    const amount = parseFloat(document.getElementById('cashInput').value);
+    if (!amount || amount <= 0) {
+        alert('请输入兑换金额');
+        return;
+    }
+    
+    const needPoints = Math.ceil(amount * exchangeRate);
+    if (needPoints > userPoints) {
+        alert('积分不足！\n\n需要：' + formatNumber(needPoints) + ' 积分\n当前：' + formatNumber(userPoints) + ' 积分');
+        return;
+    }
+    
+    if (!confirm(`确认兑换 ${amount} 元？\n将消耗 ${formatNumber(needPoints)} 积分`)) {
+        return;
+    }
+    
+    try {
+        // 调用后台兑换接口
+        const result = await http.post('/index.php/user/points/exchange', {
+            type: 'cash',
+            amount: amount,
+            points: needPoints
+        });
+        
+        if (result.success) {
+            alert('✅ 兑换成功！\n\n金额：' + amount + ' 元\n预计1-3个工作日到账');
+            location.reload();
+        } else {
+            alert('❌ 兑换失败：' + (result.msg || '请稍后重试'));
+        }
+    } catch (error) {
+        alert('❌ 网络错误，请稍后重试');
+    }
+}
+
+// 兑换礼品
+async function exchangeGift(giftId) {
+    alert('礼品兑换功能开发中...');
+}
+
+// 格式化数字
+function formatNumber(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+</script>
+</body>
+</html>

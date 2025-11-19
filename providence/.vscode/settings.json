@@ -1,0 +1,22 @@
+{
+  "codebase.indexing.enabled": true,
+  "codebase.indexing.onStartup": true,
+  "codebase.indexing.include": [
+    "**/*.js",
+    "**/*.html",
+    "**/*.css",
+    "**/*.md",
+    "**/*.json",
+    "**/*.php",
+    "**/*.ts"
+  ],
+  "codebase.indexing.exclude": [
+    "**/node_modules/**",
+    "**/backups/**",
+    "**/img/**",
+    "**/*.backup",
+    "**/*.bak",
+    "**/*.min.js",
+    "**/*.min.css"
+  ]
+}

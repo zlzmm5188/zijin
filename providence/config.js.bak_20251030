@@ -1,0 +1,375 @@
+// ===================================
+// PROVIDENCE前台 - API配置文件
+// ===================================
+// 创建时间：2025-10-20
+// 后台API：v2.abcmall.one
+// ===================================
+
+// API基础配置
+const API_CONFIG = {
+  // 后台API地址
+  baseURL: 'https://v2.abcmall.one/index.php',
+
+  // 后台管理地址（备用）
+  adminURL: 'https://v2.abcmall.one/octohoutai.php',
+
+  // Token存储键名
+  tokenKey: 'providence_token',
+
+  // 请求超时时间（毫秒）
+  timeout: 10000,
+
+  // 是否开启调试模式
+  debug: true
+};
+
+// API接口路径配置
+const API_ENDPOINTS = {
+  // 用户相关
+  user: {
+    info: '/user/user/index',           // 获取用户信息
+    login: '/login/index/login',         // 用户登录
+    register: '/login/reg/sms',          // 用户注册
+    logout: '/user/user/logout',         // 用户登出
+  },
+
+  // 会员等级
+  level: {
+    list: '/user/level/list',            // 获取等级列表
+  },
+
+  // 推广相关
+  promotion: {
+    invite: '/user/user/invite',         // 获取邀请信息
+  },
+
+  // 投资相关
+  fund: {
+    list: '/fund/project/list',          // 项目列表
+    detail: '/fund/project/detail',      // 项目详情
+    add: '/fund/project/add',            // 投资项目
+  },
+
+  // 订单相关
+  order: {
+    list: '/user/order/list',            // 订单列表
+    detail: '/user/order/detail',        // 订单详情
+  },
+
+  // 财务相关
+  finance: {
+    recharge: '/user/recharge/add',      // 充值
+    withdraw: '/user/withdraw/add',      // 提现
+    bankCards: '/user/bank/list',        // 银行卡列表
+  },
+
+  // 市场数据（使用本地爬虫）
+  market: {
+    all: null,           // 后端API未实现，使用本地market-crawler.php
+    funds: null,         // 使用本地数据
+    ipos: null,          // 使用本地数据
+    bonds: null,         // 使用本地数据
+    indices: null,       // 使用本地数据
+  },
+
+  // 新闻资讯（暂无，使用本地数据）
+  news: {
+    financial: null,                     // TODO: 财经快讯（暂无后台接口）
+    company: null,                       // TODO: 公司动态（暂无后台接口）
+  },
+  
+  // === 新增接口 2025-10-30 ===
+  
+  // 体验金系统
+  trialFund: {
+    balance: '/user/trial_fund/balance',        // 查询体验金余额
+    use: '/fund/project/buy_with_trial',        // 使用体验金购买
+    grant: '/user/trial_fund/grant',            // 发放体验金
+  },
+  
+  // 活动系统
+  activity: {
+    current: '/user/activity/current',          // 当前进行的活动
+    list: '/user/activity/list',                // 活动列表
+    join: '/user/activity/join',                // 参与活动
+  },
+  
+  // VIP系统
+  vip: {
+    info: '/user/vip/info',                     // 获取VIP信息
+    config: '/user/vip/config',                 // VIP配置
+    calculate: '/user/vip/calculate',           // 计算VIP等级
+  },
+  
+  // 团队系统
+  team: {
+    tree: '/user/team/tree',                    // 团队树状图
+    stats: '/user/team/stats',                  // 团队统计
+    reward: '/user/team/reward_check',          // 检测团队奖励
+  },
+  
+  // 积分系统
+  points: {
+    balance: '/user/points/balance',            // 积分余额
+    exchange: '/user/points/exchange',          // 积分兑换现金
+    logs: '/user/points/logs',                  // 积分明细
+  }
+};
+
+// HTTP请求封装
+class HttpClient {
+  constructor(config) {
+    this.baseURL = config.baseURL;
+    this.timeout = config.timeout;
+    this.debug = config.debug;
+  }
+
+  // 获取Token
+  getToken() {
+    return localStorage.getItem(API_CONFIG.tokenKey) || '';
+  }
+
+  // 设置Token
+  setToken(token) {
+    localStorage.setItem(API_CONFIG.tokenKey, token);
+  }
+
+  // 清除Token
+  clearToken() {
+    localStorage.removeItem(API_CONFIG.tokenKey);
+  }
+
+  // 通用请求方法
+  async request(url, options = {}) {
+    const {
+      method = 'GET',
+      data = null,
+      headers = {},
+      useToken = true
+    } = options;
+
+    // 构建完整URL
+    const fullURL = this.baseURL + url;
+
+    // 构建请求头
+    const reqHeaders = {
+      'Content-Type': 'application/json',
+      ...headers
+    };
+
+    // 添加Token
+    if (useToken) {
+      const token = this.getToken();
+      if (token) {
+        reqHeaders['token'] = token;
+      }
+    }
+
+    // 构建请求配置
+    const reqConfig = {
+      method,
+      headers: reqHeaders,
+      mode: 'cors',
+      credentials: 'include'
+    };
+
+    // 添加请求体
+    if (data && (method === 'POST' || method === 'PUT')) {
+      if (reqHeaders['Content-Type'] === 'application/json') {
+        reqConfig.body = JSON.stringify(data);
+      } else {
+        reqConfig.body = data;
+      }
+    }
+
+    // 调试输出
+    if (this.debug) {
+      console.log('[API Request]', method, url, data);
+    }
+
+    try {
+      // 发送请求
+      const response = await fetch(fullURL, reqConfig);
+
+      // 解析响应
+      const result = await response.json();
+
+      // 调试输出
+      if (this.debug) {
+        console.log('[API Response]', url, result);
+      }
+
+      // 检查响应状态
+      if (result.code === 1 || result.msg === 'ok') {
+        return {
+          success: true,
+          data: result.data || result,
+          msg: result.msg || 'success'
+        };
+      } else {
+        return {
+          success: false,
+          data: null,
+          msg: result.msg || '请求失败'
+        };
+      }
+    } catch (error) {
+      console.error('[API Error]', url, error);
+      return {
+        success: false,
+        data: null,
+        msg: error.message || '网络错误'
+      };
+    }
+  }
+
+  // GET请求
+  get(url, options = {}) {
+    return this.request(url, { ...options, method: 'GET' });
+  }
+
+  // POST请求
+  post(url, data, options = {}) {
+    return this.request(url, { ...options, method: 'POST', data });
+  }
+
+  // PUT请求
+  put(url, data, options = {}) {
+    return this.request(url, { ...options, method: 'PUT', data });
+  }
+
+  // DELETE请求
+  delete(url, options = {}) {
+    return this.request(url, { ...options, method: 'DELETE' });
+  }
+}
+
+// 创建HTTP客户端实例
+const http = new HttpClient(API_CONFIG);
+
+// API服务封装
+const API = {
+  // 用户服务
+  user: {
+    // 获取用户信息
+    getInfo() {
+      return http.get(API_ENDPOINTS.user.info);
+    },
+
+    // 用户登录
+    login(mobile, password) {
+      return http.post(API_ENDPOINTS.user.login, { mobile, password }, { useToken: false });
+    },
+
+    // 用户注册
+    register(data) {
+      return http.post(API_ENDPOINTS.user.register, data, { useToken: false });
+    },
+
+    // 用户登出
+    logout() {
+      return http.post(API_ENDPOINTS.user.logout);
+    }
+  },
+
+  // 会员等级服务
+  level: {
+    // 获取等级列表
+    getList() {
+      return http.get(API_ENDPOINTS.level.list);
+    }
+  },
+
+  // 推广服务
+  promotion: {
+    // 获取邀请信息
+    getInviteInfo() {
+      return http.get(API_ENDPOINTS.promotion.invite);
+    }
+  },
+
+  // 投资服务
+  fund: {
+    // 获取项目列表
+    getList(params = {}) {
+      const query = new URLSearchParams(params).toString();
+      return http.get(API_ENDPOINTS.fund.list + (query ? '?' + query : ''));
+    },
+
+    // 获取项目详情
+    getDetail(id) {
+      return http.get(API_ENDPOINTS.fund.detail + '?id=' + id);
+    },
+
+    // 投资项目
+    invest(data) {
+      return http.post(API_ENDPOINTS.fund.add, data);
+    }
+  },
+
+  // 订单服务
+  order: {
+    // 获取订单列表
+    getList(params = {}) {
+      const query = new URLSearchParams(params).toString();
+      return http.get(API_ENDPOINTS.order.list + (query ? '?' + query : ''));
+    },
+
+    // 获取订单详情
+    getDetail(id) {
+      return http.get(API_ENDPOINTS.order.detail + '?id=' + id);
+    }
+  },
+
+  // 财务服务
+  finance: {
+    // 充值
+    recharge(data) {
+      return http.post(API_ENDPOINTS.finance.recharge, data);
+    },
+
+    // 提现
+    withdraw(data) {
+      return http.post(API_ENDPOINTS.finance.withdraw, data);
+    },
+
+    // 获取银行卡列表
+    getBankCards() {
+      return http.get(API_ENDPOINTS.finance.bankCards);
+    }
+  },
+
+  // 市场服务
+  market: {
+    // 获取所有市场数据
+    getAll() {
+      return http.get(API_ENDPOINTS.market.all);
+    },
+
+    // 获取基金数据
+    getFunds() {
+      return http.get(API_ENDPOINTS.market.funds);
+    },
+
+    // 获取IPO数据
+    getIPOs() {
+      return http.get(API_ENDPOINTS.market.ipos);
+    },
+
+    // 获取债券数据
+    getBonds() {
+      return http.get(API_ENDPOINTS.market.bonds);
+    }
+  }
+};
+
+// 导出配置和API（用于其他JS文件引用）
+if (typeof window !== 'undefined') {
+  window.API_CONFIG = API_CONFIG;
+  window.API_ENDPOINTS = API_ENDPOINTS;
+  window.http = http;
+  window.API = API;
+}
+
+console.log('🚀 PROVIDENCE API配置已加载');
+console.log('📍 后台地址:', API_CONFIG.baseURL);

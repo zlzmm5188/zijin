@@ -1,0 +1,61 @@
+<?php
+/**
+ * 获取项目列表
+ * GET /fund/project/all
+ */
+require_once __DIR__ . '/../../config/bootstrap.php';
+
+$db = Database::getInstance();
+
+// 获取分页参数
+$page = max(1, (int)($_GET['page'] ?? 1));
+$pageSize = min(100, max(10, (int)($_GET['limit'] ?? 20)));
+$offset = ($page - 1) * $pageSize;
+
+// 获取筛选条件
+$category = $_GET['category'] ?? '';
+$status = $_GET['status'] ?? 1;
+
+$where = 'status = :status';
+$params = ['status' => $status];
+
+if (!empty($category)) {
+    $where .= ' AND category = :category';
+    $params['category'] = $category;
+}
+
+// 获取总数
+$total = $db->count('invest_projects', $where, $params);
+
+// 获取列表
+$sql = "SELECT p.*, pm.name as manager_name, pm.title as manager_title, pm.avatar as manager_avatar
+        FROM " . $db->getPrefix() . "invest_projects p
+        LEFT JOIN " . $db->getPrefix() . "project_managers pm ON p.manager_id = pm.id
+        WHERE {$where}
+        ORDER BY p.sort_order DESC, p.id DESC
+        LIMIT {$offset}, {$pageSize}";
+
+$list = $db->fetchAll($sql, $params);
+
+// 格式化数据
+foreach ($list as &$item) {
+    $item['id'] = (int)$item['id'];
+    $item['min_invest'] = (float)$item['min_invest'];
+    $item['max_invest'] = (float)$item['max_invest'];
+    $item['daily_rate'] = (float)$item['daily_rate'];
+    $item['total_days'] = (int)$item['total_days'];
+    $item['total_return_rate'] = (float)$item['total_return_rate'];
+    $item['risk_level'] = (int)$item['risk_level'];
+    $item['view_count'] = (int)$item['view_count'];
+    $item['invest_count'] = (int)$item['invest_count'];
+    $item['total_invested'] = (float)$item['total_invested'];
+    $item['images'] = !empty($item['images']) ? json_decode($item['images'], true) : [];
+    $item['manager'] = [
+        'name' => $item['manager_name'],
+        'title' => $item['manager_title'],
+        'avatar' => $item['manager_avatar']
+    ];
+    unset($item['manager_name'], $item['manager_title'], $item['manager_avatar']);
+}
+
+Response::paginate($list, $total, $page, $pageSize);

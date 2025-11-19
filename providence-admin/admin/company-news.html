@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>公司动态</title>
+    <link rel="stylesheet" href="https://cdn.staticfile.org/layui/2.8.18/css/layui.css">
+</head>
+<body>
+    <div style="padding: 20px;">
+        <h2>公司动态管理</h2>
+        <button class="layui-btn" id="addBtn">发布动态</button>
+        <table class="layui-table">
+            <thead>
+                <tr><th>ID</th><th>标题</th><th>分类</th><th>状态</th><th>置顶</th><th>发布时间</th><th>操作</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td>Providence荣获GrowthCap认证</td><td>奖项</td><td>已发布</td><td><input type="checkbox" checked></td><td>2024-10-24</td><td><button class="layui-btn layui-btn-xs">编辑</button></td></tr>
+                <tr><td>2</td><td>管理资产规模突破500亿美元</td><td>喜讯</td><td>已发布</td><td><input type="checkbox"></td><td>2024-10-15</td><td><button class="layui-btn layui-btn-xs">编辑</button></td></tr>
+            </tbody>
+        </table>
+    </div>
+    <script src="https://cdn.staticfile.org/layui/2.8.18/layui.js"></script>
+    <script>
+    layui.use('layer', function(){
+        var layer = layui.layer;
+        document.getElementById('addBtn').onclick = function(){
+            layer.msg('发布功能开发中...');
+        };
+    });
+    </script>
+</body>
+</html>

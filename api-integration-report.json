@@ -1,436 +1,286 @@
 {
-  "generatedAt": "2025-11-19T20:48:45.733Z",
+  "generatedAt": "2025-11-19T22:34:42.763Z",
   "summary": {
     "backendRouteCount": 100,
-    "frontendApiCount": 82,
-    "matchedCount": 49,
-    "missingCount": 33,
-    "unusedCount": 10
+    "frontendApiCount": 62,
+    "matchedCount": 44,
+    "missingCount": 18,
+    "unusedCount": 15
   },
   "missing": [
     {
       "api": "${this.config.apiBase}/chat/completions",
-      "samples": [
+      "usages": [
         {
-          "file": "/workspace/providence/ai-openai.js",
+          "file": "/providence/ai-openai.js",
           "line": 181,
-          "snippet": "`/index.php/${this.config.apiBase}/chat/completions`"
+          "snippet": "fetch(`/index.php/${this.config.apiBase}/chat/completions`"
+        },
+        {
+          "file": "/providence/ai-openai.js",
+          "line": 334,
+          "snippet": "fetch(`${this.config.apiBase}/chat/completions`"
         }
       ]
     },
     {
-      "api": "ai/chat</code></p>\n    <div id=",
-      "samples": [
+      "api": "calendar-crawler.php",
+      "usages": [
         {
-          "file": "/workspace/providence/test-ai.html",
-          "line": 30,
-          "snippet": "https://apis.copla.top/index.php/ai/chat</code></p>\n    <div id="
+          "file": "/providence/calendar.js",
+          "line": 34,
+          "snippet": "fetch(`calendar-crawler.php?${params}`"
         }
       ]
     },
     {
-      "api": "finance/ribao-",
-      "samples": [
+      "api": "config.php",
+      "usages": [
         {
-          "file": "/workspace/providence/config.js",
-          "line": 201,
-          "snippet": "'/index.php/finance/ribao-'"
+          "file": "/providence/shop.html",
+          "line": 524,
+          "snippet": "fetch(\n            `config.php?action=invite_config&vip=${userVipLevel}`"
+        }
+      ]
+    },
+    {
+      "api": "data/market-data.json",
+      "usages": [
+        {
+          "file": "/providence/index-main.html",
+          "line": 605,
+          "snippet": "fetch('data/market-data.json?v='"
+        },
+        {
+          "file": "/providence/index-original.html",
+          "line": 605,
+          "snippet": "fetch('data/market-data.json?v='"
+        },
+        {
+          "file": "/providence/index.html",
+          "line": 601,
+          "snippet": "fetch('data/market-data.json?v='"
+        },
+        {
+          "file": "/providence/market.js",
+          "line": 357,
+          "snippet": "fetch('data/market-data.json?v='"
+        }
+      ]
+    },
+    {
+      "api": "data/news-data.json",
+      "usages": [
+        {
+          "file": "/providence/index-main.html",
+          "line": 475,
+          "snippet": "fetch('data/news-data.json?t='"
+        },
+        {
+          "file": "/providence/index-original.html",
+          "line": 475,
+          "snippet": "fetch('data/news-data.json?t='"
+        },
+        {
+          "file": "/providence/index.html",
+          "line": 471,
+          "snippet": "fetch('data/news-data.json?t='"
+        },
+        {
+          "file": "/providence/news-flash.js",
+          "line": 15,
+          "snippet": "fetch(`data/news-data.json?t=${Date.now()}`"
+        }
+      ]
+    },
+    {
+      "api": "get",
+      "usages": [
+        {
+          "file": "/providence/profile.js",
+          "line": 125,
+          "snippet": "httpClient.get('/index.php/user/user/index'"
         }
       ]
     },
     {
       "api": "get_usdt_rate",
-      "samples": [
+      "usages": [
         {
-          "file": "/workspace/providence/deposit.js",
+          "file": "/providence/deposit.js",
           "line": 116,
           "snippet": "API_BASE + '/index.php/get_usdt_rate'"
-        },
-        {
-          "file": "/workspace/providence/deposit.js",
-          "line": 116,
-          "snippet": "'/index.php/get_usdt_rate'"
         }
       ]
     },
     {
       "api": "kyc-face-verify.php",
-      "samples": [
+      "usages": [
         {
-          "file": "/workspace/providence/test-kyc-api.html",
+          "file": "/providence/test-kyc-api.html",
           "line": 130,
-          "snippet": "'/kyc-face-verify.php'"
+          "snippet": "fetch('/kyc-face-verify.php'"
         },
         {
-          "file": "/workspace/providence/test-kyc-token.html",
+          "file": "/providence/test-kyc-token.html",
           "line": 95,
-          "snippet": "'/kyc-face-verify.php'"
-        }
-      ]
-    },
-    {
-      "api": "login.html",
-      "samples": [
-        {
-          "file": "/workspace/providence/config.js",
-          "line": 298,
-          "snippet": "'/login.html'"
-        },
-        {
-          "file": "/workspace/providence/config.js",
-          "line": 378,
-          "snippet": "'/login.html'"
-        },
-        {
-          "file": "/workspace/providence/points-exchange-original.html",
-          "line": 617,
-          "snippet": "'/login.html'"
-        }
-      ]
-    },
-    {
-      "api": "login/",
-      "samples": [
-        {
-          "file": "/workspace/providence/config.js",
-          "line": 205,
-          "snippet": "'/index.php/login/'"
-        }
-      ]
-    },
-    {
-      "api": "login/account</pre\n      >\n    </div>\n\n    <script>\n      async function test() {\n        const u = document.getElementById(",
-      "samples": [
-        {
-          "file": "/workspace/providence/test-api.html",
-          "line": 64,
-          "snippet": "https://copla.top\n方法: POST\n路径: /index.php/login/account</pre\n      >\n    </div>\n\n    <script>\n      async function test() {\n        const u = document.getElemen"
+          "snippet": "fetch('/kyc-face-verify.php'"
         }
       ]
     },
     {
       "api": "login/sms/forget",
-      "samples": [
+      "usages": [
         {
-          "file": "/workspace/providence/forgot.js",
+          "file": "/providence/forgot.js",
           "line": 43,
           "snippet": "API_BASE + '/index.php/login/sms/forget'"
-        },
-        {
-          "file": "/workspace/providence/forgot.js",
-          "line": 43,
-          "snippet": "'/index.php/login/sms/forget'"
         }
       ]
     },
     {
       "api": "login/sms/forget/account",
-      "samples": [
+      "usages": [
         {
-          "file": "/workspace/providence/forgot.js",
+          "file": "/providence/forgot.js",
           "line": 75,
           "snippet": "API_BASE + '/index.php/login/sms/forget/account'"
-        },
-        {
-          "file": "/workspace/providence/forgot.js",
-          "line": 75,
-          "snippet": "'/index.php/login/sms/forget/account'"
         }
       ]
     },
     {
       "api": "login/sms/login",
-      "samples": [
+      "usages": [
         {
-          "file": "/workspace/providence/login.js",
+          "file": "/providence/login.js",
           "line": 342,
           "snippet": "API_BASE + '/index.php/login/sms/login'"
-        },
-        {
-          "file": "/workspace/providence/login.js",
-          "line": 342,
-          "snippet": "'/index.php/login/sms/login'"
         }
       ]
     },
     {
-      "api": "points-exchange-history.html",
-      "samples": [
+      "api": "market-crawler.php",
+      "usages": [
         {
-          "file": "/workspace/providence/points-exchange-original.html",
-          "line": 738,
-          "snippet": "'/points-exchange-history.html'"
-        },
-        {
-          "file": "/workspace/providence/points-exchange.html",
-          "line": 903,
-          "snippet": "'/points-exchange-history.html'"
+          "file": "/providence/finance.js",
+          "line": 117,
+          "snippet": "fetch('market-crawler.php?action=get&type=all'"
         }
       ]
     },
     {
-      "api": "trial/canClaim",
-      "samples": [
+      "api": "password/reset-verified",
+      "usages": [
         {
-          "file": "/workspace/providence/trial-money-popup.js",
-          "line": 11,
-          "snippet": "'/index.php/trial/canClaim'"
+          "file": "/providence/ai-password-reset.js",
+          "line": 435,
+          "snippet": "fetch('https://apis.copla.topuser/password/reset-verified'"
         }
       ]
     },
     {
-      "api": "user/checkin/do",
-      "samples": [
+      "api": "points/logs",
+      "usages": [
         {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 68,
-          "snippet": "'/index.php/user/checkin/do'"
+          "file": "/providence/points-record.html",
+          "line": 205,
+          "snippet": "fetch('https://apis.copla.topuser/points/logs'"
         }
       ]
     },
     {
-      "api": "user/checkin/status",
-      "samples": [
+      "api": "upload-image.php",
+      "usages": [
         {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 67,
-          "snippet": "'/index.php/user/checkin/status'"
+          "file": "/providence/upload-image.html",
+          "line": 276,
+          "snippet": "fetch('upload-image.php'"
         }
       ]
     },
     {
-      "api": "user/index.php",
-      "samples": [
+      "api": "user/balance",
+      "usages": [
         {
-          "file": "/workspace/providence/ai-service-local.js",
-          "line": 43,
-          "snippet": "'/index.php/user/index.php'"
+          "file": "/providence/ribao.html",
+          "line": 1333,
+          "snippet": "fetch(\n              `${API_BASE}/index.php/user/balance`"
         }
       ]
     },
     {
-      "api": "user/invite",
-      "samples": [
+      "api": "verify/face-idcard",
+      "usages": [
         {
-          "file": "/workspace/providence/ai-service-local.js",
-          "line": 415,
-          "snippet": "'/index.php/user/invite'"
+          "file": "/providence/ai-password-reset.js",
+          "line": 313,
+          "snippet": "fetch('https://apis.copla.topuser/verify/face-idcard'"
         }
       ]
     },
     {
-      "api": "user/invite-info.php",
-      "samples": [
+      "api": "verify/idcard",
+      "usages": [
         {
-          "file": "/workspace/providence/invite.js",
-          "line": 41,
-          "snippet": "'/index.php/user/invite-info.php'"
-        }
-      ]
-    },
-    {
-      "api": "user/invite/rewards_config",
-      "samples": [
-        {
-          "file": "/workspace/providence/invite-share.js",
-          "line": 89,
-          "snippet": "'/index.php/user/invite/rewards_config'"
-        }
-      ]
-    },
-    {
-      "api": "user/points-balance.php",
-      "samples": [
-        {
-          "file": "/workspace/providence/points-exchange-original.html",
-          "line": 626,
-          "snippet": "'/index.php/user/points-balance.php'"
-        }
-      ]
-    },
-    {
-      "api": "user/points-exchange.php",
-      "samples": [
-        {
-          "file": "/workspace/providence/points-exchange-original.html",
-          "line": 702,
-          "snippet": "'/index.php/user/points-exchange.php'"
-        }
-      ]
-    },
-    {
-      "api": "user/points-logs.php",
-      "samples": [
-        {
-          "file": "/workspace/providence/points-logs.html",
-          "line": 310,
-          "snippet": "https://apis.copla.top/index.php/user/points-logs.php?page=${page}&limit=20"
-        }
-      ]
-    },
-    {
-      "api": "user/points/goods",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 69,
-          "snippet": "'/index.php/user/points/goods'"
-        }
-      ]
-    },
-    {
-      "api": "user/profile.php",
-      "samples": [
-        {
-          "file": "/workspace/providence/config.js",
-          "line": 202,
-          "snippet": "'/index.php/user/profile.php'"
-        }
-      ]
-    },
-    {
-      "api": "user/ribao/",
-      "samples": [
-        {
-          "file": "/workspace/providence/config.js",
-          "line": 203,
-          "snippet": "'/index.php/user/ribao/'"
-        }
-      ]
-    },
-    {
-      "api": "user/ribao/head",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 59,
-          "snippet": "'/index.php/user/ribao/head'"
-        },
-        {
-          "file": "/workspace/providence/ribao.js",
-          "line": 91,
-          "snippet": "'/index.php/user/ribao/head'"
-        }
-      ]
-    },
-    {
-      "api": "user/ribao/in",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 61,
-          "snippet": "'/index.php/user/ribao/in'"
-        },
-        {
-          "file": "/workspace/providence/ribao.js",
-          "line": 413,
-          "snippet": "'/index.php/user/ribao/in'"
-        }
-      ]
-    },
-    {
-      "api": "user/ribao/list",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 60,
-          "snippet": "'/index.php/user/ribao/list'"
-        },
-        {
-          "file": "/workspace/providence/ribao.js",
-          "line": 143,
-          "snippet": "'/index.php/user/ribao/list'"
-        }
-      ]
-    },
-    {
-      "api": "user/ribao/out",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 62,
-          "snippet": "'/index.php/user/ribao/out'"
-        },
-        {
-          "file": "/workspace/providence/ribao.js",
-          "line": 476,
-          "snippet": "'/index.php/user/ribao/out'"
-        }
-      ]
-    },
-    {
-      "api": "user/sign/",
-      "samples": [
-        {
-          "file": "/workspace/providence/config.js",
-          "line": 204,
-          "snippet": "'/index.php/user/sign/'"
-        }
-      ]
-    },
-    {
-      "api": "user/team/claim-reward",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 65,
-          "snippet": "'/index.php/user/team/claim-reward'"
-        }
-      ]
-    },
-    {
-      "api": "user/team/my-rewards",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 64,
-          "snippet": "'/index.php/user/team/my-rewards'"
-        }
-      ]
-    },
-    {
-      "api": "user/team/reward-rules",
-      "samples": [
-        {
-          "file": "/workspace/providence/check-all-api-errors.js",
-          "line": 63,
-          "snippet": "'/index.php/user/team/reward-rules'"
+          "file": "/providence/ai-password-reset.js",
+          "line": 170,
+          "snippet": "fetch('https://apis.copla.topuser/verify/idcard'"
         }
       ]
     }
   ],
   "unused": [
     {
+      "route": "ai/chat",
+      "file": "ai/chat.php"
+    },
+    {
+      "route": "fund/project/add",
+      "file": "project/invest.php"
+    },
+    {
       "route": "fund/project/calculate",
       "file": "project/calculate.php"
+    },
+    {
+      "route": "fund/project/detail",
+      "file": "project/detail.php"
     },
     {
       "route": "login/login/account",
       "file": "login.php"
     },
     {
-      "route": "pay/currency-exchange",
-      "file": "pay/currency-exchange.php"
-    },
-    {
       "route": "pay/notify",
       "file": "pay/notify.php"
     },
     {
-      "route": "pay/pending-order",
-      "file": "pay/pending-order.php"
-    },
-    {
-      "route": "pay/usdt/check",
-      "file": "pay/usdt-check.php"
+      "route": "pay/pay/recharge",
+      "file": "pay/recharge.php"
     },
     {
       "route": "user/bank/list",
       "file": "finance/bank_list.php"
     },
     {
-      "route": "user/transaction/records",
-      "file": "user/transaction-records.php"
+      "route": "user/level/list",
+      "file": "vip/list.php"
+    },
+    {
+      "route": "user/order/list",
+      "file": "order/list.php"
+    },
+    {
+      "route": "user/recharge/add",
+      "file": "finance/recharge.php"
+    },
+    {
+      "route": "user/ribao/records",
+      "file": "user/ribao-records.php"
+    },
+    {
+      "route": "user/ribao/transfer-out",
+      "file": "user/ribao-transfer-out.php"
     },
     {
       "route": "user/vip/info",

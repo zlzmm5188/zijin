@@ -1,10 +1,10 @@
 {
-  "generatedAt": "2025-11-19T22:34:42.763Z",
+  "generatedAt": "2025-11-19T22:46:47.424Z",
   "summary": {
     "backendRouteCount": 100,
-    "frontendApiCount": 62,
+    "frontendApiCount": 59,
     "matchedCount": 44,
-    "missingCount": 18,
+    "missingCount": 15,
     "unusedCount": 15
   },
   "missing": [
@@ -125,36 +125,6 @@
           "file": "/providence/test-kyc-token.html",
           "line": 95,
           "snippet": "fetch('/kyc-face-verify.php'"
-        }
-      ]
-    },
-    {
-      "api": "login/sms/forget",
-      "usages": [
-        {
-          "file": "/providence/forgot.js",
-          "line": 43,
-          "snippet": "API_BASE + '/index.php/login/sms/forget'"
-        }
-      ]
-    },
-    {
-      "api": "login/sms/forget/account",
-      "usages": [
-        {
-          "file": "/providence/forgot.js",
-          "line": 75,
-          "snippet": "API_BASE + '/index.php/login/sms/forget/account'"
-        }
-      ]
-    },
-    {
-      "api": "login/sms/login",
-      "usages": [
-        {
-          "file": "/providence/login.js",
-          "line": 342,
-          "snippet": "API_BASE + '/index.php/login/sms/login'"
         }
       ]
     },

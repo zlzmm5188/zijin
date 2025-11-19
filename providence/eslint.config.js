@@ -49,7 +49,9 @@ export default [
         matchKnowledge: 'readonly',
         AbortController: 'readonly',
         URLSearchParams: 'readonly',
-        confirm: 'readonly'
+        confirm: 'readonly',
+        showToast: 'readonly',
+        location: 'readonly'
       }
     },
     rules: {

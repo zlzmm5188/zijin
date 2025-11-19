@@ -1,0 +1,444 @@
+{
+  "generatedAt": "2025-11-19T20:48:45.733Z",
+  "summary": {
+    "backendRouteCount": 100,
+    "frontendApiCount": 82,
+    "matchedCount": 49,
+    "missingCount": 33,
+    "unusedCount": 10
+  },
+  "missing": [
+    {
+      "api": "${this.config.apiBase}/chat/completions",
+      "samples": [
+        {
+          "file": "/workspace/providence/ai-openai.js",
+          "line": 181,
+          "snippet": "`/index.php/${this.config.apiBase}/chat/completions`"
+        }
+      ]
+    },
+    {
+      "api": "ai/chat</code></p>\n    <div id=",
+      "samples": [
+        {
+          "file": "/workspace/providence/test-ai.html",
+          "line": 30,
+          "snippet": "https://apis.copla.top/index.php/ai/chat</code></p>\n    <div id="
+        }
+      ]
+    },
+    {
+      "api": "finance/ribao-",
+      "samples": [
+        {
+          "file": "/workspace/providence/config.js",
+          "line": 201,
+          "snippet": "'/index.php/finance/ribao-'"
+        }
+      ]
+    },
+    {
+      "api": "get_usdt_rate",
+      "samples": [
+        {
+          "file": "/workspace/providence/deposit.js",
+          "line": 116,
+          "snippet": "API_BASE + '/index.php/get_usdt_rate'"
+        },
+        {
+          "file": "/workspace/providence/deposit.js",
+          "line": 116,
+          "snippet": "'/index.php/get_usdt_rate'"
+        }
+      ]
+    },
+    {
+      "api": "kyc-face-verify.php",
+      "samples": [
+        {
+          "file": "/workspace/providence/test-kyc-api.html",
+          "line": 130,
+          "snippet": "'/kyc-face-verify.php'"
+        },
+        {
+          "file": "/workspace/providence/test-kyc-token.html",
+          "line": 95,
+          "snippet": "'/kyc-face-verify.php'"
+        }
+      ]
+    },
+    {
+      "api": "login.html",
+      "samples": [
+        {
+          "file": "/workspace/providence/config.js",
+          "line": 298,
+          "snippet": "'/login.html'"
+        },
+        {
+          "file": "/workspace/providence/config.js",
+          "line": 378,
+          "snippet": "'/login.html'"
+        },
+        {
+          "file": "/workspace/providence/points-exchange-original.html",
+          "line": 617,
+          "snippet": "'/login.html'"
+        }
+      ]
+    },
+    {
+      "api": "login/",
+      "samples": [
+        {
+          "file": "/workspace/providence/config.js",
+          "line": 205,
+          "snippet": "'/index.php/login/'"
+        }
+      ]
+    },
+    {
+      "api": "login/account</pre\n      >\n    </div>\n\n    <script>\n      async function test() {\n        const u = document.getElementById(",
+      "samples": [
+        {
+          "file": "/workspace/providence/test-api.html",
+          "line": 64,
+          "snippet": "https://copla.top\n方法: POST\n路径: /index.php/login/account</pre\n      >\n    </div>\n\n    <script>\n      async function test() {\n        const u = document.getElemen"
+        }
+      ]
+    },
+    {
+      "api": "login/sms/forget",
+      "samples": [
+        {
+          "file": "/workspace/providence/forgot.js",
+          "line": 43,
+          "snippet": "API_BASE + '/index.php/login/sms/forget'"
+        },
+        {
+          "file": "/workspace/providence/forgot.js",
+          "line": 43,
+          "snippet": "'/index.php/login/sms/forget'"
+        }
+      ]
+    },
+    {
+      "api": "login/sms/forget/account",
+      "samples": [
+        {
+          "file": "/workspace/providence/forgot.js",
+          "line": 75,
+          "snippet": "API_BASE + '/index.php/login/sms/forget/account'"
+        },
+        {
+          "file": "/workspace/providence/forgot.js",
+          "line": 75,
+          "snippet": "'/index.php/login/sms/forget/account'"
+        }
+      ]
+    },
+    {
+      "api": "login/sms/login",
+      "samples": [
+        {
+          "file": "/workspace/providence/login.js",
+          "line": 342,
+          "snippet": "API_BASE + '/index.php/login/sms/login'"
+        },
+        {
+          "file": "/workspace/providence/login.js",
+          "line": 342,
+          "snippet": "'/index.php/login/sms/login'"
+        }
+      ]
+    },
+    {
+      "api": "points-exchange-history.html",
+      "samples": [
+        {
+          "file": "/workspace/providence/points-exchange-original.html",
+          "line": 738,
+          "snippet": "'/points-exchange-history.html'"
+        },
+        {
+          "file": "/workspace/providence/points-exchange.html",
+          "line": 903,
+          "snippet": "'/points-exchange-history.html'"
+        }
+      ]
+    },
+    {
+      "api": "trial/canClaim",
+      "samples": [
+        {
+          "file": "/workspace/providence/trial-money-popup.js",
+          "line": 11,
+          "snippet": "'/index.php/trial/canClaim'"
+        }
+      ]
+    },
+    {
+      "api": "user/checkin/do",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 68,
+          "snippet": "'/index.php/user/checkin/do'"
+        }
+      ]
+    },
+    {
+      "api": "user/checkin/status",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 67,
+          "snippet": "'/index.php/user/checkin/status'"
+        }
+      ]
+    },
+    {
+      "api": "user/index.php",
+      "samples": [
+        {
+          "file": "/workspace/providence/ai-service-local.js",
+          "line": 43,
+          "snippet": "'/index.php/user/index.php'"
+        }
+      ]
+    },
+    {
+      "api": "user/invite",
+      "samples": [
+        {
+          "file": "/workspace/providence/ai-service-local.js",
+          "line": 415,
+          "snippet": "'/index.php/user/invite'"
+        }
+      ]
+    },
+    {
+      "api": "user/invite-info.php",
+      "samples": [
+        {
+          "file": "/workspace/providence/invite.js",
+          "line": 41,
+          "snippet": "'/index.php/user/invite-info.php'"
+        }
+      ]
+    },
+    {
+      "api": "user/invite/rewards_config",
+      "samples": [
+        {
+          "file": "/workspace/providence/invite-share.js",
+          "line": 89,
+          "snippet": "'/index.php/user/invite/rewards_config'"
+        }
+      ]
+    },
+    {
+      "api": "user/points-balance.php",
+      "samples": [
+        {
+          "file": "/workspace/providence/points-exchange-original.html",
+          "line": 626,
+          "snippet": "'/index.php/user/points-balance.php'"
+        }
+      ]
+    },
+    {
+      "api": "user/points-exchange.php",
+      "samples": [
+        {
+          "file": "/workspace/providence/points-exchange-original.html",
+          "line": 702,
+          "snippet": "'/index.php/user/points-exchange.php'"
+        }
+      ]
+    },
+    {
+      "api": "user/points-logs.php",
+      "samples": [
+        {
+          "file": "/workspace/providence/points-logs.html",
+          "line": 310,
+          "snippet": "https://apis.copla.top/index.php/user/points-logs.php?page=${page}&limit=20"
+        }
+      ]
+    },
+    {
+      "api": "user/points/goods",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 69,
+          "snippet": "'/index.php/user/points/goods'"
+        }
+      ]
+    },
+    {
+      "api": "user/profile.php",
+      "samples": [
+        {
+          "file": "/workspace/providence/config.js",
+          "line": 202,
+          "snippet": "'/index.php/user/profile.php'"
+        }
+      ]
+    },
+    {
+      "api": "user/ribao/",
+      "samples": [
+        {
+          "file": "/workspace/providence/config.js",
+          "line": 203,
+          "snippet": "'/index.php/user/ribao/'"
+        }
+      ]
+    },
+    {
+      "api": "user/ribao/head",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 59,
+          "snippet": "'/index.php/user/ribao/head'"
+        },
+        {
+          "file": "/workspace/providence/ribao.js",
+          "line": 91,
+          "snippet": "'/index.php/user/ribao/head'"
+        }
+      ]
+    },
+    {
+      "api": "user/ribao/in",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 61,
+          "snippet": "'/index.php/user/ribao/in'"
+        },
+        {
+          "file": "/workspace/providence/ribao.js",
+          "line": 413,
+          "snippet": "'/index.php/user/ribao/in'"
+        }
+      ]
+    },
+    {
+      "api": "user/ribao/list",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 60,
+          "snippet": "'/index.php/user/ribao/list'"
+        },
+        {
+          "file": "/workspace/providence/ribao.js",
+          "line": 143,
+          "snippet": "'/index.php/user/ribao/list'"
+        }
+      ]
+    },
+    {
+      "api": "user/ribao/out",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 62,
+          "snippet": "'/index.php/user/ribao/out'"
+        },
+        {
+          "file": "/workspace/providence/ribao.js",
+          "line": 476,
+          "snippet": "'/index.php/user/ribao/out'"
+        }
+      ]
+    },
+    {
+      "api": "user/sign/",
+      "samples": [
+        {
+          "file": "/workspace/providence/config.js",
+          "line": 204,
+          "snippet": "'/index.php/user/sign/'"
+        }
+      ]
+    },
+    {
+      "api": "user/team/claim-reward",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 65,
+          "snippet": "'/index.php/user/team/claim-reward'"
+        }
+      ]
+    },
+    {
+      "api": "user/team/my-rewards",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 64,
+          "snippet": "'/index.php/user/team/my-rewards'"
+        }
+      ]
+    },
+    {
+      "api": "user/team/reward-rules",
+      "samples": [
+        {
+          "file": "/workspace/providence/check-all-api-errors.js",
+          "line": 63,
+          "snippet": "'/index.php/user/team/reward-rules'"
+        }
+      ]
+    }
+  ],
+  "unused": [
+    {
+      "route": "fund/project/calculate",
+      "file": "project/calculate.php"
+    },
+    {
+      "route": "login/login/account",
+      "file": "login.php"
+    },
+    {
+      "route": "pay/currency-exchange",
+      "file": "pay/currency-exchange.php"
+    },
+    {
+      "route": "pay/notify",
+      "file": "pay/notify.php"
+    },
+    {
+      "route": "pay/pending-order",
+      "file": "pay/pending-order.php"
+    },
+    {
+      "route": "pay/usdt/check",
+      "file": "pay/usdt-check.php"
+    },
+    {
+      "route": "user/bank/list",
+      "file": "finance/bank_list.php"
+    },
+    {
+      "route": "user/transaction/records",
+      "file": "user/transaction-records.php"
+    },
+    {
+      "route": "user/vip/info",
+      "file": "user/vip-progress.php"
+    },
+    {
+      "route": "user/withdraw/add",
+      "file": "finance/withdraw.php"
+    }
+  ]
+}

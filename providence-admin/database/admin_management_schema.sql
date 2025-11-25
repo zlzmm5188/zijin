@@ -403,9 +403,9 @@ INSERT INTO `prov_admin_roles` (`name`, `code`, `description`, `permissions`, `s
 ('运营管理员', 'operation_admin', '管理项目活动', '["project.*","task.*"]', 3),
 ('客服', 'customer_service', '处理用户问题', '["user.view","finance.view"]', 4);
 
--- 插入默认超级管理员账号 (密码: admin123)
+-- 插入默认超级管理员账号 (密码: Admin@123456，部署后请立即修改!)
 INSERT INTO `prov_admins` (`username`, `password`, `real_name`, `role_id`, `status`) VALUES
-('admin', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', '系统管理员', 1, 1);
+('admin', '$2y$10$N4xJQj3xQhG1YqXLGOzAquF5eLTqA8fMHPJgvwxHvOjQc5cZvqIZS', '系统管理员', 1, 1);
 
 -- 插入默认系统配置
 INSERT INTO `prov_system_configs` (`group`, `key`, `value`, `type`, `description`, `is_public`) VALUES

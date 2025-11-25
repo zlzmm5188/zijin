@@ -31,6 +31,8 @@ if (!isset($supportedTypes[$type])) {
 
 $db = Database::getInstance();
 $adminId = 1; // 简化处理
+// TODO: 生产环境应从Session或Token获取真实管理员信息
+// $adminId = $_SESSION['admin_id'] ?? 1;
 
 try {
     // 创建导出任务
@@ -114,9 +116,13 @@ try {
             break;
     }
 
-    // 生成CSV文件
+    // 生成CSV文件到应用临时目录
+    $exportDir = __DIR__ . '/../../public/exports';
+    if (!is_dir($exportDir)) {
+        mkdir($exportDir, 0755, true);
+    }
     $filename = $type . '_' . date('YmdHis') . '.csv';
-    $filepath = '/tmp/' . $filename;
+    $filepath = $exportDir . '/' . $filename;
     
     $fp = fopen($filepath, 'w');
     // 添加BOM头以支持中文

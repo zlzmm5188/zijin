@@ -73,9 +73,12 @@ if ($type == 'ADD') {
     }
 }
 
-// 获取管理员信息 (简化处理)
-$adminId = 1;
+$adminId = 1; // 简化处理
 $adminName = 'admin';
+
+// TODO: 生产环境应从Session或Token获取真实管理员信息
+// $adminId = $_SESSION['admin_id'] ?? 1;
+// $adminName = $_SESSION['admin_name'] ?? 'admin';
 
 try {
     $db->beginTransaction();

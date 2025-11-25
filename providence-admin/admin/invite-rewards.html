@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邀请奖励配置</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body { padding: 20px; background: #f7f8fa; margin: 0; font-family: -apple-system, sans-serif; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 20px; font-weight: 700; color: #1a2332; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(90deg, #0b3b5e, #145a8a); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,59,94,0.3); }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .table-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow-x: auto; margin-bottom: 20px; }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 13px; }
+        tr:hover { background: #fafbfc; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-success { background: #dcfce7; color: #16a34a; }
+        .badge-danger { background: #fee2e2; color: #dc2626; }
+        .badge-info { background: #e0f2fe; color: #0284c7; }
+        .badge-warning { background: #fef3c7; color: #d97706; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-value { font-size: 28px; font-weight: 700; color: #0b3b5e; }
+        .stat-label { font-size: 14px; color: #64748b; margin-top: 4px; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: #fff; border-radius: 12px; width: 90%; max-width: 500px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-input-full { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .page-btn { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; cursor: pointer; }
+        .page-btn.active { background: #0b3b5e; color: #fff; border-color: #0b3b5e; }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2 class="page-title">🎁 邀请奖励配置</h2>
+        <button class="btn btn-primary" onclick="openAddModal()">➕ 添加规则</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalRewards">¥0</div>
+            <div class="stat-label">累计发放奖励</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="todayRewards">¥0</div>
+            <div class="stat-label">今日发放</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="activeRules">0</div>
+            <div class="stat-label">生效规则</div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="card-title">奖励规则配置</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>规则名称</th>
+                    <th>奖励类型</th>
+                    <th>层级</th>
+                    <th>奖励方式</th>
+                    <th>奖励值</th>
+                    <th>最低金额</th>
+                    <th>VIP限制</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="ruleList"></tbody>
+        </table>
+    </div>
+
+    <div class="table-card">
+        <div class="card-title">最近奖励记录</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>获奖用户</th>
+                    <th>来源用户</th>
+                    <th>类型</th>
+                    <th>层级</th>
+                    <th>关联金额</th>
+                    <th>奖励金额</th>
+                    <th>时间</th>
+                </tr>
+            </thead>
+            <tbody id="logList"></tbody>
+        </table>
+        <div class="pagination" id="pagination"></div>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">添加奖励规则</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-group">
+                        <label class="form-label">规则名称 *</label>
+                        <input type="text" class="form-input-full" id="editName" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">奖励类型 *</label>
+                            <select class="form-input-full" id="editType">
+                                <option value="register">注册奖励</option>
+                                <option value="recharge">充值返佣</option>
+                                <option value="invest">投资返佣</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">层级</label>
+                            <select class="form-input-full" id="editLevel">
+                                <option value="1">一级（直接邀请）</option>
+                                <option value="2">二级（间接邀请）</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">奖励方式</label>
+                            <select class="form-input-full" id="editRewardType">
+                                <option value="fixed">固定金额</option>
+                                <option value="percent">百分比</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">奖励值 *</label>
+                            <input type="number" class="form-input-full" id="editRewardValue" step="0.0001" value="0">
+                            <div class="form-hint">固定金额填数值，百分比填小数(如0.02表示2%)</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">最低触发金额</label>
+                            <input type="number" class="form-input-full" id="editMinAmount" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">最高奖励</label>
+                            <input type="number" class="form-input-full" id="editMaxReward" value="0">
+                            <div class="form-hint">0表示不限制</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">最低VIP等级</label>
+                            <select class="form-input-full" id="editVipLimit">
+                                <option value="0">不限制</option>
+                                <option value="1">VIP1</option>
+                                <option value="2">VIP2</option>
+                                <option value="3">VIP3</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">状态</label>
+                            <select class="form-input-full" id="editStatus">
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveRule()">保存</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API_BASE = '../api';
+let allRules = [];
+let currentPage = 1;
+
+async function loadRules() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/invite-rules`);
+        const data = await res.json();
+        if (data.code === 1) {
+            allRules = data.data.data || [];
+            renderRules(allRules);
+            updateStats();
+        }
+    } catch (e) {
+        console.error('加载规则失败', e);
+    }
+}
+
+function renderRules(list) {
+    const tbody = document.getElementById('ruleList');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999;padding:40px;">暂无规则</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map(item => `
+        <tr>
+            <td>${item.id}</td>
+            <td><strong>${item.name}</strong></td>
+            <td><span class="badge badge-info">${item.type_text}</span></td>
+            <td><span class="badge ${item.level === 1 ? 'badge-success' : 'badge-warning'}">${item.level_text}</span></td>
+            <td>${item.reward_type_text}</td>
+            <td><strong>${item.reward_display}</strong></td>
+            <td>¥${item.min_amount}</td>
+            <td>${item.vip_limit > 0 ? 'VIP' + item.vip_limit + '+' : '不限'}</td>
+            <td><span class="badge ${item.status === 1 ? 'badge-success' : 'badge-danger'}">${item.status_text}</span></td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="editRule(${item.id})">编辑</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateStats() {
+    const activeCount = allRules.filter(r => r.status === 1).length;
+    document.getElementById('activeRules').textContent = activeCount;
+}
+
+async function loadLogs(page = 1) {
+    currentPage = page;
+    try {
+        const res = await fetch(`${API_BASE}/admin/invite-logs?page=${page}&limit=10`);
+        const data = await res.json();
+        if (data.code === 1) {
+            renderLogs(data.data.data || []);
+            renderPagination(data.data.count || 0, page);
+        }
+    } catch (e) {
+        console.error('加载记录失败', e);
+    }
+}
+
+function renderLogs(list) {
+    const tbody = document.getElementById('logList');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;color:#999;padding:40px;">暂无记录</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map(item => `
+        <tr>
+            <td>${item.id}</td>
+            <td>${item.user_name || 'ID:' + item.user_id}</td>
+            <td>${item.from_user_name || 'ID:' + item.from_user_id}</td>
+            <td><span class="badge badge-info">${item.type_text}</span></td>
+            <td>${item.level_text}</td>
+            <td>¥${item.ref_amount || 0}</td>
+            <td><strong style="color:#25d0a6">+¥${item.reward_amount}</strong></td>
+            <td>${item.created_at}</td>
+        </tr>
+    `).join('');
+}
+
+function renderPagination(total, current) {
+    const totalPages = Math.ceil(total / 10);
+    const pagination = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+        html += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="loadLogs(${i})">${i}</button>`;
+    }
+    pagination.innerHTML = html;
+}
+
+function openAddModal() {
+    document.getElementById('editId').value = '';
+    document.getElementById('editName').value = '';
+    document.getElementById('editType').value = 'register';
+    document.getElementById('editLevel').value = '1';
+    document.getElementById('editRewardType').value = 'fixed';
+    document.getElementById('editRewardValue').value = '0';
+    document.getElementById('editMinAmount').value = '0';
+    document.getElementById('editMaxReward').value = '0';
+    document.getElementById('editVipLimit').value = '0';
+    document.getElementById('editStatus').value = '1';
+    document.getElementById('modalTitle').textContent = '添加奖励规则';
+    document.getElementById('editModal').classList.add('show');
+}
+
+function editRule(id) {
+    const item = allRules.find(r => r.id === id);
+    if (item) {
+        document.getElementById('editId').value = item.id;
+        document.getElementById('editName').value = item.name;
+        document.getElementById('editType').value = item.type;
+        document.getElementById('editLevel').value = item.level;
+        document.getElementById('editRewardType').value = item.reward_type;
+        document.getElementById('editRewardValue').value = item.reward_value;
+        document.getElementById('editMinAmount').value = item.min_amount;
+        document.getElementById('editMaxReward').value = item.max_reward;
+        document.getElementById('editVipLimit').value = item.vip_limit;
+        document.getElementById('editStatus').value = item.status;
+        document.getElementById('modalTitle').textContent = '编辑奖励规则';
+        document.getElementById('editModal').classList.add('show');
+    }
+}
+
+function closeModal() {
+    document.getElementById('editModal').classList.remove('show');
+}
+
+async function saveRule() {
+    const id = document.getElementById('editId').value;
+    const data = {
+        id: id ? parseInt(id) : 0,
+        name: document.getElementById('editName').value,
+        type: document.getElementById('editType').value,
+        level: parseInt(document.getElementById('editLevel').value),
+        reward_type: document.getElementById('editRewardType').value,
+        reward_value: parseFloat(document.getElementById('editRewardValue').value),
+        min_amount: parseFloat(document.getElementById('editMinAmount').value),
+        max_reward: parseFloat(document.getElementById('editMaxReward').value),
+        vip_limit: parseInt(document.getElementById('editVipLimit').value),
+        status: parseInt(document.getElementById('editStatus').value)
+    };
+
+    if (!data.name) {
+        alert('请填写规则名称');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/invite-rule-save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.code === 1) {
+            alert(result.msg || '保存成功');
+            closeModal();
+            loadRules();
+        } else {
+            alert(result.msg || '保存失败');
+        }
+    } catch (e) {
+        alert('保存失败');
+    }
+}
+
+loadRules();
+loadLogs();
+</script>
+</body>
+</html>

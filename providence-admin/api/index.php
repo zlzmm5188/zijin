@@ -192,6 +192,47 @@ $routes = [
     'admin/article-detail' => 'admin/article-detail.php',
     'admin/article-save' => 'admin/article-save.php',
     'admin/article-delete' => 'admin/article-delete.php',
+
+    // =====================================================
+    // 后台管理增强模块 API
+    // =====================================================
+
+    // 管理员认证与管理
+    'admin/auth/login' => 'admin/auth-login.php',
+    'admin/admins' => 'admin/admins.php',
+    'admin/admin-save' => 'admin/admin-save.php',
+    'admin/roles' => 'admin/roles.php',
+    'admin/role-save' => 'admin/role-save.php',
+
+    // 短信配置
+    'admin/sms-channels' => 'admin/sms-channels.php',
+    'admin/sms-channel-save' => 'admin/sms-channel-save.php',
+    'admin/sms-logs' => 'admin/sms-logs.php',
+
+    // 支付通道配置
+    'admin/payment-channels' => 'admin/payment-channels.php',
+    'admin/payment-channel-save' => 'admin/payment-channel-save.php',
+
+    // 任务中心
+    'admin/tasks' => 'admin/tasks.php',
+    'admin/task-save' => 'admin/task-save.php',
+
+    // 邀请奖励
+    'admin/invite-rules' => 'admin/invite-rules.php',
+    'admin/invite-rule-save' => 'admin/invite-rule-save.php',
+    'admin/invite-logs' => 'admin/invite-logs.php',
+
+    // 资产调账
+    'admin/balance-adjust' => 'admin/balance-adjust.php',
+    'admin/balance-adjustments' => 'admin/balance-adjustments.php',
+
+    // 报表与数据导出
+    'admin/daily-reports' => 'admin/daily-reports.php',
+    'admin/export' => 'admin/export.php',
+
+    // 系统配置
+    'admin/configs' => 'admin/configs.php',
+    'admin/config-save' => 'admin/config-save.php',
 ];
 
 if (isset($routes[$path])) {

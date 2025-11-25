@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>数据报表</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body { padding: 20px; background: #f7f8fa; margin: 0; font-family: -apple-system, sans-serif; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .page-title { font-size: 20px; font-weight: 700; color: #1a2332; }
+        .toolbar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(90deg, #0b3b5e, #145a8a); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,59,94,0.3); }
+        .btn-success { background: #25d0a6; color: #fff; }
+        .form-input { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-value { font-size: 24px; font-weight: 700; }
+        .stat-value.positive { color: #25d0a6; }
+        .stat-value.negative { color: #ef4444; }
+        .stat-value.primary { color: #0b3b5e; }
+        .stat-label { font-size: 14px; color: #64748b; margin-top: 4px; }
+        
+        .table-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; white-space: nowrap; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 13px; }
+        tr:hover { background: #fafbfc; }
+        .text-success { color: #25d0a6; }
+        .text-danger { color: #ef4444; }
+        
+        .chart-container { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; height: 300px; }
+        .chart-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+        
+        .export-btns { display: flex; gap: 8px; }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2 class="page-title">📊 数据报表</h2>
+        <div class="toolbar">
+            <input type="date" class="form-input" id="startDate">
+            <span>至</span>
+            <input type="date" class="form-input" id="endDate">
+            <button class="btn btn-primary" onclick="loadReports()">🔍 查询</button>
+            <div class="export-btns">
+                <button class="btn btn-success" onclick="exportData('daily_reports')">📥 导出报表</button>
+                <button class="btn btn-success" onclick="exportData('users')">📥 导出用户</button>
+                <button class="btn btn-success" onclick="exportData('orders')">📥 导出订单</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value primary" id="sumNewUsers">0</div>
+            <div class="stat-label">新增用户</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value positive" id="sumRecharge">¥0</div>
+            <div class="stat-label">充值金额</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value negative" id="sumWithdraw">¥0</div>
+            <div class="stat-label">提现金额</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value primary" id="sumInvest">¥0</div>
+            <div class="stat-label">投资金额</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="sumNetIncome" style="color:#c99b2b">¥0</div>
+            <div class="stat-label">净收入</div>
+        </div>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">趋势图</div>
+        <canvas id="trendChart"></canvas>
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>日期</th>
+                    <th>新增用户</th>
+                    <th>活跃用户</th>
+                    <th>充值笔数</th>
+                    <th>充值金额</th>
+                    <th>提现笔数</th>
+                    <th>提现金额</th>
+                    <th>投资金额</th>
+                    <th>收益发放</th>
+                    <th>净收入</th>
+                </tr>
+            </thead>
+            <tbody id="reportList"></tbody>
+        </table>
+    </div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const API_BASE = '../api';
+let chart = null;
+
+// 设置默认日期范围
+function initDates() {
+    const today = new Date();
+    const thirtyDaysAgo = new Date(today);
+    thirtyDaysAgo.setDate(today.getDate() - 30);
+    
+    document.getElementById('endDate').value = today.toISOString().split('T')[0];
+    document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+}
+
+async function loadReports() {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/daily-reports?start_date=${startDate}&end_date=${endDate}`);
+        const data = await res.json();
+        if (data.code === 1) {
+            renderTable(data.data.data || []);
+            renderSummary(data.data.summary || {});
+            renderChart(data.data.data || []);
+        }
+    } catch (e) {
+        console.error('加载报表失败', e);
+    }
+}
+
+function renderTable(list) {
+    const tbody = document.getElementById('reportList');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999;padding:40px;">暂无数据</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map(item => `
+        <tr>
+            <td><strong>${item.date}</strong></td>
+            <td>${item.new_users}</td>
+            <td>${item.active_users}</td>
+            <td>${item.recharge_count}</td>
+            <td class="text-success">¥${item.recharge_amount.toLocaleString()}</td>
+            <td>${item.withdraw_count}</td>
+            <td class="text-danger">¥${item.withdraw_amount.toLocaleString()}</td>
+            <td>¥${item.invest_amount.toLocaleString()}</td>
+            <td class="text-danger">¥${item.profit_amount.toLocaleString()}</td>
+            <td style="font-weight:700;color:${item.net_income >= 0 ? '#25d0a6' : '#ef4444'}">
+                ¥${item.net_income.toLocaleString()}
+            </td>
+        </tr>
+    `).join('');
+}
+
+function renderSummary(summary) {
+    document.getElementById('sumNewUsers').textContent = summary.total_new_users || 0;
+    document.getElementById('sumRecharge').textContent = '¥' + (summary.total_recharge_amount || 0).toLocaleString();
+    document.getElementById('sumWithdraw').textContent = '¥' + (summary.total_withdraw_amount || 0).toLocaleString();
+    document.getElementById('sumInvest').textContent = '¥' + (summary.total_invest_amount || 0).toLocaleString();
+    document.getElementById('sumNetIncome').textContent = '¥' + (summary.total_net_income || 0).toLocaleString();
+}
+
+function renderChart(data) {
+    const ctx = document.getElementById('trendChart').getContext('2d');
+    
+    // 反转数据使日期从旧到新
+    const reversed = [...data].reverse();
+    
+    const labels = reversed.map(d => d.date);
+    const rechargeData = reversed.map(d => d.recharge_amount);
+    const withdrawData = reversed.map(d => d.withdraw_amount);
+    const netIncomeData = reversed.map(d => d.net_income);
+
+    if (chart) chart.destroy();
+
+    chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels,
+            datasets: [
+                {
+                    label: '充值',
+                    data: rechargeData,
+                    borderColor: '#25d0a6',
+                    backgroundColor: 'rgba(37,208,166,0.1)',
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: '提现',
+                    data: withdrawData,
+                    borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239,68,68,0.1)',
+                    tension: 0.4,
+                    fill: false
+                },
+                {
+                    label: '净收入',
+                    data: netIncomeData,
+                    borderColor: '#c99b2b',
+                    backgroundColor: 'rgba(201,155,43,0.1)',
+                    tension: 0.4,
+                    fill: true
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'top',
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+}
+
+async function exportData(type) {
+    const startDate = document.getElementById('startDate').value;
+    const endDate = document.getElementById('endDate').value;
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/export`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                type,
+                params: { start_date: startDate, end_date: endDate }
+            })
+        });
+        const data = await res.json();
+        if (data.code === 1) {
+            // 下载文件
+            const content = atob(data.data.content);
+            const blob = new Blob([content], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = data.data.filename;
+            a.click();
+            URL.revokeObjectURL(url);
+            alert(`导出成功！共 ${data.data.row_count} 条数据`);
+        } else {
+            alert(data.msg || '导出失败');
+        }
+    } catch (e) {
+        alert('导出失败');
+        console.error(e);
+    }
+}
+
+initDates();
+loadReports();
+</script>
+</body>
+</html>

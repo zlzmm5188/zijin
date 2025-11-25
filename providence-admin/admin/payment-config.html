@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>支付通道配置</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body { padding: 20px; background: #f7f8fa; margin: 0; font-family: -apple-system, sans-serif; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 20px; font-weight: 700; color: #1a2332; }
+        .toolbar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(90deg, #0b3b5e, #145a8a); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,59,94,0.3); }
+        .btn-success { background: #25d0a6; color: #fff; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .form-select { padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; min-width: 120px; background: #fff; }
+        .table-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow-x: auto; margin-bottom: 20px; }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 13px; }
+        tr:hover { background: #fafbfc; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-success { background: #dcfce7; color: #16a34a; }
+        .badge-danger { background: #fee2e2; color: #dc2626; }
+        .badge-info { background: #e0f2fe; color: #0284c7; }
+        .qrcode-thumb { width: 40px; height: 40px; border-radius: 4px; object-fit: cover; cursor: pointer; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: #fff; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-input-full { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 20px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        .stat-value { font-size: 28px; font-weight: 700; color: #0b3b5e; }
+        .stat-label { font-size: 14px; color: #64748b; margin-top: 4px; }
+        
+        .type-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .type-tab { padding: 10px 20px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .type-tab.active { background: #0b3b5e; color: #fff; border-color: #0b3b5e; }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2 class="page-title">💳 支付通道配置</h2>
+        <button class="btn btn-primary" onclick="openAddModal()">➕ 添加通道</button>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalAmount">¥0</div>
+            <div class="stat-label">今日收款</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="orderCount">0</div>
+            <div class="stat-label">今日订单</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="activeChannels">0</div>
+            <div class="stat-label">启用通道</div>
+        </div>
+    </div>
+
+    <div class="type-tabs">
+        <div class="type-tab active" onclick="filterType('')">全部</div>
+        <div class="type-tab" onclick="filterType('bank')">银行卡</div>
+        <div class="type-tab" onclick="filterType('alipay')">支付宝</div>
+        <div class="type-tab" onclick="filterType('wechat')">微信</div>
+        <div class="type-tab" onclick="filterType('usdt')">USDT</div>
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>通道名称</th>
+                    <th>类型</th>
+                    <th>模式</th>
+                    <th>收款码</th>
+                    <th>金额限制</th>
+                    <th>费率</th>
+                    <th>今日使用</th>
+                    <th>累计收款</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="channelList"></tbody>
+        </table>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">添加支付通道</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">通道名称 *</label>
+                            <input type="text" class="form-input-full" id="editName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">通道代码 *</label>
+                            <input type="text" class="form-input-full" id="editCode" required>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">支付类型 *</label>
+                            <select class="form-input-full" id="editType">
+                                <option value="bank">银行卡</option>
+                                <option value="alipay">支付宝</option>
+                                <option value="wechat">微信支付</option>
+                                <option value="usdt">USDT</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">收款模式</label>
+                            <select class="form-input-full" id="editMode">
+                                <option value="qrcode">二维码</option>
+                                <option value="api">API接口</option>
+                                <option value="manual">人工处理</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">收款码图片</label>
+                        <input type="text" class="form-input-full" id="editQrcode" placeholder="图片URL">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">收款账号</label>
+                            <input type="text" class="form-input-full" id="editAccount">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">收款人姓名</label>
+                            <input type="text" class="form-input-full" id="editAccountName">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">最低金额</label>
+                            <input type="number" class="form-input-full" id="editMinAmount" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">最高金额</label>
+                            <input type="number" class="form-input-full" id="editMaxAmount" value="0">
+                            <div class="form-hint">0表示不限制</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">费率(%)</label>
+                            <input type="number" class="form-input-full" id="editFeeRate" value="0" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">固定手续费</label>
+                            <input type="number" class="form-input-full" id="editFeeFixed" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">日限额</label>
+                            <input type="number" class="form-input-full" id="editDailyLimit" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">优先级</label>
+                            <input type="number" class="form-input-full" id="editPriority" value="0">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">状态</label>
+                            <select class="form-input-full" id="editStatus">
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">备注</label>
+                            <input type="text" class="form-input-full" id="editRemark">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveChannel()">保存</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API_BASE = '../api';
+let allChannels = [];
+let currentType = '';
+
+async function loadChannels() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/payment-channels`);
+        const data = await res.json();
+        if (data.code === 1) {
+            allChannels = data.data.data || [];
+            renderChannels(filterChannels());
+            updateStats();
+        }
+    } catch (e) {
+        console.error('加载通道失败', e);
+    }
+}
+
+function filterChannels() {
+    if (!currentType) return allChannels;
+    return allChannels.filter(c => c.type === currentType);
+}
+
+function filterType(type) {
+    currentType = type;
+    document.querySelectorAll('.type-tab').forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.textContent === '全部' && !type) tab.classList.add('active');
+        if (tab.textContent === getTypeName(type)) tab.classList.add('active');
+    });
+    renderChannels(filterChannels());
+}
+
+function getTypeName(type) {
+    const names = { 'bank': '银行卡', 'alipay': '支付宝', 'wechat': '微信', 'usdt': 'USDT' };
+    return names[type] || type;
+}
+
+function getModeName(mode) {
+    const names = { 'qrcode': '二维码', 'api': 'API接口', 'manual': '人工处理' };
+    return names[mode] || mode;
+}
+
+function renderChannels(list) {
+    const tbody = document.getElementById('channelList');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="11" style="text-align:center;color:#999;padding:40px;">暂无通道配置</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map(item => `
+        <tr>
+            <td>${item.id}</td>
+            <td><strong>${item.name}</strong></td>
+            <td><span class="badge badge-info">${item.type_text}</span></td>
+            <td>${getModeName(item.mode)}</td>
+            <td>${item.qrcode_image ? `<img src="${item.qrcode_image}" class="qrcode-thumb" onclick="window.open('${item.qrcode_image}')">` : '-'}</td>
+            <td>¥${item.min_amount} ~ ${item.max_amount > 0 ? '¥' + item.max_amount : '不限'}</td>
+            <td>${item.fee_rate * 100}% + ¥${item.fee_fixed}</td>
+            <td>¥${item.used_today}${item.daily_limit > 0 ? '/¥' + item.daily_limit : ''}</td>
+            <td>¥${item.total_amount}</td>
+            <td><span class="badge ${item.status === 1 ? 'badge-success' : 'badge-danger'}">${item.status_text}</span></td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="editChannel(${item.id})">编辑</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function updateStats() {
+    let totalAmount = 0;
+    let orderCount = 0;
+    let activeCount = 0;
+
+    allChannels.forEach(item => {
+        totalAmount += item.used_today;
+        orderCount += item.order_count;
+        if (item.status === 1) activeCount++;
+    });
+
+    document.getElementById('totalAmount').textContent = '¥' + totalAmount.toFixed(2);
+    document.getElementById('orderCount').textContent = orderCount;
+    document.getElementById('activeChannels').textContent = activeCount;
+}
+
+function openAddModal() {
+    document.getElementById('editId').value = '';
+    document.getElementById('editName').value = '';
+    document.getElementById('editCode').value = '';
+    document.getElementById('editType').value = 'bank';
+    document.getElementById('editMode').value = 'qrcode';
+    document.getElementById('editQrcode').value = '';
+    document.getElementById('editAccount').value = '';
+    document.getElementById('editAccountName').value = '';
+    document.getElementById('editMinAmount').value = '0';
+    document.getElementById('editMaxAmount').value = '0';
+    document.getElementById('editFeeRate').value = '0';
+    document.getElementById('editFeeFixed').value = '0';
+    document.getElementById('editDailyLimit').value = '0';
+    document.getElementById('editPriority').value = '0';
+    document.getElementById('editStatus').value = '1';
+    document.getElementById('editRemark').value = '';
+    document.getElementById('modalTitle').textContent = '添加支付通道';
+    document.getElementById('editModal').classList.add('show');
+}
+
+function editChannel(id) {
+    const item = allChannels.find(c => c.id === id);
+    if (item) {
+        document.getElementById('editId').value = item.id;
+        document.getElementById('editName').value = item.name;
+        document.getElementById('editCode').value = item.code;
+        document.getElementById('editType').value = item.type;
+        document.getElementById('editMode').value = item.mode;
+        document.getElementById('editQrcode').value = item.qrcode_image || '';
+        document.getElementById('editAccount').value = item.account_info?.account || '';
+        document.getElementById('editAccountName').value = item.account_info?.name || '';
+        document.getElementById('editMinAmount').value = item.min_amount;
+        document.getElementById('editMaxAmount').value = item.max_amount;
+        document.getElementById('editFeeRate').value = item.fee_rate;
+        document.getElementById('editFeeFixed').value = item.fee_fixed;
+        document.getElementById('editDailyLimit').value = item.daily_limit;
+        document.getElementById('editPriority').value = item.priority;
+        document.getElementById('editStatus').value = item.status;
+        document.getElementById('editRemark').value = item.remark || '';
+        document.getElementById('modalTitle').textContent = '编辑支付通道';
+        document.getElementById('editModal').classList.add('show');
+    }
+}
+
+function closeModal() {
+    document.getElementById('editModal').classList.remove('show');
+}
+
+async function saveChannel() {
+    const id = document.getElementById('editId').value;
+    const data = {
+        id: id ? parseInt(id) : 0,
+        name: document.getElementById('editName').value,
+        code: document.getElementById('editCode').value,
+        type: document.getElementById('editType').value,
+        mode: document.getElementById('editMode').value,
+        qrcode_image: document.getElementById('editQrcode').value,
+        account_info: {
+            account: document.getElementById('editAccount').value,
+            name: document.getElementById('editAccountName').value
+        },
+        min_amount: parseFloat(document.getElementById('editMinAmount').value),
+        max_amount: parseFloat(document.getElementById('editMaxAmount').value),
+        fee_rate: parseFloat(document.getElementById('editFeeRate').value),
+        fee_fixed: parseFloat(document.getElementById('editFeeFixed').value),
+        daily_limit: parseFloat(document.getElementById('editDailyLimit').value),
+        priority: parseInt(document.getElementById('editPriority').value),
+        status: parseInt(document.getElementById('editStatus').value),
+        remark: document.getElementById('editRemark').value
+    };
+
+    if (!data.name || !data.code) {
+        alert('请填写必填项');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/payment-channel-save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.code === 1) {
+            alert(result.msg || '保存成功');
+            closeModal();
+            loadChannels();
+        } else {
+            alert(result.msg || '保存失败');
+        }
+    } catch (e) {
+        alert('保存失败');
+    }
+}
+
+loadChannels();
+</script>
+</body>
+</html>

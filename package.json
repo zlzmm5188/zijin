@@ -1,0 +1,19 @@
+{
+  "name": "zijin",
+  "version": "1.0.0",
+  "description": "Zijin Financial Platform",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "financial",
+    "platform"
+  ],
+  "author": "Zijin Team",
+  "license": "proprietary",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

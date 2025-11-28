@@ -1,0 +1,12 @@
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "Dockerfile"
+
+[deploy]
+startCommand = "/usr/bin/supervisord -c /etc/supervisord.conf"
+healthcheckPath = "/"
+healthcheckTimeout = 300
+
+[[services]]
+name = "web"
+port = 8080

@@ -1,19 +1,57 @@
-# 使用官方 node 镜像
-FROM node:18-alpine
+# PHP + Nginx Docker Image for Railway Deployment
+FROM php:8.2-fpm-alpine
 
-# 创建工作目录
+# Install required extensions and nginx
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    libzip-dev \
+    oniguruma-dev \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg \
+    && docker-php-ext-install -j$(nproc) \
+        pdo \
+        pdo_mysql \
+        mbstring \
+        curl \
+        gd \
+        zip \
+        opcache \
+    && rm -rf /var/cache/apk/*
+
+# Create application directory
 WORKDIR /app
 
-# 复制依赖清单并安装生产依赖
-COPY package*.json ./
-RUN npm ci --only=production
-
-# 复制源码
+# Copy application source
 COPY . .
 
-# 默认端口（Parse 常用 1337；如不同请修改）
-ENV PORT=1337
-EXPOSE 1337
+# Install Composer dependencies for PHP API
+WORKDIR /app/providence-admin
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
+    && if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
 
-# 启动命令：依赖于 package.json 中的 start 脚本，例如 "start": "node index.js"
-CMD ["npm", "start"]
+WORKDIR /app
+
+# Copy Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
+
+# Copy PHP-FPM configuration
+COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
+
+# Copy supervisord configuration
+COPY supervisord.conf /etc/supervisord.conf
+
+# Create required directories
+RUN mkdir -p /run/nginx /var/log/nginx /app/providence-admin/logs \
+    && chown -R www-data:www-data /app \
+    && chmod -R 755 /app
+
+# Default Railway port
+ENV PORT=8080
+EXPOSE 8080
+
+# Start services via supervisord
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]

@@ -51,17 +51,20 @@ Configure the following environment variables in Railway dashboard:
 | `DB_DATABASE` | Database name | `providence` |
 | `DB_USERNAME` | Database user | `root` |
 | `DB_PASSWORD` | Database password | `your-password` |
-| `PORT` | Application port (auto-set by Railway) | `8080` |
 
 ### Optional Variables
 
-| Variable | Description | Example |
+| Variable | Description | Default |
 |----------|-------------|---------|
-| `JWT_SECRET` | Secret key for JWT tokens | `your-secret-key` |
-| `TELEGRAM_BOT_TOKEN` | Telegram bot token for notifications | `123456:ABC...` |
-| `TELEGRAM_CHAT_ID` | Telegram chat ID | `-1001234567890` |
-| `TRONGRID_API_KEY` | TronGrid API key for USDT payments | `your-api-key` |
-| `OPENAI_API_KEY` | OpenAI API key for AI features | `sk-...` |
+| `DB_CHARSET` | Database charset | `utf8mb4` |
+| `DB_PREFIX` | Table prefix | (empty) |
+| `JWT_SECRET` | Secret key for JWT tokens | - |
+| `TELEGRAM_BOT_TOKEN` | Telegram bot token for notifications | - |
+| `TELEGRAM_CHAT_ID` | Telegram chat ID | - |
+| `TRONGRID_API_KEY` | TronGrid API key for USDT payments | - |
+| `OPENAI_API_KEY` | OpenAI API key for AI features | - |
+
+> **Note:** When using Railway's MySQL add-on, database environment variables are automatically provided as `MYSQLHOST`, `MYSQLPORT`, `MYSQLDATABASE`, `MYSQLUSER`, and `MYSQLPASSWORD`. You can reference these in your Railway service configuration.
 
 ## Database Setup
 

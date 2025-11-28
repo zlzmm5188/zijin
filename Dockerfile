@@ -6,6 +6,7 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     curl \
+    curl-dev \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
@@ -16,7 +17,6 @@ RUN apk add --no-cache \
         pdo \
         pdo_mysql \
         mbstring \
-        curl \
         gd \
         zip \
         opcache \
@@ -28,10 +28,10 @@ WORKDIR /app
 # Copy application source
 COPY . .
 
-# Install Composer dependencies for PHP API
+# Install Composer from official image and install PHP dependencies
 WORKDIR /app/providence-admin
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer \
-    && if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/composer
+RUN if [ -f "composer.json" ]; then composer install --no-dev --optimize-autoloader --no-interaction; fi
 
 WORKDIR /app
 
@@ -44,10 +44,12 @@ COPY php-fpm.conf /usr/local/etc/php-fpm.d/www.conf
 # Copy supervisord configuration
 COPY supervisord.conf /etc/supervisord.conf
 
-# Create required directories
+# Create required directories with proper permissions
 RUN mkdir -p /run/nginx /var/log/nginx /app/providence-admin/logs \
-    && chown -R www-data:www-data /app \
-    && chmod -R 755 /app
+    && chown -R www-data:www-data /app/providence-admin/logs \
+    && find /app -type d -exec chmod 755 {} \; \
+    && find /app -type f -exec chmod 644 {} \; \
+    && chmod 775 /app/providence-admin/logs
 
 # Default Railway port
 ENV PORT=8080

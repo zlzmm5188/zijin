@@ -2,31 +2,30 @@
 /**
  * Database configuration
  * Uses environment variables for production deployment
+ * Leverages vlucas/phpdotenv for secure environment variable loading
  */
 
-// Load environment variables from .env file if it exists
-if (file_exists(__DIR__ . '/../../.env')) {
-    $envFile = file(__DIR__ . '/../../.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
-    foreach ($envFile as $line) {
-        if (strpos(trim($line), '#') === 0) continue;
-        if (strpos($line, '=') !== false) {
-            list($name, $value) = explode('=', $line, 2);
-            $name = trim($name);
-            $value = trim($value);
-            if (!empty($name) && !isset($_ENV[$name])) {
-                $_ENV[$name] = $value;
-                putenv("$name=$value");
-            }
-        }
+// Use phpdotenv if available (loaded via composer autoload in bootstrap.php)
+// Environment variables should already be loaded by bootstrap.php
+
+/**
+ * Safely get environment variable with validation
+ */
+function safe_env($key, $default = null) {
+    $value = $_ENV[$key] ?? getenv($key) ?: $default;
+    // Sanitize value to prevent injection
+    if ($value !== null && $value !== $default) {
+        $value = preg_replace('/[^\w\-\.\:\/\@]/', '', $value);
     }
+    return $value;
 }
 
 return [
-    'host'     => $_ENV['DB_HOST'] ?? getenv('DB_HOST') ?: 'localhost',
-    'port'     => $_ENV['DB_PORT'] ?? getenv('DB_PORT') ?: '3306',
-    'database' => $_ENV['DB_DATABASE'] ?? getenv('DB_DATABASE') ?: 'providence',
-    'username' => $_ENV['DB_USERNAME'] ?? getenv('DB_USERNAME') ?: 'root',
+    'host'     => safe_env('DB_HOST', 'localhost'),
+    'port'     => safe_env('DB_PORT', '3306'),
+    'database' => safe_env('DB_DATABASE', 'providence'),
+    'username' => safe_env('DB_USERNAME', 'root'),
     'password' => $_ENV['DB_PASSWORD'] ?? getenv('DB_PASSWORD') ?: '',
-    'charset'  => $_ENV['DB_CHARSET'] ?? getenv('DB_CHARSET') ?: 'utf8mb4',
-    'prefix'   => $_ENV['DB_PREFIX'] ?? getenv('DB_PREFIX') ?: '',
+    'charset'  => safe_env('DB_CHARSET', 'utf8mb4'),
+    'prefix'   => safe_env('DB_PREFIX', ''),
 ];

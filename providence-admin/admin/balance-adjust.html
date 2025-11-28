@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>资产调账</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body { padding: 20px; background: #f7f8fa; margin: 0; font-family: -apple-system, sans-serif; }
+        .page-header { margin-bottom: 20px; }
+        .page-title { font-size: 20px; font-weight: 700; color: #1a2332; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(90deg, #0b3b5e, #145a8a); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,59,94,0.3); }
+        .btn-success { background: #25d0a6; color: #fff; }
+        .btn-danger { background: #ef4444; color: #fff; }
+        
+        .grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; }
+        @media (max-width: 992px) { .grid { grid-template-columns: 1fr; } }
+        
+        .card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); margin-bottom: 20px; }
+        .card-title { font-size: 16px; font-weight: 700; margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid #e5e7eb; }
+        
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 12px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .form-select { width: 100%; padding: 12px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; background: #fff; box-sizing: border-box; }
+        .form-hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+        
+        .user-info { background: #f8fafc; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+        .user-info-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e5e7eb; }
+        .user-info-item:last-child { border-bottom: none; }
+        .user-info-label { color: #64748b; }
+        .user-info-value { font-weight: 600; }
+        
+        .table-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 13px; }
+        tr:hover { background: #fafbfc; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-success { background: #dcfce7; color: #16a34a; }
+        .badge-danger { background: #fee2e2; color: #dc2626; }
+        .pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+        .page-btn { padding: 8px 12px; border: 1px solid #e5e7eb; border-radius: 6px; background: #fff; cursor: pointer; }
+        .page-btn.active { background: #0b3b5e; color: #fff; border-color: #0b3b5e; }
+        
+        .amount-input { position: relative; }
+        .amount-prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #64748b; font-weight: 600; }
+        .amount-input input { padding-left: 30px; }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2 class="page-title">💰 资产调账</h2>
+    </div>
+
+    <div class="grid">
+        <div>
+            <div class="card">
+                <div class="card-title">调账操作</div>
+                <form id="adjustForm">
+                    <div class="form-group">
+                        <label class="form-label">用户ID *</label>
+                        <input type="number" class="form-input" id="userId" required placeholder="输入用户ID">
+                        <button type="button" class="btn btn-primary" style="margin-top:8px;width:100%" onclick="searchUser()">查询用户</button>
+                    </div>
+                    
+                    <div class="user-info" id="userInfo" style="display:none">
+                        <div class="user-info-item">
+                            <span class="user-info-label">用户名</span>
+                            <span class="user-info-value" id="infoUsername">-</span>
+                        </div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">VIP等级</span>
+                            <span class="user-info-value" id="infoVip">-</span>
+                        </div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">CNY余额</span>
+                            <span class="user-info-value" id="infoBalance">¥0</span>
+                        </div>
+                        <div class="user-info-item">
+                            <span class="user-info-label">USDT余额</span>
+                            <span class="user-info-value" id="infoUsdt">0</span>
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">币种</label>
+                        <select class="form-select" id="currency">
+                            <option value="CNY">人民币 (CNY)</option>
+                            <option value="USDT">USDT</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">操作类型</label>
+                        <select class="form-select" id="adjustType">
+                            <option value="ADD">增加余额</option>
+                            <option value="SUBTRACT">扣减余额</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">调账目标</label>
+                        <select class="form-select" id="adjustTarget">
+                            <option value="balance">可用余额</option>
+                            <option value="frozen">冻结金额</option>
+                            <option value="points">积分</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">调账金额 *</label>
+                        <div class="amount-input">
+                            <span class="amount-prefix">¥</span>
+                            <input type="number" class="form-input" id="amount" required min="0.01" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">调账原因 *</label>
+                        <select class="form-select" id="reason">
+                            <option value="">请选择原因</option>
+                            <option value="系统补偿">系统补偿</option>
+                            <option value="活动奖励">活动奖励</option>
+                            <option value="充值补单">充值补单</option>
+                            <option value="提现退款">提现退款</option>
+                            <option value="订单异常处理">订单异常处理</option>
+                            <option value="测试调账">测试调账</option>
+                            <option value="其他">其他</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <textarea class="form-input" id="remark" rows="2" placeholder="可选，填写详细说明"></textarea>
+                    </div>
+                    
+                    <button type="button" class="btn btn-primary" style="width:100%" onclick="submitAdjust()">确认调账</button>
+                </form>
+            </div>
+        </div>
+        
+        <div>
+            <div class="table-card">
+                <div class="card-title">调账记录</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>用户</th>
+                            <th>类型</th>
+                            <th>目标</th>
+                            <th>金额</th>
+                            <th>变动</th>
+                            <th>原因</th>
+                            <th>操作人</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="logList"></tbody>
+                </table>
+                <div class="pagination" id="pagination"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API_BASE = '../api';
+let currentUser = null;
+let currentPage = 1;
+
+async function searchUser() {
+    const userId = document.getElementById('userId').value;
+    if (!userId) {
+        alert('请输入用户ID');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/user-detail?id=${userId}`);
+        const data = await res.json();
+        if (data.code === 1 && data.data) {
+            currentUser = data.data;
+            document.getElementById('userInfo').style.display = 'block';
+            document.getElementById('infoUsername').textContent = currentUser.username || '-';
+            document.getElementById('infoVip').textContent = 'VIP' + (currentUser.vip_level || 0);
+            document.getElementById('infoBalance').textContent = '¥' + (currentUser.balance || 0);
+            document.getElementById('infoUsdt').textContent = currentUser.usdt_balance || 0;
+        } else {
+            alert('用户不存在');
+            document.getElementById('userInfo').style.display = 'none';
+            currentUser = null;
+        }
+    } catch (e) {
+        alert('查询失败');
+        console.error(e);
+    }
+}
+
+async function submitAdjust() {
+    const userId = document.getElementById('userId').value;
+    if (!userId) {
+        alert('请输入用户ID');
+        return;
+    }
+
+    const currency = document.getElementById('currency').value;
+    const type = document.getElementById('adjustType').value;
+    const target = document.getElementById('adjustTarget').value;
+    const amount = parseFloat(document.getElementById('amount').value);
+    const reason = document.getElementById('reason').value;
+    const remark = document.getElementById('remark').value;
+
+    if (!amount || amount <= 0) {
+        alert('请输入有效金额');
+        return;
+    }
+
+    if (!reason) {
+        alert('请选择调账原因');
+        return;
+    }
+
+    const confirmMsg = `确认${type === 'ADD' ? '增加' : '扣减'}用户 ${currentUser?.username || userId} 的${target === 'balance' ? '可用余额' : target === 'frozen' ? '冻结金额' : '积分'} ${amount} ${currency}？\n原因：${reason}`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/balance-adjust`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                user_id: parseInt(userId),
+                currency,
+                type,
+                target,
+                amount,
+                reason,
+                remark
+            })
+        });
+        const result = await res.json();
+        if (result.code === 1) {
+            alert(`调账成功！\n订单号：${result.data.order_no}\n调账前：${result.data.before_amount}\n调账后：${result.data.after_amount}`);
+            document.getElementById('amount').value = '';
+            document.getElementById('reason').value = '';
+            document.getElementById('remark').value = '';
+            searchUser();
+            loadLogs();
+        } else {
+            alert(result.msg || '调账失败');
+        }
+    } catch (e) {
+        alert('调账失败');
+        console.error(e);
+    }
+}
+
+async function loadLogs(page = 1) {
+    currentPage = page;
+    try {
+        const res = await fetch(`${API_BASE}/admin/balance-adjustments?page=${page}&limit=15`);
+        const data = await res.json();
+        if (data.code === 1) {
+            renderLogs(data.data.data || []);
+            renderPagination(data.data.count || 0, page);
+        }
+    } catch (e) {
+        console.error('加载记录失败', e);
+    }
+}
+
+function renderLogs(list) {
+    const tbody = document.getElementById('logList');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:#999;padding:40px;">暂无调账记录</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map(item => `
+        <tr>
+            <td><code style="font-size:11px">${item.order_no}</code></td>
+            <td>${item.user_name || 'ID:' + item.user_id}</td>
+            <td><span class="badge ${item.type === 'ADD' ? 'badge-success' : 'badge-danger'}">${item.type_text}</span></td>
+            <td>${item.target_text}</td>
+            <td>${item.currency} ${item.amount}</td>
+            <td>${item.before_amount} → ${item.after_amount}</td>
+            <td>${item.reason}</td>
+            <td>${item.admin_name}</td>
+            <td>${item.created_at}</td>
+        </tr>
+    `).join('');
+}
+
+function renderPagination(total, current) {
+    const totalPages = Math.ceil(total / 15);
+    const pagination = document.getElementById('pagination');
+    
+    if (totalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    let html = '';
+    for (let i = 1; i <= Math.min(totalPages, 10); i++) {
+        html += `<button class="page-btn ${i === current ? 'active' : ''}" onclick="loadLogs(${i})">${i}</button>`;
+    }
+    pagination.innerHTML = html;
+}
+
+loadLogs();
+</script>
+</body>
+</html>

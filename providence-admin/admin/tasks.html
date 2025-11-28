@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务中心</title>
+    <link rel="stylesheet" href="../public/css/srs-design-system.css">
+    <style>
+        body { padding: 20px; background: #f7f8fa; margin: 0; font-family: -apple-system, sans-serif; }
+        .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .page-title { font-size: 20px; font-weight: 700; color: #1a2332; }
+        .btn { padding: 10px 20px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: all 0.2s; }
+        .btn-primary { background: linear-gradient(90deg, #0b3b5e, #145a8a); color: #fff; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(11,59,94,0.3); }
+        .btn-danger { background: #ef4444; color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
+        .table-card { background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #f0f0f0; }
+        th { background: #f8fafc; font-weight: 600; color: #64748b; font-size: 13px; }
+        tr:hover { background: #fafbfc; }
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 600; display: inline-block; }
+        .badge-success { background: #dcfce7; color: #16a34a; }
+        .badge-danger { background: #fee2e2; color: #dc2626; }
+        .badge-info { background: #e0f2fe; color: #0284c7; }
+        .badge-warning { background: #fef3c7; color: #d97706; }
+        
+        .type-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+        .type-tab { padding: 10px 20px; border: 1px solid #e5e7eb; border-radius: 8px; background: #fff; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .type-tab.active { background: #0b3b5e; color: #fff; border-color: #0b3b5e; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal.show { display: flex; }
+        .modal-content { background: #fff; border-radius: 12px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; }
+        .modal-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .modal-title { font-size: 18px; font-weight: 700; }
+        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; }
+        .modal-body { padding: 20px; }
+        .modal-footer { padding: 20px; border-top: 1px solid #e5e7eb; display: flex; justify-content: flex-end; gap: 12px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 600; color: #374151; margin-bottom: 6px; }
+        .form-input-full { width: 100%; padding: 10px 14px; border: 1px solid #e5e7eb; border-radius: 6px; font-size: 14px; box-sizing: border-box; }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-hint { font-size: 12px; color: #9ca3af; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="page-header">
+        <h2 class="page-title">🎯 任务中心</h2>
+        <button class="btn btn-primary" onclick="openAddModal()">➕ 添加任务</button>
+    </div>
+
+    <div class="type-tabs">
+        <div class="type-tab active" onclick="filterType('')">全部</div>
+        <div class="type-tab" onclick="filterType('daily')">每日任务</div>
+        <div class="type-tab" onclick="filterType('once')">一次性任务</div>
+        <div class="type-tab" onclick="filterType('invite')">邀请任务</div>
+        <div class="type-tab" onclick="filterType('invest')">投资任务</div>
+    </div>
+
+    <div class="table-card">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>任务名称</th>
+                    <th>任务代码</th>
+                    <th>类型</th>
+                    <th>奖励</th>
+                    <th>目标</th>
+                    <th>VIP限制</th>
+                    <th>完成次数</th>
+                    <th>状态</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody id="taskList"></tbody>
+        </table>
+    </div>
+
+    <!-- 编辑弹窗 -->
+    <div class="modal" id="editModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title" id="modalTitle">添加任务</div>
+                <button class="modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input type="hidden" id="editId">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">任务名称 *</label>
+                            <input type="text" class="form-input-full" id="editName" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">任务代码 *</label>
+                            <input type="text" class="form-input-full" id="editCode" required>
+                            <div class="form-hint">唯一标识，如：daily_checkin</div>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">任务类型 *</label>
+                            <select class="form-input-full" id="editType">
+                                <option value="daily">每日任务</option>
+                                <option value="once">一次性任务</option>
+                                <option value="invite">邀请任务</option>
+                                <option value="invest">投资任务</option>
+                                <option value="checkin">签到任务</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">奖励类型</label>
+                            <select class="form-input-full" id="editRewardType">
+                                <option value="points">积分</option>
+                                <option value="balance">余额</option>
+                                <option value="coupon">优惠券</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">任务描述</label>
+                        <textarea class="form-input-full" id="editDescription" rows="2"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">奖励数量 *</label>
+                            <input type="number" class="form-input-full" id="editRewardAmount" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">目标值</label>
+                            <input type="number" class="form-input-full" id="editTargetValue" value="1">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">目标单位</label>
+                            <input type="text" class="form-input-full" id="editTargetUnit" placeholder="如：次、元、人">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">最低VIP等级</label>
+                            <select class="form-input-full" id="editVipLimit">
+                                <option value="0">不限制</option>
+                                <option value="1">VIP1</option>
+                                <option value="2">VIP2</option>
+                                <option value="3">VIP3</option>
+                                <option value="4">VIP4</option>
+                                <option value="5">VIP5</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">排序</label>
+                            <input type="number" class="form-input-full" id="editSortOrder" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">状态</label>
+                            <select class="form-input-full" id="editStatus">
+                                <option value="1">启用</option>
+                                <option value="0">禁用</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn" onclick="closeModal()">取消</button>
+                <button class="btn btn-primary" onclick="saveTask()">保存</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+const API_BASE = '../api';
+let allTasks = [];
+let currentType = '';
+
+async function loadTasks() {
+    try {
+        const res = await fetch(`${API_BASE}/admin/tasks`);
+        const data = await res.json();
+        if (data.code === 1) {
+            allTasks = data.data.data || [];
+            renderTasks(filterTasks());
+        }
+    } catch (e) {
+        console.error('加载任务失败', e);
+    }
+}
+
+function filterTasks() {
+    if (!currentType) return allTasks;
+    return allTasks.filter(t => t.type === currentType);
+}
+
+function filterType(type) {
+    currentType = type;
+    document.querySelectorAll('.type-tab').forEach(tab => tab.classList.remove('active'));
+    event.target.classList.add('active');
+    renderTasks(filterTasks());
+}
+
+function getTypeBadge(type, text) {
+    const colors = {
+        'daily': 'badge-info',
+        'once': 'badge-warning',
+        'invite': 'badge-success',
+        'invest': 'badge-danger',
+        'checkin': 'badge-info'
+    };
+    return `<span class="badge ${colors[type] || 'badge-info'}">${text}</span>`;
+}
+
+function renderTasks(list) {
+    const tbody = document.getElementById('taskList');
+    if (!list.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="text-align:center;color:#999;padding:40px;">暂无任务</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = list.map(item => `
+        <tr>
+            <td>${item.id}</td>
+            <td><strong>${item.name}</strong></td>
+            <td><code>${item.code}</code></td>
+            <td>${getTypeBadge(item.type, item.type_text)}</td>
+            <td>${item.reward_amount} ${item.reward_type_text}</td>
+            <td>${item.target_value} ${item.target_unit || ''}</td>
+            <td>${item.vip_limit > 0 ? 'VIP' + item.vip_limit + '+' : '不限'}</td>
+            <td>${item.complete_count}</td>
+            <td><span class="badge ${item.status === 1 ? 'badge-success' : 'badge-danger'}">${item.status_text}</span></td>
+            <td>
+                <button class="btn btn-primary btn-sm" onclick="editTask(${item.id})">编辑</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+function openAddModal() {
+    document.getElementById('editId').value = '';
+    document.getElementById('editName').value = '';
+    document.getElementById('editCode').value = '';
+    document.getElementById('editType').value = 'daily';
+    document.getElementById('editRewardType').value = 'points';
+    document.getElementById('editDescription').value = '';
+    document.getElementById('editRewardAmount').value = '0';
+    document.getElementById('editTargetValue').value = '1';
+    document.getElementById('editTargetUnit').value = '';
+    document.getElementById('editVipLimit').value = '0';
+    document.getElementById('editSortOrder').value = '0';
+    document.getElementById('editStatus').value = '1';
+    document.getElementById('modalTitle').textContent = '添加任务';
+    document.getElementById('editModal').classList.add('show');
+}
+
+function editTask(id) {
+    const item = allTasks.find(t => t.id === id);
+    if (item) {
+        document.getElementById('editId').value = item.id;
+        document.getElementById('editName').value = item.name;
+        document.getElementById('editCode').value = item.code;
+        document.getElementById('editType').value = item.type;
+        document.getElementById('editRewardType').value = item.reward_type;
+        document.getElementById('editDescription').value = item.description || '';
+        document.getElementById('editRewardAmount').value = item.reward_amount;
+        document.getElementById('editTargetValue').value = item.target_value;
+        document.getElementById('editTargetUnit').value = item.target_unit || '';
+        document.getElementById('editVipLimit').value = item.vip_limit;
+        document.getElementById('editSortOrder').value = item.sort_order;
+        document.getElementById('editStatus').value = item.status;
+        document.getElementById('modalTitle').textContent = '编辑任务';
+        document.getElementById('editModal').classList.add('show');
+    }
+}
+
+function closeModal() {
+    document.getElementById('editModal').classList.remove('show');
+}
+
+async function saveTask() {
+    const id = document.getElementById('editId').value;
+    const data = {
+        id: id ? parseInt(id) : 0,
+        name: document.getElementById('editName').value,
+        code: document.getElementById('editCode').value,
+        type: document.getElementById('editType').value,
+        reward_type: document.getElementById('editRewardType').value,
+        description: document.getElementById('editDescription').value,
+        reward_amount: parseFloat(document.getElementById('editRewardAmount').value),
+        target_value: parseInt(document.getElementById('editTargetValue').value),
+        target_unit: document.getElementById('editTargetUnit').value,
+        vip_limit: parseInt(document.getElementById('editVipLimit').value),
+        sort_order: parseInt(document.getElementById('editSortOrder').value),
+        status: parseInt(document.getElementById('editStatus').value)
+    };
+
+    if (!data.name || !data.code) {
+        alert('请填写必填项');
+        return;
+    }
+
+    try {
+        const res = await fetch(`${API_BASE}/admin/task-save`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (result.code === 1) {
+            alert(result.msg || '保存成功');
+            closeModal();
+            loadTasks();
+        } else {
+            alert(result.msg || '保存失败');
+        }
+    } catch (e) {
+        alert('保存失败');
+    }
+}
+
+loadTasks();
+</script>
+</body>
+</html>

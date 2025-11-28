@@ -6,7 +6,6 @@ RUN apk add --no-cache \
     nginx \
     supervisor \
     curl \
-    curl-dev \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \

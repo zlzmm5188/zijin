@@ -24,6 +24,7 @@ export default [
         localStorage: 'readonly',
         sessionStorage: 'readonly',
         fetch: 'readonly',
+        Headers: 'readonly',
         XMLHttpRequest: 'readonly',
         CustomEvent: 'readonly',
         setTimeout: 'readonly',
@@ -40,7 +41,17 @@ export default [
         Number: 'readonly',
         Boolean: 'readonly',
         RegExp: 'readonly',
-        Error: 'readonly'
+        Error: 'readonly',
+        AI_CONFIG: 'readonly',
+        AI_RULES_ENGINE: 'readonly',
+        AI_OPENAI: 'readonly',
+        AI_SERVICE_LOCAL: 'readonly',
+        matchKnowledge: 'readonly',
+        AbortController: 'readonly',
+        URLSearchParams: 'readonly',
+        confirm: 'readonly',
+        showToast: 'readonly',
+        location: 'readonly'
       }
     },
     rules: {

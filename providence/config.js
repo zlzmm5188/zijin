@@ -1,392 +1,633 @@
-// =============================================
-// 智能拦截器版本: 20250117-FIXED
-// =============================================
-console.log('%c🚀 Config.js 已加载 [版本: 20250117-FIXED]', 'color: #4CAF50; font-size: 16px; font-weight: bold');
-console.log('%c📍 如果看到这条消息，说明config.js成功加载', 'color: #2196F3');
-console.log('%c✅ API地址已更新为: apis.copla.top', 'color: #00FF00; font-weight: bold');
-
-// ===================================
-// Providence 前台通用 API 配置
-// 重建时间：2025-11-12
-// ===================================
-
-const API_CONFIG = {
-    SPLASH_DOMAIN: 'https://sen.wyzyrx.cn',
-  baseURL: 'https://apis.copla.top',
-  adminURL: 'https://apis.copla.topoctohoutai.php',
-  tokenKey: 'providence_token',
-  timeout: 15000,
-  debug: true  // 临时开启调试模式，便于排查问题
-};
-
-class HttpClient {
-  constructor(config) {
-    this.baseURL = config.baseURL;
-    this.timeout = config.timeout;
-    this.debug = config.debug;
-  }
-
-  // getToken() {
-  //   try {
-  //     return localStorage.getItem(API_CONFIG.tokenKey) || '';
-  //   } catch (err) {
-  //     console.warn('getToken fail', err);
-  //     return '';
-  //   }
-  // }
-
-  buildHeaders(extra = {}) {
-    const headers = {
-      'Content-Type': 'application/json',
-      ...extra
-    };
-    // const token = this.getToken();
-    // if (token) {
-    //   // 同时设置token和Authorization头，兼容不同的后端实现
-    //   headers['token'] = token;
-    //   headers['Authorization'] = token;
-    // }
-    return headers;
-  }
-
-  async request(method, url, body = null, extraHeaders = {}) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), this.timeout);
-    const options = {
-      method,
-      headers: this.buildHeaders(extraHeaders),
-      signal: controller.signal
-    };
-    if (body) options.body = JSON.stringify(body);
-
-    let response;
-    let result;
-    try {
-      if (this.debug) {
-        console.log('[HTTP] request', method, url, body);
-      }
-      response = await fetch(this.baseURL + url, options);
-      const text = await response.text();
-      try {
-        result = text ? JSON.parse(text) : {};
-      } catch (err) {
-        if (this.debug) {
-          console.error('[HTTP] JSON parse error', err, text);
-        }
-        throw new Error('响应解析失败');
-      }
-      return {
-        status: response.status,
-        ok: response.ok,
-        data: result
-      };
-    } finally {
-      clearTimeout(timeoutId);
-    }
-  }
-
-  async get(url, params = {}, extraHeaders = {}) {
-    const query = new URLSearchParams(params).toString();
-    const fullUrl = query ? `${url}?${query}` : url;
-    return this.request('GET', fullUrl, null, extraHeaders);
-  }
-
-  async post(url, data = {}, extraHeaders = {}) {
-    return this.request('POST', url, data, extraHeaders);
-  }
-}
-
-const http = new HttpClient(API_CONFIG);
-
-const ApiService = {
-  auth: {
-    // saveToken(token) {
-    //   try {
-    //     localStorage.setItem(API_CONFIG.tokenKey, token || '');
-    //   } catch (err) {
-    //     console.warn('saveToken fail', err);
-    //   }
-    // },
-    // clearToken() {
-    //   try {
-    //     localStorage.removeItem(API_CONFIG.tokenKey);
-    //   } catch (err) {
-    //     console.warn('clearToken fail', err);
-    //   }
-    // },
-    // ensureLogin() {
-    //   const token = localStorage.getItem(API_CONFIG.tokenKey);
-    //   if (!token) {
-    //     window.location.href = 'login.html';
-    //     return false;
-    //   }
-    //   return true;
-    // }
-  },
-
-  ribao: {
-    async getInfo() {
-      const res = await http.get('/index.php/user/ribao/info');
-      return res.data || {};
-    },
-    async transferIn(payload) {
-      const res = await http.post('/index.php/user/ribao/transfer-in', payload);
-      return res.data || {};
-    },
-    async transferOut(payload) {
-      const res = await http.post('/index.php/user/ribao/transfer-out', payload);
-      return res.data || {};
-    },
-    async getRecords(params = {}) {
-      const res = await http.get('/index.php/user/ribao/records', params);
-      return res.data || {};
-    }
-  },
-
-  points: {
-    async getBalance() {
-      const res = await http.get('/index.php/user/points/balance');
-      return res.data || {};
-    },
-    async exchange(payload) {
-      const res = await http.post('/index.php/user/points/exchange', payload);
-      return res.data || {};
-    },
-    async getLogs(params = {}) {
-      const res = await http.get('/index.php/user/points/logs', params);
-      return res.data || {};
-    }
-  },
-
-  finance: {
-    async getUserBalance() {
-      // 从用户信息接口获取余额
-      const res = await http.get('/index.php/user/user/index');
-      return res.data || {};
-    },
-    async recharge(payload) {
-      // 使用用户充值接口
-      const res = await http.post('/index.php/user/recharge/add', payload);
-      return res.data || {};
-    },
-    async withdraw(payload) {
-      const res = await http.post('/index.php/pay/pay/withdraw', payload);
-      return res.data || {};
-    },
-    async getBankList() {
-      const res = await http.get('/index.php/pay/bank/list');
-      return res.data || {};
-    },
-    async getUsdtInfo() {
-      const res = await http.get('/index.php/pay/us/info');
-      return res.data || {};
-    }
-  }
-};
-
-window.ApiService = ApiService;
-window.httpClient = http;
-
-// ==========================================
-
-// 页面加载时检查 Token
-// Token 失效全局拦截器 - 增强调试版本
-// ==========================================
-(function() {
-  // 保存原始 fetch
-  const originalFetch = window.fetch;
-
-  // API白名单 - 这些API的Token错误不会触发强制退出
-  const WHITELIST_APIS = [
-    '/index.php/finance/ribao-',  // 日利宝相关API
-    '/index.php/user/profile.php', // 个人信息
-    '/index.php/user/ribao/', // 日利宝相关API（新路径）
-    '/index.php/user/sign/', // 签到相关API
-    '/index.php/login/', // 登录相关API（忘记密码等）
-    '/index.php/user/user/index', // 用户信息API（避免误判）
+(() => {
+  const DEFAULT_API_BASE = 'https://apis.copla.top';
+  const DEFAULT_ADMIN_BASE = 'https://houtai.copla.top';
+  const DEFAULT_SPLASH_DOMAIN = 'https://sen.wyzyrx.cn';
+  const LEGACY_API_HOSTS = [
+    'https://apis.copla.top',
+    'http://apis.copla.top',
+    'https://api.frevix.top',
+    'http://api.frevix.top',
+    'https://v2.abcmall.one',
+    'https://v2api.hemlx.com'
   ];
+  const LEGACY_TOKEN_KEYS = ['providence_token', 'token', 'auth_token'];
 
-  window.fetch = async function(...args) {
-    try {
-      // 获取请求URL（在调用前获取，以便错误处理）
-      const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
+  console.log('%c🚀 Config.js 已加载 [Unified API Bridge]', 'color: #4CAF50; font-size: 16px; font-weight: bold');
 
-      // 检查 originalFetch 是否存在
-      if (!originalFetch) {
-        console.error('[拦截器] originalFetch 未定义，无法执行请求');
-        throw new Error('Fetch拦截器初始化失败');
+  function sanitizeBase(url) {
+    if (!url || typeof url !== 'string') {
+      return '';
+    }
+    return url.trim().replace(/\/$/, '');
+  }
+
+  function readMetaContent(name) {
+    if (typeof document === 'undefined') {
+      return '';
+    }
+    const tag = document.querySelector(`meta[name="${name}"]`);
+    return tag?.content?.trim() || '';
+  }
+
+  function readCurrentScriptDataset(key) {
+    if (typeof document === 'undefined') {
+      return '';
+    }
+    const currentScript = document.currentScript;
+    if (currentScript && currentScript.dataset && currentScript.dataset[key]) {
+      return currentScript.dataset[key].trim();
+    }
+    return '';
+  }
+
+  function resolveBaseURL() {
+    const candidates = [
+      window.API_ENV?.baseURL,
+      window.__APP_CONFIG?.apiBase,
+      readMetaContent('api-base'),
+      readCurrentScriptDataset('apiBase'),
+      window.API_BASE,
+      DEFAULT_API_BASE
+    ];
+    for (const candidate of candidates) {
+      if (candidate && typeof candidate === 'string') {
+        const sanitized = sanitizeBase(candidate);
+        if (sanitized) {
+          return sanitized;
+        }
       }
+    }
+    return DEFAULT_API_BASE;
+  }
 
-      // 只在调试模式下输出日志
-      if (API_CONFIG.debug && url) {
-        console.log('%c[拦截器] 拦截到请求:', 'color: #2196F3', url);
+  function resolveAdminURL(baseURL) {
+    const candidates = [
+      window.API_ENV?.adminURL,
+      window.__APP_CONFIG?.adminURL,
+      readMetaContent('admin-base'),
+      readCurrentScriptDataset('adminBase')
+    ];
+    for (const candidate of candidates) {
+      if (candidate && typeof candidate === 'string') {
+        const sanitized = sanitizeBase(candidate);
+        if (sanitized) {
+          return sanitized;
+        }
       }
+    }
+    if (baseURL.includes('api.')) {
+      return sanitizeBase(baseURL.replace('api.', 'houtai.'));
+    }
+    return DEFAULT_ADMIN_BASE;
+  }
 
-      const response = await originalFetch.apply(this, args);
+  function resolveBoolean(value, fallback) {
+    if (value === undefined || value === null) {
+      return fallback;
+    }
+    if (typeof value === 'string') {
+      return value === 'true' || value === '1';
+    }
+    return Boolean(value);
+  }
 
-      // 检查URL是否有效
-      if (!url) {
-        console.error('[拦截器] 无法获取请求URL:', args[0]);
-        return response;
-      }
+  const BASE_URL = resolveBaseURL();
 
-      // 检查是否在白名单中（URL已在上面获取）
-      const isWhitelisted = WHITELIST_APIS.some(pattern => {
-        return url.includes(pattern);
-      });
+  const API_CONFIG = {
+    SPLASH_DOMAIN: DEFAULT_SPLASH_DOMAIN,
+    baseURL: BASE_URL,
+    adminURL: resolveAdminURL(BASE_URL),
+    tokenKey: 'providence_token',
+    timeout: Number(window.API_ENV?.timeout || 15000),
+    debug: resolveBoolean(window.API_ENV?.debug, true)
+  };
 
-      if (API_CONFIG.debug) {
-        console.log(`[拦截器] URL白名单状态: ${isWhitelisted ? '✅在白名单中' : '❌不在白名单中'}`);
-      }
+  const DEFAULT_AI_CONFIG = {
+    mode: 'rules_only',
+    backend: { enable: false },
+    knowledge: { enable: false, priority: 'low' },
+    openai: { apiKey: '', model: 'gpt-4o-mini' }
+  };
 
-      // 检查 HTTP 状态码，排除服务器错误（502、503等）
-      const httpStatus = response.status;
-      if (httpStatus === 502 || httpStatus === 503 || httpStatus === 504) {
-        console.error('[拦截器] 服务器错误，不跳转:', {
-          url: url,
-          status: httpStatus,
-          statusText: response.statusText
-        });
-        return response;
-      }
+  const AI_CONFIG = window.AI_CONFIG
+    ? { ...DEFAULT_AI_CONFIG, ...window.AI_CONFIG }
+    : DEFAULT_AI_CONFIG;
+  window.AI_CONFIG = AI_CONFIG;
 
-      // 克隆响应以便读取
-      const clonedResponse = response.clone();
+  console.log('%c📍 API基地址:', 'color: #2196F3', API_CONFIG.baseURL);
 
+  const TokenStorage = {
+    get() {
       try {
-        const data = await clonedResponse.json();
-
-        // 只在调试模式下输出日志
-        if (API_CONFIG.debug) {
-          console.log('[拦截器] API响应:', {
-            url: url.substring(url.lastIndexOf('/') + 1),
-            code: data.code,
-            msg: data.msg
-          });
+        const existing = localStorage.getItem(API_CONFIG.tokenKey);
+        if (existing) {
+          return existing;
         }
-
-        // 检查 Token 失效 - 已注释：不再检查 token，不再跳转
-        // const isAuthError = data.code === 401 || data.code === 501;
-
-        // if (isAuthError) {
-        //   if (API_CONFIG.debug) {
-        //     console.log('%c[拦截器] 检测到认证错误！', 'color: #FF9800; font-weight: bold');
-        //     console.log('[拦截器] 错误详情:', { code: data.code, msg: data.msg, url: url });
-        //   }
-
-        //   if (isWhitelisted) {
-        //     if (API_CONFIG.debug) {
-        //       console.warn('%c[拦截器] ✅ API在白名单中，跳过强制退出', 'color: #4CAF50; font-size: 14px; font-weight: bold');
-        //       console.warn('[拦截器] URL:', url);
-        //       console.warn('[拦截器] 错误信息:', data.msg);
-        //     }
-        //   } else {
-        //     // 清除本地存储（使用正确的token key）
-        //     localStorage.removeItem('providence_token');
-        //     localStorage.removeItem('token');
-        //     localStorage.removeItem('userInfo');
-
-        //     // 显示提示
-        //     if (typeof showToast === 'function') {
-        //       showToast('登录已过期，请重新登录');
-        //     } else {
-        //       alert('登录已过期，请重新登录');
-        //     }
-
-        //     // 延迟跳转
-        //     setTimeout(() => {
-        //       window.location.href = '/login.html';
-        //     }, 1500);
-        //   }
-        // } else if (data.code !== undefined && data.code !== 1) {
-        //   // 其他错误（非认证错误），只记录日志，不跳转
-        //   console.error('[拦截器] API返回错误（非认证错误），不跳转:', {
-        //     url: url,
-        //     code: data.code,
-        //     msg: data.msg
-        //   });
-        // }
-
-        // 只记录日志，不跳转
-        if (data.code !== undefined && data.code !== 1) {
-          console.error('[拦截器] API返回错误，不跳转:', {
-            url: url,
-            code: data.code,
-            msg: data.msg
-          });
+        for (const key of LEGACY_TOKEN_KEYS) {
+          const legacy = localStorage.getItem(key);
+          if (legacy) {
+            localStorage.setItem(API_CONFIG.tokenKey, legacy);
+            return legacy;
+          }
         }
-      } catch (e) {
-        // JSON 解析失败（可能是HTML返回或其他非JSON响应），只记录日志，不跳转
-        console.error('[拦截器] JSON解析失败（可能是HTML返回或非JSON响应），不跳转:', {
-          url: url,
-          httpStatus: httpStatus,
-          error: e.message
-        });
+      } catch (err) {
+        console.warn('[TokenStorage] 读取失败:', err.message);
       }
-
-      return response;
-    } catch (error) {
-      // 获取请求URL用于错误日志
-      const url = typeof args[0] === 'string' ? args[0] : (args[0]?.url || '');
-
-      // 如果是网络错误，提供更详细的日志
-      if (error.message && (error.message.includes('Failed to fetch') || error.message.includes('NetworkError'))) {
-        console.error('[拦截器] 网络请求失败:', {
-          url: url,
-          error: error.message,
-          type: error.name || 'NetworkError',
-          hint: '可能是CORS问题、网络连接问题或服务器不可达'
-        });
-      } else {
-        console.error('[拦截器] 请求失败:', {
-          url: url,
-          error: error.message || error,
-          type: error.name || 'UnknownError'
-        });
+      return '';
+    },
+    set(token) {
+      if (!token) {
+        return;
       }
-
-      // 重新抛出错误，让调用者处理
-      throw error;
+      try {
+        localStorage.setItem(API_CONFIG.tokenKey, token);
+        for (const key of LEGACY_TOKEN_KEYS) {
+          localStorage.setItem(key, token);
+        }
+      } catch (err) {
+        console.warn('[TokenStorage] 保存失败:', err.message);
+      }
+    },
+    clear() {
+      try {
+        localStorage.removeItem(API_CONFIG.tokenKey);
+        for (const key of LEGACY_TOKEN_KEYS) {
+          localStorage.removeItem(key);
+        }
+      } catch (err) {
+        console.warn('[TokenStorage] 清除失败:', err.message);
+      }
     }
   };
 
-  // 只在调试模式下输出启动日志
-  if (API_CONFIG.debug) {
-    console.log('%c[拦截器] Token失效拦截器已启动（增强调试模式）', 'color: #4CAF50; font-size: 14px; font-weight: bold');
-    console.log('[拦截器] 白名单:', WHITELIST_APIS);
-  }
-})();
-// (function() {
-//   // 需要登录的页面列表
-//   const requireAuthPages = [
-//     'profile.html',
-//     'recharge.html',
-//     'withdraw.html',
-//     'my-investments.html',
-//     'ribao.html',
-//     'team-rewards.html',
-//     'bank-cards.html'
-//   ];
-
-//   const currentPage = window.location.pathname.split('/').pop();
-
-//   if (requireAuthPages.includes(currentPage)) {
-//     const token = localStorage.getItem('token');
-
-//     if (!token) {
-//       console.log('[拦截器] 未登录，跳转登录页');
-//       window.location.href = '/login.html';
-//     }
-//   }
-// })();
-// APIClient别名，兼容旧代码
-class APIClient {
-    constructor() {
-        this.http = http;
-        this.api = ApiService;
+  class HttpClient {
+    constructor(config) {
+      this.baseURL = sanitizeBase(config.baseURL || DEFAULT_API_BASE);
+      this.timeout = config.timeout || 15000;
+      this.debug = config.debug;
     }
-    async get(url, params) { return this.http.get(url, params); }
-    async post(url, data) { return this.http.post(url, data); }
-    // getToken() { return this.http.getToken(); }
-}
-window.APIClient = APIClient;
+
+    getToken() {
+      return TokenStorage.get();
+    }
+
+    setToken(token) {
+      TokenStorage.set(token);
+    }
+
+    clearToken() {
+      TokenStorage.clear();
+    }
+
+    buildHeaders(extraHeaders = {}, skipAuth = false) {
+      const headers = new Headers({ 'Content-Type': 'application/json' });
+      const source = extraHeaders instanceof Headers ? extraHeaders : new Headers(extraHeaders);
+      source.forEach((value, key) => headers.set(key, value));
+      if (!skipAuth && !headers.has('token')) {
+        const token = this.getToken();
+        if (token) {
+          headers.set('token', token);
+          headers.set('Authorization', token);
+        }
+      }
+      return headers;
+    }
+
+    resolveUrl(url) {
+      if (!url) {
+        return this.baseURL;
+      }
+      if (/^https?:/i.test(url)) {
+        return normalizeApiUrl(url);
+      }
+      if (url.startsWith('/')) {
+        return `${this.baseURL}${url}`;
+      }
+      if (url.startsWith('index.php')) {
+        return `${this.baseURL}/${url}`;
+      }
+      return `${this.baseURL}/${url.replace(/^\.\//, '')}`;
+    }
+
+    async request(method, url, body = null, headers = {}, options = {}) {
+      const skipAuth = Boolean(options.skipAuth);
+      const endpoint = this.resolveUrl(url);
+      const finalHeaders = this.buildHeaders(headers, skipAuth);
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+      const fetchOptions = {
+        method,
+        headers: finalHeaders,
+        signal: controller.signal,
+        mode: 'cors',
+        credentials: 'include'
+      };
+
+      if (body && method !== 'GET' && method !== 'HEAD') {
+        const contentType = finalHeaders.get('Content-Type') || '';
+        fetchOptions.body = contentType.includes('application/json') && typeof body !== 'string'
+          ? JSON.stringify(body)
+          : body;
+      }
+
+      if (this.debug) {
+        console.log('[HTTP]', method, endpoint, body);
+      }
+
+      try {
+        const response = await fetch(endpoint, fetchOptions);
+        const text = await response.text();
+        let parsed = null;
+        if (text) {
+          try {
+            parsed = JSON.parse(text);
+          } catch (err) {
+            console.error('[HTTP] JSON解析失败:', err.message, text.substring(0, 200));
+          }
+        }
+
+        const payload = parsed || {};
+        const success = (
+          response.ok && (payload.code === 1 || payload.code === 200)
+        ) || payload.success === true;
+        const message = payload.msg || payload.message || (success ? 'success' : `HTTP ${response.status}`);
+        const data = payload.data ?? payload.result ?? null;
+
+        return {
+          success,
+          status: response.status,
+          data,
+          msg: message,
+          raw: payload
+        };
+      } catch (error) {
+        console.error('[HTTP] 请求失败:', error);
+        return {
+          success: false,
+          status: 0,
+          data: null,
+          msg: error.message || '网络错误',
+          error
+        };
+      } finally {
+        clearTimeout(timeoutId);
+      }
+    }
+
+    async get(url, params = {}, options = {}) {
+      const query = new URLSearchParams(params).toString();
+      const finalUrl = query ? `${url}?${query}` : url;
+      return this.request('GET', finalUrl, null, options.headers || {}, options);
+    }
+
+    async post(url, data = {}, options = {}) {
+      return this.request('POST', url, data, options.headers || {}, options);
+    }
+
+    async put(url, data = {}, options = {}) {
+      return this.request('PUT', url, data, options.headers || {}, options);
+    }
+
+    async delete(url, options = {}) {
+      return this.request('DELETE', url, null, options.headers || {}, options);
+    }
+  }
+
+  const http = new HttpClient(API_CONFIG);
+
+  const API_ENDPOINTS = {
+    auth: {
+      login: '/index.php/login/account',
+      legacyLogin: '/index.php/login/login/account',
+      register: '/index.php/login/reg/account'
+    },
+    user: {
+      info: '/index.php/user/user/index',
+      invite: '/index.php/user/user/invite'
+    },
+    fund: {
+      list: '/index.php/fund/project/all',
+      detail: '/index.php/fund/project/detail',
+      invest: '/index.php/fund/project/add'
+    },
+    order: {
+      list: '/index.php/user/order/list'
+    },
+    finance: {
+      recharge: '/index.php/user/recharge/add',
+      withdraw: '/index.php/pay/pay/withdraw',
+      bankCards: '/index.php/pay/bank/list',
+      usdtInfo: '/index.php/pay/us/info'
+    },
+    points: {
+      balance: '/index.php/user/points/balance',
+      exchange: '/index.php/user/points/exchange',
+      logs: '/index.php/user/points/logs'
+    },
+    ribao: {
+      info: '/index.php/user/ribao/info',
+      transferIn: '/index.php/user/ribao/transfer-in',
+      transferOut: '/index.php/user/ribao/transfer-out',
+      records: '/index.php/user/ribao/records'
+    },
+    team: {
+      info: '/index.php/user/team/team',
+      rewardsStatus: '/index.php/user/team/rewards_status',
+      claimReward: '/index.php/user/team/claim_reward'
+    },
+    trial: {
+      claim: '/index.php/user/trial/claim'
+    },
+    sign: {
+      info: '/index.php/user/sign/info',
+      sign: '/index.php/user/sign/sign'
+    },
+    ai: {
+      chat: '/index.php/ai/chat'
+    },
+    pay: {
+      bankList: '/index.php/pay/bank/list',
+      usdtCheck: '/index.php/pay/usdt/check',
+      currencyExchange: '/index.php/pay/currency-exchange'
+    }
+  };
+
+  const API = {
+    user: {
+      getInfo() {
+        return http.get(API_ENDPOINTS.user.info);
+      },
+      login(username, password) {
+        return http.post(API_ENDPOINTS.auth.login, { username, password }, { skipAuth: true });
+      },
+      register(payload) {
+        return http.post(API_ENDPOINTS.auth.register, payload, { skipAuth: true });
+      },
+      invite() {
+        return http.get(API_ENDPOINTS.user.invite);
+      }
+    },
+    fund: {
+      getList(params = {}) {
+        return http.get(API_ENDPOINTS.fund.list, params);
+      },
+      getDetail(id) {
+        return http.get(`${API_ENDPOINTS.fund.detail}?id=${encodeURIComponent(id ?? '')}`);
+      },
+      invest(payload) {
+        return http.post(API_ENDPOINTS.fund.invest, payload);
+      }
+    },
+    order: {
+      getList(params = {}) {
+        return http.get(API_ENDPOINTS.order.list, params);
+      }
+    },
+    finance: {
+      recharge(payload) {
+        return http.post(API_ENDPOINTS.finance.recharge, payload);
+      },
+      withdraw(payload) {
+        return http.post(API_ENDPOINTS.finance.withdraw, payload);
+      },
+      getBankCards() {
+        return http.get(API_ENDPOINTS.finance.bankCards);
+      },
+      getUsdtInfo() {
+        return http.get(API_ENDPOINTS.finance.usdtInfo);
+      }
+    },
+    points: {
+      getBalance() {
+        return http.get(API_ENDPOINTS.points.balance);
+      },
+      exchange(payload) {
+        return http.post(API_ENDPOINTS.points.exchange, payload);
+      },
+      getLogs(params = {}) {
+        return http.get(API_ENDPOINTS.points.logs, params);
+      }
+    },
+    ribao: {
+      getInfo() {
+        return http.get(API_ENDPOINTS.ribao.info);
+      },
+      getRecords(params = {}) {
+        return http.get(API_ENDPOINTS.ribao.records, params);
+      },
+      transferIn(payload) {
+        return http.post(API_ENDPOINTS.ribao.transferIn, payload);
+      },
+      transferOut(payload) {
+        return http.post(API_ENDPOINTS.ribao.transferOut, payload);
+      }
+    },
+    team: {
+      getInfo() {
+        return http.get(API_ENDPOINTS.team.info);
+      },
+      getRewardsStatus() {
+        return http.get(API_ENDPOINTS.team.rewardsStatus);
+      },
+      claimReward(payload = {}) {
+        return http.post(API_ENDPOINTS.team.claimReward, payload);
+      }
+    },
+    trial: {
+      claim(payload = {}) {
+        return http.post(API_ENDPOINTS.trial.claim, payload);
+      }
+    },
+    sign: {
+      info() {
+        return http.get(API_ENDPOINTS.sign.info);
+      },
+      sign() {
+        return http.post(API_ENDPOINTS.sign.sign, {});
+      }
+    },
+    ai: {
+      chat(payload) {
+        return http.post(API_ENDPOINTS.ai.chat, payload);
+      }
+    }
+  };
+
+  const ApiService = {
+    ribao: {
+      async getInfo() {
+        const res = await API.ribao.getInfo();
+        if (!res.success) {
+          throw new Error(res.msg || '获取日利宝信息失败');
+        }
+        return res.data || {};
+      },
+      async transferIn(payload) {
+        const res = await API.ribao.transferIn(payload);
+        if (!res.success) {
+          throw new Error(res.msg || '转入失败');
+        }
+        return res.data || {};
+      },
+      async transferOut(payload) {
+        const res = await API.ribao.transferOut(payload);
+        if (!res.success) {
+          throw new Error(res.msg || '转出失败');
+        }
+        return res.data || {};
+      },
+      async getRecords(params = {}) {
+        const res = await API.ribao.getRecords(params);
+        if (!res.success) {
+          throw new Error(res.msg || '获取记录失败');
+        }
+        return res.data || {};
+      }
+    },
+    points: {
+      async getBalance() {
+        const res = await API.points.getBalance();
+        if (!res.success) {
+          throw new Error(res.msg || '获取积分失败');
+        }
+        return res.data || {};
+      },
+      async exchange(payload) {
+        const res = await API.points.exchange(payload);
+        if (!res.success) {
+          throw new Error(res.msg || '兑换失败');
+        }
+        return res.data || {};
+      },
+      async getLogs(params = {}) {
+        const res = await API.points.getLogs(params);
+        if (!res.success) {
+          throw new Error(res.msg || '获取积分日志失败');
+        }
+        return res.data || {};
+      }
+    },
+    finance: {
+      async getUserBalance() {
+        const res = await API.user.getInfo();
+        if (!res.success) {
+          throw new Error(res.msg || '获取余额失败');
+        }
+        return res.data || {};
+      },
+      async recharge(payload) {
+        return API.finance.recharge(payload);
+      },
+      async withdraw(payload) {
+        return API.finance.withdraw(payload);
+      },
+      async getBankList() {
+        return API.finance.getBankCards();
+      },
+      async getUsdtInfo() {
+        return API.finance.getUsdtInfo();
+      }
+    }
+  };
+
+  function normalizeApiUrl(url) {
+    if (!url) {
+      return url;
+    }
+    const trimmed = url.trim();
+    if (trimmed.startsWith('/index.php/')) {
+      return `${API_CONFIG.baseURL}${trimmed}`;
+    }
+    if (trimmed.startsWith('index.php/')) {
+      return `${API_CONFIG.baseURL}/${trimmed}`;
+    }
+    const legacyHost = LEGACY_API_HOSTS.find((host) => trimmed.startsWith(host));
+    if (legacyHost) {
+      return `${API_CONFIG.baseURL}${trimmed.substring(legacyHost.length)}`;
+    }
+    return trimmed;
+  }
+
+  function shouldAttachToken(url) {
+    if (!url) {
+      return false;
+    }
+    if (url.includes('/login/') || url.includes('/register/')) {
+      return false;
+    }
+    return url.startsWith(API_CONFIG.baseURL);
+  }
+
+  function normalizeHeaders(headersInput) {
+    if (!headersInput) {
+      return new Headers();
+    }
+    if (headersInput instanceof Headers) {
+      return new Headers(headersInput);
+    }
+    return new Headers(headersInput);
+  }
+
+  function setupFetchInterceptor() {
+    if (typeof window === 'undefined' || typeof window.fetch !== 'function') {
+      return;
+    }
+    const originalFetch = window.fetch.bind(window);
+    window.fetch = function(input, init = {}) {
+      if (typeof input !== 'string') {
+        return originalFetch(input, init);
+      }
+      const normalizedInit = { ...init };
+      const skipAuth = Boolean(normalizedInit.skipAuth);
+      if ('skipAuth' in normalizedInit) {
+        delete normalizedInit.skipAuth;
+      }
+      const headers = normalizeHeaders(normalizedInit.headers);
+      const rewrittenUrl = normalizeApiUrl(input);
+      if (shouldAttachToken(rewrittenUrl) && !skipAuth) {
+        if (!headers.has('token')) {
+          const token = TokenStorage.get();
+          if (token) {
+            headers.set('token', token);
+            headers.set('Authorization', token);
+          }
+        }
+      }
+      normalizedInit.headers = headers;
+      return originalFetch(rewrittenUrl, normalizedInit);
+    };
+    console.log('%c🔒 Fetch 拦截器已启用', 'color: #9C27B0');
+  }
+
+  setupFetchInterceptor();
+
+  class APIClient {
+    constructor() {
+      this.http = http;
+      this.api = API;
+    }
+
+    async get(url, params) {
+      return this.http.get(url, params);
+    }
+
+    async post(url, data) {
+      return this.http.post(url, data);
+    }
+
+    getToken() {
+      return this.http.getToken();
+    }
+  }
+
+  window.API_CONFIG = API_CONFIG;
+  window.API_ENDPOINTS = API_ENDPOINTS;
+  window.httpClient = http;
+  window.API = API;
+  window.ApiService = ApiService;
+  window.APIClient = APIClient;
+  window.getApiBaseURL = () => API_CONFIG.baseURL;
+  window.getAuthToken = () => TokenStorage.get();
+  window.setAuthToken = (token) => TokenStorage.set(token);
+  window.clearAuthToken = () => TokenStorage.clear();
+})();

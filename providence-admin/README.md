@@ -6,7 +6,7 @@ PROVIDENCE 专属后台管理系统，为前台投资理财平台提供完整的
 
 **开发时间**: 2024-11-10  
 **技术栈**: PHP 7.4+ / MySQL 5.7+ / LayUI  
-**前台地址**: https://4kp3l0iq.top
+**前台地址**: https://agx.bi
 
 ---
 

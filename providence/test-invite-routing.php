@@ -39,12 +39,12 @@ echo "\n";
 // 3. 测试子域名解析
 echo "=== 子域名解析测试 ===\n";
 $testHosts = [
-    'ABC123.4kp3l0iq.top',
-    'test123.4kp3l0iq.top',
+    'ABC123.agx.bi',
+    'test123.agx.bi',
     $_SERVER['HTTP_HOST'] ?? 'current-host'
 ];
 
-$supportedDomains = ['4kp3l0iq.top'];
+$supportedDomains = ['agx.bi'];
 
 foreach ($testHosts as $host) {
     echo "测试: $host\n";

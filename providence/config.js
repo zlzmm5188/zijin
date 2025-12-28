@@ -3,20 +3,22 @@
 // =============================================
 console.log('%c🚀 Config.js 已加载 [版本: 20250117-FIXED]', 'color: #4CAF50; font-size: 16px; font-weight: bold');
 console.log('%c📍 如果看到这条消息，说明config.js成功加载', 'color: #2196F3');
-console.log('%c✅ API地址已更新为: apis.copla.top', 'color: #00FF00; font-weight: bold');
+console.log('%c✅ API地址已更新为: agx.bi', 'color: #00FF00; font-weight: bold');
 
 // ===================================
 // Providence 前台通用 API 配置
 // 重建时间：2025-11-12
 // ===================================
 
+const API_BASE_URL = 'https://agx.bi';
+
 const API_CONFIG = {
-    SPLASH_DOMAIN: 'https://sen.wyzyrx.cn',
-  baseURL: 'https://apis.copla.top',
-  adminURL: 'https://apis.copla.topoctohoutai.php',
+  SPLASH_DOMAIN: 'https://sen.wyzyrx.cn',
+  baseURL: API_BASE_URL,
+  adminURL: `${API_BASE_URL}/octohoutai.php`,
   tokenKey: 'providence_token',
   timeout: 15000,
-  debug: true  // 临时开启调试模式，便于排查问题
+  debug: true // 临时开启调试模式，便于排查问题
 };
 
 class HttpClient {

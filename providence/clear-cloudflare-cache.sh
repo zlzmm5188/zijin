@@ -1,6 +1,6 @@
 #!/bin/bash
 # Cloudflare缓存清除脚本
-# 用于快速清除4kp3l0iq.top域名的CDN缓存
+# 用于快速清除agx.bi域名的CDN缓存
 
 echo "🌐 Cloudflare缓存清除工具"
 echo "================================"
@@ -13,7 +13,7 @@ CF_API_KEY="85832aec51094ffd765682f3d18a9465f2893"
 # 需要先获取Zone ID
 echo "📋 步骤1：获取Zone ID"
 echo "访问 https://dash.cloudflare.com/"
-echo "选择域名 4kp3l0iq.top"
+echo "选择域名 agx.bi"
 echo "在右侧找到 Zone ID 并复制"
 echo ""
 read -p "请输入Zone ID: " CF_ZONE_ID
@@ -46,7 +46,7 @@ if [ "$SUCCESS" -eq 1 ]; then
     echo "⏱ 预计30秒-3分钟后全球生效"
     echo ""
     echo "🎯 现在可以访问网站查看更新："
-    echo "   https://4kp3l0iq.top/"
+    echo "   https://agx.bi/"
 else
     echo "❌ 缓存清除失败！"
     echo ""

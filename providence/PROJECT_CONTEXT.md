@@ -1,7 +1,7 @@
 # Providence 项目上下文
 
 ## 项目信息
-- **域名**：4kp3l0iq.top (abcmall.one已过期)
+- **域名**：agx.bi (abcmall.one已过期)
 - **目录**：/www/wwwroot/f.abcmall.one/providence
 - **后端API**：https://v2api.hemlx.com
 - **CDN**：CloudFlare（修改后需清除缓存或强制刷新）

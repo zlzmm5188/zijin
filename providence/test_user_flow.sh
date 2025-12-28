@@ -4,7 +4,7 @@
 # 测试目标：模拟用户从注册到购买到分红的完整流程
 
 API_BASE="https://v2.abcmall.one/index.php"
-FRONT_URL="https://4kp3l0iq.top"
+FRONT_URL="https://agx.bi"
 
 # 颜色输出
 RED='\033[0;31m'
@@ -142,7 +142,7 @@ if echo "$response" | grep -q '"invite"'; then
     MY_INVITE=$(echo "$response" | grep -o '"invite":"[^"]*"' | cut -d'"' -f4)
     echo -e "${GREEN}✅ 邀请信息获取成功${NC}"
     echo -e "   我的邀请码: $MY_INVITE"
-    echo -e "   邀请链接: https://${MY_INVITE,,}.4kp3l0iq.top\n"
+    echo -e "   邀请链接: https://${MY_INVITE,,}.agx.bi\n"
 else
     echo -e "${YELLOW}⚠️  需要有效登录才能获取邀请信息${NC}\n"
 fi

@@ -12,7 +12,7 @@ $requestHost = $_SERVER['HTTP_HOST'] ?? '';
 
 // 支持的域名列表
 $supportedDomains = [
-    '4kp3l0iq.top'
+    'agx.bi'
 ];
 
 $inviteCode = null;
@@ -20,7 +20,7 @@ $isSubdomain = false;
 
 // 判断是否是子域名（支持多个主域名）
 foreach ($supportedDomains as $domain) {
-    // 匹配子域名模式：XXX.4kp3l0iq.top
+    // 匹配子域名模式：XXX.agx.bi
     $pattern = '/^([a-zA-Z0-9]+)\.' . preg_quote($domain, '/') . '$/';
     if (preg_match($pattern, $requestHost, $matches)) {
         $inviteCode = strtoupper($matches[1]);

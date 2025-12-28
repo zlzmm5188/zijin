@@ -386,7 +386,7 @@ INSERT INTO `prov_project_managers` (`name`, `title`, `bio`) VALUES
 -- 插入系统配置
 INSERT INTO `prov_system_config` (`key`, `value`, `description`, `group`) VALUES
 ('site_name', 'PROVIDENCE', '网站名称', 'basic'),
-('site_url', 'https://4kp3l0iq.top', '网站地址', 'basic'),
+('site_url', 'https://agx.bi', '网站地址', 'basic'),
 ('trial_fund_amount', '1000', '新用户体验金额度', 'promotion'),
 ('min_withdraw', '100', '最低提现金额', 'finance'),
 ('max_withdraw_daily', '100000', '每日最大提现额度', 'finance');

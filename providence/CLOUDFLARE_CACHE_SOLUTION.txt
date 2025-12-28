@@ -24,7 +24,7 @@ CloudFlare的缓存层级：
 方案1: 使用Purge Everything（最彻底）⭐⭐⭐⭐⭐
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. 登录 CloudFlare Dashboard
-2. 选择域名：4kp3l0iq.top
+2. 选择域名：agx.bi
 3. 缓存 → 配置
 4. 点击「清除所有内容」(Purge Everything)
 5. 等待30秒-2分钟
@@ -36,7 +36,7 @@ CloudFlare的缓存层级：
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 1. CloudFlare → 规则 → 页面规则
 2. 创建页面规则：
-   URL: *4kp3l0iq.top/*.html
+   URL: *agx.bi/*.html
    设置: 缓存级别 = "绕过"
 3. 保存并部署
 
@@ -50,10 +50,10 @@ CloudFlare的缓存层级：
 方案3: 使用查询参数（临时方案）⭐⭐⭐⭐
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 访问时添加随机参数：
-https://4kp3l0iq.top/projects.html?nocache=$(date +%s)
+https://agx.bi/projects.html?nocache=$(date +%s)
 
 或者：
-https://4kp3l0iq.top/projects.html?v=1762558000
+https://agx.bi/projects.html?v=1762558000
 
 缺点：每次都要手动添加参数
 
@@ -105,7 +105,7 @@ location ~* \.(html)$ {
     - Age
 
 方法2: 访问测试页面
-  https://4kp3l0iq.top/test-btn-style.html
+  https://agx.bi/test-btn-style.html
   （刚创建的，无缓存）
 
 ================================================

@@ -90,7 +90,7 @@
 
     <hr>
     <p style="font-size:12px;color:#666;">
-        访问地址：https://4kp3l0iq.top/check-kyc-status.php
+        访问地址：https://agx.bi/check-kyc-status.php
     </p>
 </body>
 </html>
